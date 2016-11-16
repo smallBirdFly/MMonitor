@@ -1,0 +1,136 @@
+<?php
+
+namespace statistics\controllers;
+
+use common\components\HttpUtils;
+use common\components\Constant;
+
+use common\utils\HttpResponseUtil;
+use Redis;
+use statistics\models\Daycount;
+use statistics\models\Scount;
+use Yii;
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
+use yii\web\Controller;
+use yii\helpers\Url;
+
+class SiteController extends Controller
+{
+    public $layout = 'blank';
+    public function behaviors()
+    {
+        return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'logout' => ['post'],
+                ],
+            ],
+        ];
+    }
+
+    public function actions()
+    {
+        return [
+            'error' => [
+                'class' => 'yii\web\ErrorAction',
+            ],
+            'captcha' => [
+                'class' => 'yii\captcha\CaptchaAction',
+                'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
+            ],
+        ];
+    }
+
+    // 首页
+    public function actionIndex()
+    {
+        $con = Yii::$app->request->get();
+        //将数据格式化
+        $result = json_encode($con);
+        //将数据存入redis
+        $redis = new Redis();
+        $redis->connect('127.0.0.1', 6379);
+        $redis->lPush('count_msg',"$result");
+    }
+
+//    验证ip
+    public function check()
+    {
+        $remoteIp = Yii::$app->request->headers->get('X-Real-IP');
+        if(empty($remoteIp)){
+            $remoteIp = Yii::$app->request->getUserIP();
+        }
+    }
+
+//    把redis数据存入数据库
+    public function actionSave()
+    {
+        $redis = new Redis();
+        $redis->connect('127.0.0.1', 6379);
+        $arr = $redis->lRange('count_msg',0,10000);
+        foreach($arr as $k=>$v)
+        {
+            $attr = json_decode($v);
+            $rows[] = $attr;
+        }
+//        var_dump($rows);
+        Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['spm_code','tag','type','content'],$rows)->execute();
+        $redis->lTrim('count_msg',0,-10000);
+    }
+
+//    统计当前数据的结果，并将数据导出成sql语句
+    public function actionExport()
+    {
+//        获得所有的spm_code
+       $arr = Scount::find()->groupBy('spm_code')->all();
+        foreach($arr as $v)
+        {
+//            var_dump($v->spm_code);
+            $tags = Scount::find()->where(['spm_code' => $v->spm_code])->groupBy('tag')->all();
+            foreach($tags as $i)
+            {
+                $count = Scount::find()->where(['spm_code' => $i->spm_code,'tag'=>$i->tag])->count();
+//                echo ' smp_code:'.$i->spm_code.' tag:'.$i->tag.' num:'.$count."<br>";
+                $num = new Daycount();
+                $num->spm_code = $i->spm_code;
+                $num->tag = $i->tag;
+                $num->num = $count;
+                $num->save();
+            }
+        }
+        $content = Scount::find()->all();
+        $string = null;
+        foreach($content as $v)
+        {
+            $string .= '(\''.$v->spm_code.'\',';
+            $string .= '\''.$v->tag.'\',';
+            $string .= '\''.$v->type.'\',';
+            $string .= '\''.$v->content.'\',';
+            $string .= '\''.$v->created_at.'\',';
+            $string .= '\''.$v->updated_at.'\'),';
+        }
+        $tname = 'scount'.time();
+        $ctable = 'CREATE TABLE `'.$tname.'` (
+                `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+                  `spm_code` varchar(25) NOT NULL,
+                  `tag` tinyint(4) NOT NULL COMMENT \'页面上的模块\',
+                  `type` tinyint(4) NOT NULL COMMENT \'返回的类型，0表示错误，1表示访问\',
+                  `content` smallint(6) NOT NULL COMMENT \'返回的内容，访问则是次数，错误则是错误信息\',
+                  `created_at` int(11) NOT NULL,
+                  `updated_at` int(11) NOT NULL,
+                  PRIMARY KEY (`id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `spm_code`, `tag`, `type`, `content`, `created_at`, `updated_at`) VALUES';
+        $sql =  $ctable.trim($string,',');
+        $sqlfile = fopen('sql/'.time().'.sql', "w") or die("Unable to open file!");
+        fwrite($sqlfile,$sql);
+        fclose($sqlfile);
+    }
+
+    //统一错误页面
+    public function actionError()
+    {
+        return $this->render('error');
+    }
+}

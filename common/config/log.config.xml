@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration xmlns="http://logging.apache.org/log4php/">
+
+    <appender name="myConsoleAppender" class="LoggerAppenderConsole" />
+
+    <appender name="myFileAppender" class="LoggerAppenderDailyFile">
+        <layout class="LoggerLayoutPattern">
+            <param name="conversionPattern" value="%date [%logger] %message%newline" />
+        </layout>
+        <param name="file" value="../runtime/logs/ets.%s.log" />
+        <param name="datePattern" value="Y-m-d" />
+    </appender>
+
+    <root>
+        <!--<level value="DEBUG" />-->
+        <appender_ref ref="myFileAppender" />
+    </root>
+</configuration>
