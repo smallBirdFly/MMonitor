@@ -9,6 +9,7 @@ use common\utils\HttpResponseUtil;
 use Redis;
 use statistics\models\Daycount;
 use statistics\models\Scount;
+use statistics\models\Webs;
 use Yii;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -56,11 +57,25 @@ class SiteController extends Controller
     }
 
 //    验证ip
-    public function check()
+    public function actionCheck()
     {
+        $redis = new Redis();
+        $redis->connect('127.0.0.1',6379);
         $remoteIp = Yii::$app->request->headers->get('X-Real-IP');
-        if(empty($remoteIp)){
+        if(empty($remoteIp))
+        {
             $remoteIp = Yii::$app->request->getUserIP();
+        }
+        $redis->lPush($remoteIp,$remoteIp);
+        $redis->expire($remoteIp,60);
+        //同一个ip地址一分钟之内访问超过60次会被当作脚本，不予接受该数据
+        if($redis->lLen($remoteIp) < 60)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
 
@@ -69,36 +84,33 @@ class SiteController extends Controller
     {
         $redis = new Redis();
         $redis->connect('127.0.0.1', 6379);
-        $arr = $redis->lRange('count_msg',0,10000);
+        $arr = $redis->lRange('count_msg',-99,-1);
         foreach($arr as $k=>$v)
         {
             $attr = json_decode($v);
+            $attr->time = time();
             $rows[] = $attr;
         }
-//        var_dump($rows);
-        Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['spm_code','tag','type','content'],$rows)->execute();
-        $redis->lTrim('count_msg',0,-10000);
+        Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['spm_code','tag','type','content','created_at'],$rows)->execute();
+        $redis->lTrim('count_msg',0,-100);
     }
 
 //    统计当前数据的结果，并将数据导出成sql语句
     public function actionExport()
     {
 //        获得所有的spm_code
-       $arr = Scount::find()->groupBy('spm_code')->all();
+        $arr = Webs::find()->all();
         foreach($arr as $v)
         {
-//            var_dump($v->spm_code);
-            $tags = Scount::find()->where(['spm_code' => $v->spm_code])->groupBy('tag')->all();
-            foreach($tags as $i)
-            {
-                $count = Scount::find()->where(['spm_code' => $i->spm_code,'tag'=>$i->tag])->count();
+            $e_count = Scount::find()->where(['spm_code' => $v->spm_code,'tag'=>$v->tag,'type'=> 0])->count();
+            $v_count = Scount::find()->where(['spm_code' => $v->spm_code,'tag'=>$v->tag,'type'=> 1])->count();
 //                echo ' smp_code:'.$i->spm_code.' tag:'.$i->tag.' num:'.$count."<br>";
-                $num = new Daycount();
-                $num->spm_code = $i->spm_code;
-                $num->tag = $i->tag;
-                $num->num = $count;
-                $num->save();
-            }
+            $num = new Daycount();
+            $num->spm_code = $v->spm_code;
+            $num->tag = $v->tag;
+            $num->e_num = $e_count;
+            $num->v_num = $v_count;
+            $num->save();
         }
         $content = Scount::find()->all();
         $string = null;
@@ -109,7 +121,6 @@ class SiteController extends Controller
             $string .= '\''.$v->type.'\',';
             $string .= '\''.$v->content.'\',';
             $string .= '\''.$v->created_at.'\',';
-            $string .= '\''.$v->updated_at.'\'),';
         }
         $tname = 'scount'.time();
         $ctable = 'CREATE TABLE `'.$tname.'` (
@@ -119,13 +130,13 @@ class SiteController extends Controller
                   `type` tinyint(4) NOT NULL COMMENT \'返回的类型，0表示错误，1表示访问\',
                   `content` smallint(6) NOT NULL COMMENT \'返回的内容，访问则是次数，错误则是错误信息\',
                   `created_at` int(11) NOT NULL,
-                  `updated_at` int(11) NOT NULL,
                   PRIMARY KEY (`id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `spm_code`, `tag`, `type`, `content`, `created_at`, `updated_at`) VALUES';
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `spm_code`, `tag`, `type`, `content`, `created_at`) VALUES';
         $sql =  $ctable.trim($string,',');
-        $sqlfile = fopen('sql/'.time().'.sql', "w") or die("Unable to open file!");
+        $sqlfile = fopen('sql/'.$tname.'.sql', "w") or die("Unable to open file!");
         fwrite($sqlfile,$sql);
         fclose($sqlfile);
+        Scount::deleteAll();
     }
 
     //统一错误页面
