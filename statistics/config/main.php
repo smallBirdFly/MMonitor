@@ -5,7 +5,9 @@ $params = array_merge(
     require(__DIR__ . '/params.php'),
     require(__DIR__ . '/params-local.php')
 );
-
+$mmconf = require(__DIR__ . '/../../mmconf/dist/mm.php');
+$db = $mmconf['db'];
+$redis = $mmconf['redis'];
 return [
     'id' => 'app-statistics',
     'basePath' => dirname(__DIR__),
@@ -18,7 +20,13 @@ return [
             'cookieValidationKey' => 'mamaxinjia!@#$%^&*',
         ],
         'cache' => [
-            'class' => 'yii\caching\DbCache',
+            'class' => 'yii\redis\Cache',
+        ],
+        'redis' => [
+            'class' => 'yii\redis\Connection',
+            'hostname' => $redis['host'],
+            'port' => $redis['port'],
+            'database' => $redis['database'],
         ],
         'user' => [
             'identityClass' => 'statistics\models\User',
@@ -60,4 +68,5 @@ return [
         ],
     ],
     'params' => $params,
+
 ];

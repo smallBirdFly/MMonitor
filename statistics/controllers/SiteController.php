@@ -15,6 +15,7 @@ use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\helpers\Url;
+use yii\redis\Connection;
 
 class SiteController extends Controller
 {
@@ -47,12 +48,17 @@ class SiteController extends Controller
     // 首页
     public function actionIndex()
     {
+
         $con = Yii::$app->request->get();
         //将数据格式化
         $result = json_encode($con);
         //将数据存入redis
-        $redis = new Redis();
-        $redis->connect('127.0.0.1', 6379);
+        $redis = Yii::$app->redis;
+        $redis1 = new Redis();
+        var_dump($redis);
+        echo "<br>";
+        var_dump($redis1);
+        die;
         $redis->lPush('count_msg',"$result");
     }
 
@@ -68,6 +74,7 @@ class SiteController extends Controller
         }
         $redis->lPush($remoteIp,$remoteIp);
         $redis->expire($remoteIp,60);
+
         //同一个ip地址一分钟之内访问超过60次会被当作脚本，不予接受该数据
         if($redis->lLen($remoteIp) < 60)
         {

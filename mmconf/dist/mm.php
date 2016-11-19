@@ -6,7 +6,10 @@ return [
         'password' => '123456',
     ],
     "env" => "dev",       //local, dev or prod
-    "debug" => true
+    "debug" => true,
+    "host" => '127.0.0.1',
+    "port" => 6379,
+    "database" => 'mmonitor'
 ];
 
 //return [
