@@ -6,6 +6,7 @@ use common\components\HttpUtils;
 use common\components\Constant;
 
 use common\utils\HttpResponseUtil;
+use statistics\component\DaemonCommand;
 use Redis;
 use statistics\models\Daycount;
 use statistics\models\Scount;
@@ -48,18 +49,22 @@ class SiteController extends Controller
     // 首页
     public function actionIndex()
     {
-
-        $con = Yii::$app->request->get();
+        header('Access-Control-Allow-Origin:*');
+        header('Access-Control-Allow-Methods:POST');
+        header('Access-Control-Allow-Headers:x-requested-with,content-type');
+        if(empty($remoteIp))
+        {
+            $remoteIp = Yii::$app->request->getUserIP();
+        }
+        $con = array();
+        $con['ip'] = $remoteIp;
+        $con['time'] = time();
+        $con['url'] = Yii::$app->request->getPathInfo();
         //将数据格式化
         $result = json_encode($con);
         //将数据存入redis
         $redis = Yii::$app->redis;
-        $redis1 = new Redis();
-        var_dump($redis);
-        echo "<br>";
-        var_dump($redis1);
-        die;
-        $redis->lPush('count_msg',"$result");
+        $redis->lpush('count_msg',"$result");
     }
 
 //    验证ip
@@ -144,6 +149,18 @@ class SiteController extends Controller
         fwrite($sqlfile,$sql);
         fclose($sqlfile);
         Scount::deleteAll();
+    }
+
+    public function actionTest()
+    {
+        ignore_user_abort();//关闭浏览器仍然执行
+        set_time_limit(0);//让程序一直执行下去
+        $interval=86400;//每隔一定时间运行
+        do{
+            $redis = Yii::$app->redis;
+            $redis->lpush('count_msg',time());
+            sleep($interval);//等待时间，进行下一次操作。
+        }while(true);
     }
 
     //统一错误页面

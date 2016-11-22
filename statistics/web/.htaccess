@@ -5,4 +5,4 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
 # otherwise forward it to index.php
-RewriteRule ^(.*)$ ./index.php/$1
+RewriteRule ^(.*)$ /mmonitor/index.php/$1
