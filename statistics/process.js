@@ -12,7 +12,7 @@ var j = schedule.scheduleJob(rule, function(){
     var options={
         hostname:'192.168.1.109',
         port:80,
-        path:'/mmonitor/site/test',
+        path:'/mmonitor/site/export',
         method:'GET'
     }
 //创建请求
@@ -34,5 +34,34 @@ var j = schedule.scheduleJob(rule, function(){
     req.end();
 });
 
+rule.minute = 0;
+//整点执行
+var j = schedule.scheduleJob(rule, function(){
+
+    var options={
+        hostname:'192.168.1.109',
+        port:80,
+        path:'/mmonitor/site/savedb',
+        method:'GET'
+    }
+//创建请求
+    var req=http.request(options,function(res){
+        console.log('STATUS:'+res.statusCode);
+        console.log('HEADERS:'+JSON.stringify(res.headers));
+        res.setEncoding('utf-8');
+        res.on('data',function(chunk){
+            console.log('数据片段分隔-----------------------\r\n');
+            console.log(chunk);
+        });
+        res.on('end',function(){
+            console.log('响应结束********');
+        });
+    });
+    req.on('error',function(err){
+        console.error(err);
+    });
+    req.end();
+
+});
 
 

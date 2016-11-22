@@ -46,42 +46,20 @@ class SiteController extends Controller
         ];
     }
 
-    // 首页
-    public function actionIndex()
-    {
-        header('Access-Control-Allow-Origin:*');
-        header('Access-Control-Allow-Methods:POST');
-        header('Access-Control-Allow-Headers:x-requested-with,content-type');
-        if(empty($remoteIp))
-        {
-            $remoteIp = Yii::$app->request->getUserIP();
-        }
-        $con = array();
-        $con['ip'] = $remoteIp;
-        $con['time'] = time();
-        $con['url'] = Yii::$app->request->getPathInfo();
-        //将数据格式化
-        $result = json_encode($con);
-        //将数据存入redis
-        $redis = Yii::$app->redis;
-        $redis->lpush('count_msg',"$result");
-    }
-
 //    验证ip
-    public function actionCheck()
+    private function check()
     {
-        $redis = new Redis();
-        $redis->connect('127.0.0.1',6379);
+        $redis = Yii::$app->redis;
         $remoteIp = Yii::$app->request->headers->get('X-Real-IP');
         if(empty($remoteIp))
         {
             $remoteIp = Yii::$app->request->getUserIP();
         }
-        $redis->lPush($remoteIp,$remoteIp);
+        $redis->lpush($remoteIp,$remoteIp);
         $redis->expire($remoteIp,60);
 
         //同一个ip地址一分钟之内访问超过60次会被当作脚本，不予接受该数据
-        if($redis->lLen($remoteIp) < 60)
+        if($redis->llen($remoteIp) < 60)
         {
             return true;
         }
@@ -91,59 +69,94 @@ class SiteController extends Controller
         }
     }
 
-//    把redis数据存入数据库
-    public function actionSave()
+    public function actionIndex()
     {
-        $redis = new Redis();
-        $redis->connect('127.0.0.1', 6379);
-        $arr = $redis->lRange('count_msg',-99,-1);
+        ignore_user_abort();//关闭浏览器仍然执行
+        set_time_limit(0);//让程序一直执行下去
+        $interval=5*60;//每隔一定时间运行
+        do{
+            $this->savedb();
+            sleep($interval);
+        }while(true);
+    }
+
+    //存到redis缓存中
+    public function actionSaveredis()
+    {
+        //是否为脚本
+        if(!$this->check())
+        {
+            return false;
+        }
+        //没有获取到spmcode的数据无效，丢弃
+        if(empty(Yii::$app->request->get('spmcode')))
+        {
+            return false;
+        }
+        $con = array();
+        $con['spmcode'] = Yii::$app->request->get('spmcode');
+//        获取ip地址
+        if(empty($remoteIp))
+        {
+            $remoteIp = Yii::$app->request->getUserIP();
+        }
+        $content['ip'] = $remoteIp;
+        $content['time'] = time();
+        $content['url'] = Url::to(['/']).Yii::$app->request->getPathInfo();
+        $con['content'] = json_encode($content);
+        //将数据格式化
+        $result = json_encode($con);
+        //将数据存入redis
+        $redis = Yii::$app->redis;
+        $redis->lpush('msg',$result);
+    }
+
+//    把redis数据存入数据库
+    public function actionSavedb()
+    {
+        $num = 100;
+        $redis = Yii::$app->redis;
+        $arr = $redis->lrange('msg',-$num+1,-1);
         foreach($arr as $k=>$v)
         {
             $attr = json_decode($v);
             $attr->time = time();
             $rows[] = $attr;
         }
-        Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['spm_code','tag','type','content','created_at'],$rows)->execute();
-        $redis->lTrim('count_msg',0,-100);
+        Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['spmcode','content','created_at'],$rows)->execute();
+        $redis->ltrim('msg',0,-$num);
     }
 
 //    统计当前数据的结果，并将数据导出成sql语句
     public function actionExport()
     {
-//        获得所有的spm_code
-        $arr = Webs::find()->all();
-        foreach($arr as $v)
+//        对当天数据进行统计
+        $categorys = Scount::find()->groupBy('spmcode')->all();
+        foreach($categorys as $category)
         {
-            $e_count = Scount::find()->where(['spm_code' => $v->spm_code,'tag'=>$v->tag,'type'=> 0])->count();
-            $v_count = Scount::find()->where(['spm_code' => $v->spm_code,'tag'=>$v->tag,'type'=> 1])->count();
-//                echo ' smp_code:'.$i->spm_code.' tag:'.$i->tag.' num:'.$count."<br>";
-            $num = new Daycount();
-            $num->spm_code = $v->spm_code;
-            $num->tag = $v->tag;
-            $num->e_num = $e_count;
-            $num->v_num = $v_count;
-            $num->save();
+            $num = Scount::find()->where(['spmcode'=> $category->spmcode])->count();
+            $count = new Daycount();
+            $count->spmcode = $category->spmcode;
+            $count->num = $num;
+            $count->save();
         }
+
         $content = Scount::find()->all();
         $string = null;
         foreach($content as $v)
         {
-            $string .= '(\''.$v->spm_code.'\',';
-            $string .= '\''.$v->tag.'\',';
-            $string .= '\''.$v->type.'\',';
+            $string .= '(\''.$v->spmcode.'\',';
             $string .= '\''.$v->content.'\',';
-            $string .= '\''.$v->created_at.'\',';
+            $string .= '\''.$v->created_at.'\'),';
         }
         $tname = 'scount'.time();
         $ctable = 'CREATE TABLE `'.$tname.'` (
                 `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-                  `spm_code` varchar(25) NOT NULL,
-                  `tag` tinyint(4) NOT NULL COMMENT \'页面上的模块\',
-                  `type` tinyint(4) NOT NULL COMMENT \'返回的类型，0表示错误，1表示访问\',
-                  `content` smallint(6) NOT NULL COMMENT \'返回的内容，访问则是次数，错误则是错误信息\',
+                  `spmcode` varchar(40) NOT NULL,
+                  `content` varchar(100) NOT NULL COMMENT \'返回的内容\',
                   `created_at` int(11) NOT NULL,
                   PRIMARY KEY (`id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `spm_code`, `tag`, `type`, `content`, `created_at`) VALUES';
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `spmcode`, `content`, `created_at`) VALUES';
         $sql =  $ctable.trim($string,',');
         $sqlfile = fopen('sql/'.$tname.'.sql', "w") or die("Unable to open file!");
         fwrite($sqlfile,$sql);
@@ -153,14 +166,14 @@ class SiteController extends Controller
 
     public function actionTest()
     {
-        ignore_user_abort();//关闭浏览器仍然执行
+        /*ignore_user_abort();//关闭浏览器仍然执行
         set_time_limit(0);//让程序一直执行下去
         $interval=86400;//每隔一定时间运行
         do{
             $redis = Yii::$app->redis;
             $redis->lpush('count_msg',time());
             sleep($interval);//等待时间，进行下一次操作。
-        }while(true);
+        }while(true);*/
     }
 
     //统一错误页面
