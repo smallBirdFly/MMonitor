@@ -75,7 +75,6 @@ class SiteController extends Controller
         set_time_limit(0);//让程序一直执行下去
         $interval=5*60;//每隔一定时间运行
         do{
-            $this->savedb();
             sleep($interval);
         }while(true);
     }
@@ -95,14 +94,26 @@ class SiteController extends Controller
         }
         $con = array();
         $con['spmcode'] = Yii::$app->request->get('spmcode');
-//        获取ip地址
+        $spmcode = explode('.',$con['spmcode']);
         if(empty($remoteIp))
         {
             $remoteIp = Yii::$app->request->getUserIP();
         }
         $content['ip'] = $remoteIp;
-        $content['time'] = time();
-        $content['url'] = Url::to(['/']).Yii::$app->request->getPathInfo();
+        $type = $spmcode[3];
+        //判断type的值
+//        如果是正常的情况
+        if($type == '1' || $type == 2)
+        {
+            //        获取ip地址
+            $content['time'] = time();
+            $content['url'] = Url::to(['/']).Yii::$app->request->getPathInfo();
+        }
+        else
+        {
+            //出现错误的情况
+            $content['content'] = Yii::$app->request->get('content');
+        }
         $con['content'] = json_encode($content);
         //将数据格式化
         $result = json_encode($con);
@@ -174,6 +185,8 @@ class SiteController extends Controller
             $redis->lpush('count_msg',time());
             sleep($interval);//等待时间，进行下一次操作。
         }while(true);*/
+        $code = explode('.','192.168.1.1');
+        print_r($code);
     }
 
     //统一错误页面
