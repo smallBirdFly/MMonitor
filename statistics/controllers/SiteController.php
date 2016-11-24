@@ -21,6 +21,9 @@ use yii\redis\Connection;
 class SiteController extends Controller
 {
     public $layout = 'blank';
+
+    public $enableCsrfValidation = false;
+
     public function behaviors()
     {
         return [
@@ -71,12 +74,6 @@ class SiteController extends Controller
 
     public function actionIndex()
     {
-        ignore_user_abort();//关闭浏览器仍然执行
-        set_time_limit(0);//让程序一直执行下去
-        $interval=5*60;//每隔一定时间运行
-        do{
-            sleep($interval);
-        }while(true);
     }
 
     //存到redis缓存中
@@ -85,7 +82,19 @@ class SiteController extends Controller
         //是否为脚本
         if(!$this->check())
         {
-            return false;
+            $result['code'] = 400;
+            $result['data']['content'] = "访问过于频繁";
+            HttpResponseUtil::setJsonResponse($result);
+            return;
+        }
+        //如果传过来为空
+        if(empty(Yii::$app->request->get()))
+        {
+            Yii::error('11111');
+            $result['code'] = 401;
+            $result['data']['content'] = "输入的值为空";
+            HttpResponseUtil::setJsonResponse($result);
+            return;
         }
         $contents = json_decode(Yii::$app->request->get('content'))->content;
         foreach($contents as $content)
@@ -145,6 +154,10 @@ class SiteController extends Controller
                     $message['message'][] = $message->warm;
                 }
             }
+            else
+            {
+                break;
+            }
             $con['content'] = $message;
             //将数据格式化
             $result = json_encode($con);
@@ -152,22 +165,40 @@ class SiteController extends Controller
             $redis = Yii::$app->redis;
             $redis->lpush('msg',$result);
         }
+        $result1['code'] = 200;
+        $result1['data']['content'] = "success";
+        HttpResponseUtil::setJsonResponse($result1);
     }
 
 //    把redis数据存入数据库
     public function actionSavedb()
     {
-        $num = 100;
+        $num = Yii::$app->params['num'];
         $redis = Yii::$app->redis;
-        $arr = $redis->lrange('msg',-$num+1,-1);
-        foreach($arr as $k=>$v)
+        $arr = $redis->lrange('msg',$num+1,-1);
+        var_dump($arr);die;
+        foreach($arr as $v)
         {
             $attr = json_decode($v);
+            $attr->spmcode = json_encode($attr->spmcode);
+            $attr->content = json_encode($attr->content);
             $attr->time = time();
             $rows[] = $attr;
         }
-        Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['spmcode','content','created_at'],$rows)->execute();
-        $redis->ltrim('msg',0,-$num);
+        if(!empty($rows))
+        {
+            Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['spmcode','content','created_at'],$rows)->execute();
+            $redis->ltrim('msg',0,$num);
+            $result1['code'] = 200;
+            $result1['data']['content'] = "success";
+            HttpResponseUtil::setJsonResponse($result1);
+        }
+        else
+        {
+            $result1['code'] = 400;
+            $result1['data']['content'] = "失败，存入数据库";
+            HttpResponseUtil::setJsonResponse($result1);
+        }
     }
 
 //    统计当前数据的结果，并将数据导出成sql语句
