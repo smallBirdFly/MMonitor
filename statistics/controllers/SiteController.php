@@ -87,39 +87,71 @@ class SiteController extends Controller
         {
             return false;
         }
-        //没有获取到spmcode的数据无效，丢弃
-        if(empty(Yii::$app->request->get('spmcode')))
+        $contents = json_decode(Yii::$app->request->get('content'))->content;
+        foreach($contents as $content)
         {
-            return false;
+            //没有获取到spmcode的数据无效，丢弃
+            if(empty($content->spm))
+            {
+                break;
+            }
+
+            $spmcode = explode('.',$content->spm);
+            $type = $spmcode[count($spmcode)-1];
+            $con['spmcode'] = $spmcode;
+            //判断type的值,如果是正常的情况
+            if($type == 1 || $type == 2)
+            {
+                //        获取ip地址
+                if(empty($remoteIp))
+                {
+                    $remoteIp = Yii::$app->request->getUserIP();
+                }
+                //传递的数据
+                $message['ip'] = $remoteIp;
+                $message['time'] = time();
+                $message['url'] = Url::to(['/']).Yii::$app->request->getPathInfo();
+            }
+            else if($type = 0)
+            {
+                if(empty($remoteIp))
+                {
+                    $remoteIp = Yii::$app->request->getUserIP();
+                }
+                $message['ip'] = $remoteIp;
+                $message['time'] = time();
+                $message['url'] = Url::to(['/']).Yii::$app->request->getPathInfo();
+                //出现错误警告的情况
+                $messages = $content->con;
+                foreach($messages as $message)
+                {
+                    //获取消息
+                    $message['message'][] = $message->err;
+                }
+            }
+            else if($type == -1)
+            {
+                if(empty($remoteIp))
+                {
+                    $remoteIp = Yii::$app->request->getUserIP();
+                }
+                $message['ip'] = $remoteIp;
+                $message['time'] = time();
+                $message['url'] = Url::to(['/']).Yii::$app->request->getPathInfo();
+                $messages = $content->con;
+                foreach($messages as $message)
+                {
+                    //获取消息
+                    $message['message'][] = $message->warm;
+                }
+            }
+            $con['content'] = $message;
+            //将数据格式化
+            $result = json_encode($con);
+            //将数据存入redis
+            $redis = Yii::$app->redis;
+            $redis->lpush('msg',$result);
         }
-        $con = array();
-        $con['spmcode'] = Yii::$app->request->get('spmcode');
-        $spmcode = explode('.',$con['spmcode']);
-        if(empty($remoteIp))
-        {
-            $remoteIp = Yii::$app->request->getUserIP();
-        }
-        $content['ip'] = $remoteIp;
-        $type = $spmcode[3];
-        //判断type的值
-//        如果是正常的情况
-        if($type == '1' || $type == 2)
-        {
-            //        获取ip地址
-            $content['time'] = time();
-            $content['url'] = Url::to(['/']).Yii::$app->request->getPathInfo();
-        }
-        else
-        {
-            //出现错误的情况
-            $content['content'] = Yii::$app->request->get('content');
-        }
-        $con['content'] = json_encode($content);
-        //将数据格式化
-        $result = json_encode($con);
-        //将数据存入redis
-        $redis = Yii::$app->redis;
-        $redis->lpush('msg',$result);
     }
 
 //    把redis数据存入数据库
@@ -185,8 +217,23 @@ class SiteController extends Controller
             $redis->lpush('count_msg',time());
             sleep($interval);//等待时间，进行下一次操作。
         }while(true);*/
-        $code = explode('.','192.168.1.1');
-        print_r($code);
+        $arr['content'][]  = array(
+            'spm' => 123,
+            'con' => array(
+                'err' => 'err1',
+                'err1' => 'err2',
+            )
+
+        );
+        $arr['content'][]  = array(
+            'spm' => 123,
+            'con' => array(
+                'err' => 'err1',
+                'err1' => 'err2',
+            )
+
+        );
+        echo json_encode($arr);
     }
 
     //统一错误页面
