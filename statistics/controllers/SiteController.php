@@ -102,7 +102,7 @@ class SiteController extends Controller
             //没有获取到spmcode的数据无效，丢弃
             if(empty($content->spm))
             {
-                break;
+                continue;
             }
 
             $spmcode = explode('.',$content->spm);
@@ -121,7 +121,7 @@ class SiteController extends Controller
                 $message['time'] = time();
                 $message['url'] = Url::to(['/']).Yii::$app->request->getPathInfo();
             }
-            else if($type = 0)
+            else if($type == 0)
             {
                 if(empty($remoteIp))
                 {
@@ -132,10 +132,10 @@ class SiteController extends Controller
                 $message['url'] = Url::to(['/']).Yii::$app->request->getPathInfo();
                 //出现错误警告的情况
                 $messages = $content->con;
-                foreach($messages as $message)
+                foreach($messages as $mess)
                 {
                     //获取消息
-                    $message['message'][] = $message->err;
+                    $message['message'][] = $mess;
                 }
             }
             else if($type == -1)
@@ -148,15 +148,15 @@ class SiteController extends Controller
                 $message['time'] = time();
                 $message['url'] = Url::to(['/']).Yii::$app->request->getPathInfo();
                 $messages = $content->con;
-                foreach($messages as $message)
+                foreach($messages as $mess)
                 {
                     //获取消息
-                    $message['message'][] = $message->warm;
+                    $message['message'][] = $mess;
                 }
             }
             else
             {
-                break;
+                continue;
             }
             $con['content'] = $message;
             //将数据格式化
@@ -175,30 +175,47 @@ class SiteController extends Controller
     {
         $num = Yii::$app->params['num'];
         $redis = Yii::$app->redis;
-        $arr = $redis->lrange('msg',$num+1,-1);
-        var_dump($arr);die;
-        foreach($arr as $v)
+        //获取当前redis中的数据条数
+        $len  = $redis->llen("msg");
+        if($len == 0)
         {
-            $attr = json_decode($v);
-            $attr->spmcode = json_encode($attr->spmcode);
-            $attr->content = json_encode($attr->content);
-            $attr->time = time();
-            $rows[] = $attr;
-        }
-        if(!empty($rows))
-        {
-            Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['spmcode','content','created_at'],$rows)->execute();
-            $redis->ltrim('msg',0,$num);
-            $result1['code'] = 200;
-            $result1['data']['content'] = "success";
+            $result1['code'] = 201;
+            $result1['data']['content'] = "当前redis未存在数据";
             HttpResponseUtil::setJsonResponse($result1);
+            return;
         }
-        else
+
+        $count = ceil($len/$num);
+        for($i = 0; $i < $count; $i++)
         {
-            $result1['code'] = 400;
-            $result1['data']['content'] = "失败，存入数据库";
-            HttpResponseUtil::setJsonResponse($result1);
+            $arr = $redis->lrange('msg',-$num,-1);
+            $len  = $redis->llen("msg");
+            foreach($arr as $v)
+            {
+                $attr = json_decode($v);
+                $attr->spmcode = json_encode($attr->spmcode);
+                $attr->content = json_encode($attr->content);
+                $attr->time = time();
+                $rows[] = $attr;
+            }
+            $db = Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['spmcode','content','created_at'],$rows)->execute();
+            //将存储了的数据清空，否则下次循环会重复添加
+            $rows = array();
+            //如果当前长度大于要出栈的数量
+            if($len > $num)
+            {
+                $redis->ltrim('msg',0,$len-$num-1);
+                Yii::error('出栈1');
+                $len  = $redis->llen("msg");
+            }
+            else
+            {
+                $redis->del('msg');
+            }
         }
+        $result1['code'] = 200;
+        $result1['data']['content'] = "success";
+        HttpResponseUtil::setJsonResponse($result1);
     }
 
 //    统计当前数据的结果，并将数据导出成sql语句
@@ -206,6 +223,13 @@ class SiteController extends Controller
     {
 //        对当天数据进行统计
         $categorys = Scount::find()->groupBy('spmcode')->all();
+        if(empty($categorys))
+        {
+            $result['code'] = 201;
+            $result['data']['content'] = "当前数据表中未存在数据";
+            HttpResponseUtil::setJsonResponse($result);
+            return;
+        }
         foreach($categorys as $category)
         {
             $num = Scount::find()->where(['spmcode'=> $category->spmcode])->count();
@@ -232,10 +256,13 @@ class SiteController extends Controller
                   PRIMARY KEY (`id`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `spmcode`, `content`, `created_at`) VALUES';
         $sql =  $ctable.trim($string,',');
-        $sqlfile = fopen('sql/'.$tname.'.sql', "w") or die("Unable to open file!");
+        $sqlfile = fopen(Yii::$app->basePath."/web/sql/".$tname.'.sql', "w") or die("Unable to open file!");
         fwrite($sqlfile,$sql);
         fclose($sqlfile);
         Scount::deleteAll();
+        $result['code'] = 200;
+        $result['data']['content'] = "success";
+        HttpResponseUtil::setJsonResponse($result);
     }
 
     public function actionTest()
@@ -249,18 +276,18 @@ class SiteController extends Controller
             sleep($interval);//等待时间，进行下一次操作。
         }while(true);*/
         $arr['content'][]  = array(
-            'spm' => 123,
+            'spm' => '123.12.0',
             'con' => array(
                 'err' => 'err1',
-                'err1' => 'err2',
+                'err' => 'err2',
             )
 
         );
         $arr['content'][]  = array(
-            'spm' => 123,
+            'spm' => '123.12.-1',
             'con' => array(
-                'err' => 'err1',
-                'err1' => 'err2',
+                'warm' => 'warm1',
+                'warm' => 'warm2',
             )
 
         );
