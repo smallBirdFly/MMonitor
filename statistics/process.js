@@ -34,8 +34,10 @@ var j = schedule.scheduleJob(rule, function(){
     req.end();
 });
 
-rule.minute = 0;
+var rule = new schedule.RecurrenceRule();
 //整点执行
+rule.minute = 0;
+
 var j = schedule.scheduleJob(rule, function(){
 
     var options={
@@ -50,7 +52,7 @@ var j = schedule.scheduleJob(rule, function(){
         console.log('HEADERS:'+JSON.stringify(res.headers));
         res.setEncoding('utf-8');
         res.on('data',function(chunk){
-            console.log('数据片段分隔-----------------------\r\n');
+            console.log('开始-----------------------\r\n');
             console.log(chunk);
         });
         res.on('end',function(){
@@ -61,7 +63,6 @@ var j = schedule.scheduleJob(rule, function(){
         console.error(err);
     });
     req.end();
-
 });
 
 
