@@ -85,7 +85,8 @@ class SiteController extends Controller
     public function actionSaveredis()
     {
         $logger = MMLogger::getLogger(__FUNCTION__);
-        $remoteIp = Yii::$app->request->headers->get('X-Real-IP');
+//        $remoteIp = Yii::$app->request->headers->get('X-Real-IP');
+        $remoteIp = Yii::$app->request->userIP;
         if(empty($remoteIp))
         {
             $remoteIp = Yii::$app->request->getUserIP();
@@ -93,14 +94,15 @@ class SiteController extends Controller
         Yii::error($remoteIp);
         $message['ip'] = $remoteIp;
         $message['time'] = time();
-        $message['url'] = Url::to(['/']).Yii::$app->request->getPathInfo();
+        $message['url'] = Yii::$app->request->getReferrer();
+        Yii::error($message['url']);
         //是否为脚本
         if(!$this->check())
         {
           /*  $result['code'] = 400;
             $result['data']['content'] = "访问过于频繁";
             HttpResponseUtil::setJsonResponse($result);*/
-            $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message'.'访问过于频繁');
+            $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message:'.'访问过于频繁');
             return;
         }
         //如果传过来为空
@@ -109,7 +111,7 @@ class SiteController extends Controller
            /* $result['code'] = 401;
             $result['data']['content'] = "content没有接受到数据";
             HttpResponseUtil::setJsonResponse($result);*/
-            $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message'.'content没有接受到数据');
+            $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message:'.'content没有接受到数据');
             return;
         }
 
@@ -122,7 +124,7 @@ class SiteController extends Controller
          /*   $result['code'] = 401;
             $result['data']['content'] = "content内容不符合要求";
             HttpResponseUtil::setJsonResponse($result);*/
-            $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message'.'content内容不符合要求');
+            $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message:'.'content内容不符合要求');
             return;
         }
 
@@ -135,7 +137,7 @@ class SiteController extends Controller
             }
             $message['ip'] = $remoteIp;
             $message['time'] = time();
-            $message['url'] = Url::to(['/']).Yii::$app->request->getPathInfo();
+            $message['url'] = Yii::$app->request->getReferrer();
             //没有获取到spmcode的数据无效，丢弃
             if(empty($content->spm))
             {
@@ -143,12 +145,12 @@ class SiteController extends Controller
 //                $result['code'] = 403;
 //                $result['data']['content'] = "没有找到spmcode";
 //                HttpResponseUtil::setJsonResponse($result);
-                $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message'.'没有找到spmcode');
+                $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message:'.'没有找到spmcode');
                 continue;
             }
 
             $con['spmcode'] = $content->spm;
-
+//            Yii::error($content->spm);
 //            somcode的最后一位为type值
             $spmcode = explode('.',$content->spm);
             $type = $spmcode[count($spmcode)-1];
@@ -181,7 +183,7 @@ class SiteController extends Controller
                /* $result['code'] = 405;
                 $result['data']['content'] = "不正确的type值";
                 HttpResponseUtil::setJsonResponse($result);*/
-                $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message'.'不正确的type值');
+                $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message:'.'不正确的type值');
                 continue;
             }
 
@@ -204,6 +206,7 @@ class SiteController extends Controller
         $num = Yii::$app->params['num'];
         $redis = Yii::$app->redis;
         //获取当前redis中的数据条数
+        Yii::error('调用的savedb接口');
         $len  = $redis->llen("msg");
         if($len == 0)
         {
@@ -213,6 +216,7 @@ class SiteController extends Controller
             return;
         }
 
+        //计算需要循环的次数
         $count = ceil($len/$num);
         for($i = 0; $i < $count; $i++)
         {
@@ -309,8 +313,7 @@ class SiteController extends Controller
             $redis->lpush('count_msg',time());
             sleep($interval);//等待时间，进行下一次操作。
         }while(true);*/
-        Yii::error('123123');
-        /*$arr['content'][]  = array(
+        $arr['content'][]  = array(
             'spm' => '123.12.0',
             'con' => array(
                 'err' => 'err1',
@@ -326,7 +329,7 @@ class SiteController extends Controller
             )
 
         );
-        echo json_encode($arr);*/
+        echo json_encode($arr);
     }
 
     //统一错误页面
