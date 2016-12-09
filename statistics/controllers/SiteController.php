@@ -84,47 +84,48 @@ class SiteController extends Controller
     //存到redis缓存中
     public function actionSaveredis()
     {
+        $request = Yii::$app->request;
+        Yii::error($request->get());
+//        var_dump($request->get());
+//        die;
         $logger = MMLogger::getLogger(__FUNCTION__);
-//        $remoteIp = Yii::$app->request->headers->get('X-Real-IP');
-        $remoteIp = Yii::$app->request->userIP;
+        $remoteIp = $request->headers->get('X-Real-IP');
         if(empty($remoteIp))
         {
-            $remoteIp = Yii::$app->request->getUserIP();
+            $remoteIp = $request->getUserIP();
         }
         Yii::error($remoteIp);
         $message['ip'] = $remoteIp;
         $message['time'] = time();
-        $message['url'] = Yii::$app->request->getReferrer();
+        $message['url'] = $request->getReferrer();
         Yii::error($message['url']);
+
         //是否为脚本
         if(!$this->check())
         {
-          /*  $result['code'] = 400;
-            $result['data']['content'] = "访问过于频繁";
-            HttpResponseUtil::setJsonResponse($result);*/
             $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message:'.'访问过于频繁');
+            $result['code'] = 400;
+            HttpResponseUtil::setJsonResponse($result);
             return;
         }
         //如果传过来为空
-        if(empty(Yii::$app->request->get('content')))
+        if(empty($request->get('content')))
         {
-           /* $result['code'] = 401;
-            $result['data']['content'] = "content没有接受到数据";
-            HttpResponseUtil::setJsonResponse($result);*/
             $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message:'.'content没有接受到数据');
+            $result['code'] = 401;
+            HttpResponseUtil::setJsonResponse($result);
             return;
         }
 
         try
         {
-            $contents = json_decode(Yii::$app->request->get('content'))->content;
+            $contents = json_decode($request->get('content'))->content;
         }
         catch(ErrorException $e)
         {
-         /*   $result['code'] = 401;
-            $result['data']['content'] = "content内容不符合要求";
-            HttpResponseUtil::setJsonResponse($result);*/
             $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message:'.'content内容不符合要求');
+            $result['code'] = 401;
+            HttpResponseUtil::setJsonResponse($result);
             return;
         }
 
@@ -133,24 +134,22 @@ class SiteController extends Controller
         {
             if(empty($remoteIp))
             {
-                $remoteIp = Yii::$app->request->getUserIP();
+                $remoteIp = $request->getUserIP();
             }
             $message['ip'] = $remoteIp;
             $message['time'] = time();
-            $message['url'] = Yii::$app->request->getReferrer();
+            $message['url'] = $request->getReferrer();
             //没有获取到spmcode的数据无效，丢弃
             if(empty($content->spm))
             {
-//                $result = array();
-//                $result['code'] = 403;
-//                $result['data']['content'] = "没有找到spmcode";
-//                HttpResponseUtil::setJsonResponse($result);
                 $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message:'.'没有找到spmcode');
+                $result['code'] = 403;
+                HttpResponseUtil::setJsonResponse($result);
                 continue;
             }
 
             $con['spmcode'] = $content->spm;
-//            Yii::error($content->spm);
+            Yii::error($content->spm);
 //            somcode的最后一位为type值
             $spmcode = explode('.',$content->spm);
             $type = $spmcode[count($spmcode)-1];
@@ -180,10 +179,9 @@ class SiteController extends Controller
             }
             else
             {
-               /* $result['code'] = 405;
-                $result['data']['content'] = "不正确的type值";
-                HttpResponseUtil::setJsonResponse($result);*/
                 $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message:'.'不正确的type值');
+                $result['code'] = 405;
+                HttpResponseUtil::setJsonResponse($result);
                 continue;
             }
 
@@ -194,14 +192,14 @@ class SiteController extends Controller
             $redis = Yii::$app->redis;
             $redis->lpush('msg',$result);
             $result1['code'] = 200;
-            $result1['data']['content'] = "success";
             HttpResponseUtil::setJsonResponse($result1);
         }
     }
 
 //    把redis数据存入数据库
-    public function actionSavedb()
+    public function actionSavedisk()
     {
+        $logger = MMLogger::getLogger(__FUNCTION__);
         //每次存入数据库的数据的条数
         $num = Yii::$app->params['num'];
         $redis = Yii::$app->redis;
@@ -210,8 +208,8 @@ class SiteController extends Controller
         $len  = $redis->llen("msg");
         if($len == 0)
         {
+            $logger->warn('time:'.date('Y-m-d H:i:s').'当前redis未存在数据');
             $result1['code'] = 201;
-            $result1['data']['content'] = "当前redis未存在数据";
             HttpResponseUtil::setJsonResponse($result1);
             return;
         }
@@ -225,16 +223,29 @@ class SiteController extends Controller
             foreach($arr as $v)
             {
                 $attr = json_decode($v);
-                $attr->spmcode = json_encode($attr->spmcode);
-                $attr->content = json_encode($attr->content);
-                $attr->time = time();
-                $rows[] = $attr;
+                $res['spmcode'] = $attr->spmcode;
+                $res['ip'] = $attr->content->ip;
+                $res['time'] = $attr->content->time;
+                $res['url'] = $attr->content->url;
+                if(!empty($attr->content->message))
+                {
+                    $res['message'] = json_encode($attr->content->message);
+                }
+                else
+                {
+                    $res['message'] = '';
+                }
+                $res['created_at'] = date('Y-m-d H:m:s');
+                $rows[] = $res;
             }
-            $db = Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['spmcode','content','created_at'],$rows)->execute();
+            $db = Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['spmcode','ip','time','url','message','created_at'],$rows)->execute();
             if(!$db)
             {
-                $result1['code'] = 402;
+               /* $result1['code'] = 402;
                 $result1['data']['content'] = "数据插入数据库失败";
+                HttpResponseUtil::setJsonResponse($result1);*/
+                $logger->info('time:'.date('Y-m-d H:i:s').'数据插入数据库失败');
+                $result1['code'] = 402;
                 HttpResponseUtil::setJsonResponse($result1);
                 return;
             }
@@ -252,67 +263,66 @@ class SiteController extends Controller
             }
         }
         $result1['code'] = 200;
-        $result1['data']['content'] = "success";
         HttpResponseUtil::setJsonResponse($result1);
     }
 
 //  统计当前数据的结果，并将数据导出成sql语句
     public function actionExport()
     {
+        $logger = MMLogger::getLogger(__FUNCTION__);
 //        对当天数据进行统计
-        $categorys = Scount::find()->groupBy('spmcode')->all();
+        $categorys = Scount::find()->groupBy(['spmcode','ip','url','time'])->all();
         if(empty($categorys))
         {
             $result['code'] = 201;
-            $result['data']['content'] = "当前数据表中未存在数据";
+            $logger->warn('time:'.date('Y-m-d H:i:s').'当前数据表中未存在数据');
             HttpResponseUtil::setJsonResponse($result);
             return;
         }
         foreach($categorys as $category)
         {
-            $num = Scount::find()->where(['spmcode'=> $category->spmcode])->count();
+            $num = Scount::find()->where(['spmcode'=> $category->spmcode,'ip'=>$category->ip,'url'=>$category->url,'time'=>$category->time])->count();
             $count = new Daycount();
             $count->spmcode = $category->spmcode;
+            $count->ip = $category->ip;
+            $count->url = $category->url;
+            $count->time = $category->time;
             $count->num = $num;
             $count->save();
         }
-
         $content = Scount::find()->all();
         $string = null;
         foreach($content as $v)
         {
             $string .= '(\''.$v->spmcode.'\',';
-            $string .= '\''.$v->content.'\',';
+            $string .= '\''.$v->ip.'\',';
+            $string .= '\''.$v->time.'\',';
+            $string .= '\''.$v->url.'\',';
+            $string .= '\''.$v->message.'\',';
             $string .= '\''.$v->created_at.'\'),';
         }
         $tname = 'scount'.time();
         $ctable = 'CREATE TABLE `'.$tname.'` (
                 `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
                   `spmcode` varchar(40) NOT NULL,
-                  `content` varchar(100) NOT NULL COMMENT \'返回的内容\',
-                  `created_at` int(11) NOT NULL,
+                  `ip` char(15) NOT NULL COMMENT \'返回的内容\',
+                  `time` char(20) NOT NULL,
+                  `url` varchar(100) NOT NULL,
+                  `message` varchar(100) NOT NULL,
+                  `created_at` char(20) NOT NULL,
                   PRIMARY KEY (`id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `spmcode`, `content`, `created_at`) VALUES';
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `spmcode`, `ip`,`time`,`url`,  `message`,`created_at`) VALUES';
         $sql =  $ctable.trim($string,',');
         $sqlfile = fopen(Yii::$app->basePath."/web/sql/".$tname.'.sql', "w") or die("Unable to open file!");
         fwrite($sqlfile,$sql);
         fclose($sqlfile);
         Scount::deleteAll();
         $result['code'] = 200;
-        $result['data']['content'] = "success";
         HttpResponseUtil::setJsonResponse($result);
     }
 
     public function actionTest()
     {
-        /*ignore_user_abort();//关闭浏览器仍然执行
-        set_time_limit(0);//让程序一直执行下去
-        $interval=86400;//每隔一定时间运行
-        do{
-            $redis = Yii::$app->redis;
-            $redis->lpush('count_msg',time());
-            sleep($interval);//等待时间，进行下一次操作。
-        }while(true);*/
         $arr['content'][]  = array(
             'spm' => '123.12.0',
             'con' => array(
@@ -330,6 +340,58 @@ class SiteController extends Controller
 
         );
         echo json_encode($arr);
+    }
+
+    public function actionAnalysis()
+    {
+        $request = Yii::$app->request;
+
+        $query = Daycount::find();
+        //获得4个条件
+        if($request->post('spmcode'))
+        {
+            $query = $query->where(['spmcode'=>$request->post('spmcode')]);
+        }
+
+        if($request->post('ip'))
+        {
+//            $ip = "'ip'=>'".Yii::$app->request->post('ip')."'";
+            $query = $query->where(['ip'=>$request->post('ip')]);
+        }
+
+        if($request->post('url'))
+        {
+            $query = $query->where(['url' => $request->post('url')]);
+        }
+
+        if($request->post('time') == 'day')
+        {
+            $starttime = time()-60*60*24;
+            $query->where(['>=','time',$starttime]);
+        }
+        if($request->post('time') == 'week')
+        {
+            $starttime = time()-7*60*60*24;
+            $query->where(['>=','time',$starttime]);
+        }
+        if($request->post('time') == 'month')
+        {
+            $starttime = time()-7*30*60*60*24;
+            $query->where(['>=','time',$starttime]);
+        }
+
+        $result = $query->all();
+        if(empty($result))
+        {
+            $res['code'] = 500;
+            HttpResponseUtil::setJsonResponse($res);
+        }
+        $num = 0;
+        foreach($result as $count)
+        {
+            $num += $count->num;
+        }
+
     }
 
     //统一错误页面

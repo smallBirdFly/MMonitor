@@ -43,7 +43,7 @@ var j = schedule.scheduleJob(rule, function(){
     var options={
         hostname:'192.168.1.109',
         port:80,
-        path:'/mmonitor/site/savedb',
+        path:'/mmonitor/site/Savedisk',
         method:'GET'
     }
 //创建请求
