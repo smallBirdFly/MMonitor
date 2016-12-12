@@ -250,6 +250,10 @@ class SiteController extends Controller
                 {
                     $res['message'] = json_encode($attr->content->message);
                 }
+                else
+                {
+                    $res['message'] = '';
+                }
                 $res['created_at'] = date('Y-m-d H:i:s',time());
                 $rows[] = $res;
             }
@@ -299,7 +303,7 @@ class SiteController extends Controller
         {
             $num = Scount::find()->where(['spmcode'=> $category->spmcode,'ip'=>$category->ip,'referrer'=>$category->referrer,'time'=>$category->time,'message'=>$category->message])->count();
             $count = new Daycount();
-            $count->spmcode = $category->spmcode;
+            $count->spmcode = substr($category->spmcode,0,strripos($category->spmcode,'.'));
             $type = explode('.',$category->spmcode);
             $count->type = $type[count($type)-1];
             $count->ip = $category->ip;
@@ -309,6 +313,7 @@ class SiteController extends Controller
             $count->num = $num;
             $count->save();
         }
+        Yii::error('222222');
         //对用户的添加
         $users = Scount::find()->groupBy(['ip'])->all();
         foreach($users as $user)
@@ -316,14 +321,14 @@ class SiteController extends Controller
             //如果表中没有这个用户
             if(Ipaddress::find()->where(['ipaddress'=>$user->ip])->one())
             {
-                return;
+                break;
             }
             $ip = new Ipaddress();
             $ip->ipaddress = $user->ip;
             $ip->save();
 
         }
-
+        Yii::error('11111');
         $content = Scount::find()->all();
         $string = null;
         foreach($content as $v)
@@ -357,9 +362,10 @@ class SiteController extends Controller
 
     public function actionTest()
     {
-        $res = Scount::findOne(414);
-        var_dump($res->message);die;
-        echo json_decode($res->message);
+        $string = '123.12.1';
+//        echo  strripos($string,'.');
+        $s = substr($string,0,strripos($string,'.'));
+        echo $s;
     }
 
 

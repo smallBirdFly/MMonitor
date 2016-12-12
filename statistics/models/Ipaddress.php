@@ -24,6 +24,7 @@ class Ipaddress extends ActiveRecord
             [
                 'class' => TimestampBehavior::className(),
                 'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => 'updated_at',
                 'value' => new Expression('NOW()'),
             ],
         ];

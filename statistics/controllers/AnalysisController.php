@@ -5,7 +5,7 @@
  * Date: 2016/12/10 0010
  * Time: 17:30
  */
-namespace statistics;
+namespace statistics\controllers;
 
 use common\utils\HttpResponseUtil;
 use statistics\models\Daycount;
@@ -87,18 +87,51 @@ class AnalysisController extends Controller
         HttpResponseUtil::setJsonResponse($s);
     }
 
-//    统计日访问量
+//    统计访问量
     public function actionDaypv()
     {
         $request = Yii::$app->request;
-        if(!strtotime($request->post('day')))
+        $spmcode = $request->post('spmcode');
+        if(empty($request->post('endDay')))
         {
-            $result['code'] = 201;
-            HttpResponseUtil::setJsonResponse($result);
-            return;
+//       查看最近一天、一周、一个月的访问量
+            if($request->post('startDay') == 1 || $request->post('startDay') == 7 || $request->post('startDay') == 30)
+            {
+                $startTime = date('Y-m-d H:i:s',time()-24*60*60*$request->post('startDay'));
+                $endTime = date('Y-m-d H:i:s',time());
+            }
+            //统计某一天的访问量
+            else if(strtotime($request->post('startDay')))
+            {
+                $startTime = date('Y-m-d H:i:s',strtotime($request->post('startDay')));
+                $endTime = date('Y-m-d H:i:s',strtotime($request->post('startDay'))+86400);
+
+            }
+            else
+            {
+                $result['code'] = 201;
+                HttpResponseUtil::setJsonResponse($result);
+                return;
+            }
         }
-        $day = date('Y-m-d H:i:s',strtotime($request->post('day'))+86399);
-        $res = Daycount::find()->where(['<=','time',$day])->andWhere(['>=','time',$request->post('day')])->all();
+        else
+        {
+//        统计某个时间内的访问量
+            if(strtotime($request->post('endDay')))
+            {
+                $startTime = date('Y-m-d H:i:s',strtotime($request->post('startDay')));
+                $endTime = date('Y-m-d H:i:s',strtotime($request->post('endDay')));
+            }
+            else
+            {
+                $result['code'] = 202;
+                HttpResponseUtil::setJsonResponse($result);
+                return;
+            }
+        }
+//
+//        Yii::error($endTime);
+        $res = Daycount::find()->where(['>=','time',$startTime])->andWhere(['<','time',$endTime])->andWhere(['spmcode'=>$spmcode,'type'=>1])->all();
         $result['code'] = 200;
         $result['total'] = count($res);
         $result['data']['content'] = $res;
@@ -109,17 +142,17 @@ class AnalysisController extends Controller
     public function actionUniquev()
     {
         $request = Yii::$app->request;
-        if($request->post('day'))
+        if($request->post('date'))
         {
             $request = Yii::$app->request;
-            if(!strtotime($request->post('day')))
+            if(!strtotime($request->post('date')))
             {
                 $result['code'] = 201;
                 HttpResponseUtil::setJsonResponse($result);
                 return;
             }
-            $day = date('Y-m-d H:i:s',strtotime($request->post('day'))+86399);
-            $res = Daycount::find()->where(['<=','time',$day])->andWhere(['>=','time',$request->post('day')])->groupBy('ip')->all();
+            $day = date('Y-m-d H:i:s',strtotime($request->post('day'))+86400);
+            $res = Daycount::find()->where(['<','time',$day])->andWhere(['>=','time',$request->post('day')])->groupBy('ip')->all();
             $result['code'] = 200;
             $result['total'] = count($res);
             $result['data']['content'] = $res;
@@ -146,8 +179,8 @@ class AnalysisController extends Controller
             HttpResponseUtil::setJsonResponse($result);
             return;
         }
-        $day = date('Y-m-d H:i:s',strtotime($request->post('day'))+86399);
-        $res = Ipaddress::find()->where(['<=','created_at',$day])->andWhere(['>=','created_at',$request->post('day')])->all();
+        $day = date('Y-m-d H:i:s',strtotime($request->post('day'))+86400);
+        $res = Ipaddress::find()->where(['<','created_at',$day])->andWhere(['>=','created_at',$request->post('day')])->all();
         $result['total'] = count($res);
         $result['data']['content'] = $res;
         HttpResponseUtil::setJsonResponse($result);
@@ -157,7 +190,7 @@ class AnalysisController extends Controller
     public function actionPdepth()
     {
         $request = Yii::$app->request;
-        $res = Daycount::find()->where(['spmcode','like',$request->post('spm')])->groupBy('ip')->all();
+        $res = Daycount::find()->where(['spmcode','like',$request->post('spmcode')])->groupBy('ip')->all();
         $num = 0;
         foreach($res as $item)
         {
@@ -171,19 +204,81 @@ class AnalysisController extends Controller
     }
 
     //访问时间，1、对网页某段时间内停留的总时间；2、用户页面停留的平均时间
-    public function Ptime()
+    public function actionPtime()
     {
+        $request = Yii::$app->request;
         //页面总停留时间
+        $webs = Daycount::find()->where(['spmcode'=>$request->post('spmcode')])->groupBy('ip')->all();
         Daycount::find()->where(['type=1'])->groupBy(['spmcode']);
     }
 
     //访问最多页面
-
+    public function actionMaxv()
+    {
+//        $spmcode = Daycount::find()->where(['spmcode'=>Daycount::find()->groupBy('spmcode')->having('spmcode')->count()]);
+        $spmcode = Daycount::find()->groupBy('spmcode')->all();
+        foreach ($spmcode as $item)
+        {
+            $data['count'] = Daycount::find()->where(['spmcode' => $item->spmcode])->count();
+            $data['spmcdoe'] = $item->spmcode;
+        }
+        $spmcode = Daycount::find()->distinct()->count('spmcode');
+        var_dump($spmcode);
+    }
 
     //    来源分析
+    public function actionReferrer()
+    {
+        $request = Yii::$app->request;
+        //输入某个网站
+        $referrer = Daycount::find()->where(['spmcode'=>$request->post('spmcode'),'type'=>1]);
+        $enter = $referrer->andWhere(['referrer'=>1])->count();
+        $link = $referrer->andWhere(['referrer'=>2])->count();
+        $seo = $referrer->andWhere(['referrer'=>3])->count();
+        $enter = $referrer->andWhere(['referrer'=>4])->count();
 
+    }
 //    出现警告
+    public function actionAppearwarn()
+    {
+        $request = Yii::$app->request;
+        $warms = Daycount::find()->where(['type'=>0,$request->post('spmcode')])->all();
+        if(empty($warms))
+        {
+            //无警告现象出现
+        }
+        else
+        {
+            foreach($warms as $warm)
+            {
+                $result['data']['content'][] = json_decode($warm->message);
+            }
+            $result['num'] = count($warms);
+            HttpResponseUtil::setJsonResponse($result);
+        }
+    }
 
 //出现错误
+    public function actionAppearError()
+    {
+        $request = Yii::$app->request;
+        $errors = Daycount::find()->where(['type'=>-1,$request->post('spmcode')])->all();
+        if(empty($errors))
+        {
+            //无警告现象出现
+        }
+        else
+        {
+            foreach($errors as $error)
+            {
+                $result['data']['content'][] = json_decode($error->message);
+            }
+            $result['num'] = count($errors);
+            HttpResponseUtil::setJsonResponse($result);
+        }
+    }
 
+    public function actionTest()
+    {
+    }
 }
