@@ -9,6 +9,7 @@ use common\components\MMLogger;
 use common\utils\HttpResponseUtil;
 use statistics\component\DaemonCommand;
 
+use statistics\models\AccessLog;
 use statistics\models\Daycount;
 use statistics\models\Ipaddress;
 use statistics\models\Scount;
@@ -303,15 +304,27 @@ class SiteController extends Controller
         {
             $num = Scount::find()->where(['spmcode'=> $category->spmcode,'ip'=>$category->ip,'referrer'=>$category->referrer,'time'=>$category->time,'message'=>$category->message])->count();
             $count = new Daycount();
-            $count->spmcode = substr($category->spmcode,0,strripos($category->spmcode,'.'));
+            $spmcode = substr($category->spmcode,0,strripos($category->spmcode,'.'));
+            $count->spmcode = $spmcode;
             $type = explode('.',$category->spmcode);
             $count->type = $type[count($type)-1];
+            if($type[count($type)-1] == 1)
+            {
+                //访问记录的添加
+                $log = new AccessLog();
+                $log->ip = $category->ip;
+                $log->spmcode = $spmcode;
+                $log->time = $category->time;
+                $log->save();
+            }
             $count->ip = $category->ip;
             $count->referrer = $category->referrer;
             $count->time = $category->time;
             $count->message = $category->message;
             $count->num = $num;
             $count->save();
+
+
         }
         Yii::error('222222');
         //对用户的添加
@@ -328,7 +341,8 @@ class SiteController extends Controller
             $ip->save();
 
         }
-        Yii::error('11111');
+
+
         $content = Scount::find()->all();
         $string = null;
         foreach($content as $v)
