@@ -93,15 +93,6 @@ class SiteController extends Controller
         Yii::error($request->get());
         $logger = MMLogger::getLogger(__FUNCTION__);
 
-        //是否为脚本
-        if(!$this->check())
-        {
-            $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message:'.'访问过于频繁');
-            $result['code'] = 400;
-            HttpResponseUtil::setJsonResponse($result);
-            return;
-        }
-
         $remoteIp = $request->headers->get('X-Real-IP');
         if(empty($remoteIp))
         {
@@ -111,6 +102,16 @@ class SiteController extends Controller
         $message['ip'] = $remoteIp;
         $message['time'] = date('Y-m-d H:i:s');
         $message['referrer'] = $request->getReferrer();
+
+        //是否为脚本
+        if(!$this->check())
+        {
+            $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message:'.'访问过于频繁');
+            $result['code'] = 400;
+            HttpResponseUtil::setJsonResponse($result);
+            return;
+        }
+
         //没有获取到spmcode的数据无效，丢弃
         if(empty($request->get('spmcode')))
         {
