@@ -116,9 +116,7 @@
 				</tbody>
 			</table>
 		</div>
-		<div class="fold">
-			<a href="javascript:;">v</a>
-		</div>
+		<div class="fold"></div>
 		<div class="date-select-bar">
 			<div class="control-bar">
 				<a href="javascript:;">今天</a>
@@ -239,7 +237,6 @@
 				</div>
 			</div>
 		</div>
-		
 	</div>
 </template>
 
@@ -256,17 +253,12 @@
 			    legend: {
 			        data:['昨日','今日']
 			    },
-			    grid: {
-			        left: '3%',
-			        right: '4%',
-			        bottom: '3%',
-			        containLabel: true
-			    },
+			    calculable: true,
 			    xAxis : [
 			        {
 			            type : 'category',
 			            boundaryGap : false,
-			            data : ['周一','周二','周三','周四','周五','周六','周日']
+			            data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
 			        }
 			    ],
 			    yAxis : [
@@ -278,16 +270,14 @@
 			        {
 			            name:'昨日',
 			            type:'line',
-			            stack: '总量',
 			            areaStyle: {normal: {}},
-			            data:[120, 132, 101, 134, 90, 230, 210]
+			            data:[120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20]
 			        },
 			        {
 			            name:'今日',
 			            type:'line',
-			            stack: '总量',
 			            areaStyle: {normal: {}},
-			            data:[220, 182, 191, 234, 290, 330, 310]
+			            data:[220, 182, 191, 234, 290, 330, 310,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]
 			        }
 			    ]
 			});
@@ -306,7 +296,7 @@
 			        {
 			            type : 'category',
 			            boundaryGap : false,
-			            data : ['周一','周二','周三','周四','周五','周六','周日']
+			            data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
 			        }
 			    ],
 			    yAxis : [
@@ -316,11 +306,10 @@
 			    ],
 			    series : [
 			        {
-			            name:'邮件营销',
+			            name:'浏览量',
 			            type:'line',
-			            stack: '总量',
 			            areaStyle: {normal: {}},
-			            data:[120, 132, 101, 134, 90, 230, 210]
+			            data:[120, 132, 101, 134, 90, 230, 210,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]
 			        }
 			    ]
 			});
@@ -383,14 +372,6 @@ a {
 	height: 30px;
 	border: 1px solid #dedede;
 	border-top: 1px solid #f0f0f0;
-	text-align: center;
-}
-.fold a {
-	display: inline-block;
-	width: 50px;
-	height: 26px;
-	margin-top: -1px;
-	background: #fbfcfc;
 }
 .date-select-bar {
 	margin-top: 18px;
