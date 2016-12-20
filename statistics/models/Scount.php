@@ -30,4 +30,8 @@ class Scount extends yii\db\ActiveRecord
             ],
         ];
     }
+    public function getPage()
+    {
+        return $this->hasMany(Page::className(),['d_id'=>'id']);
+    }
 }
