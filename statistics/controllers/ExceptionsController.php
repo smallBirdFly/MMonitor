@@ -15,49 +15,50 @@ use yii\rest\Controller;
 
 class ExceptionsController extends Controller
 {
-    //今天的错误信息
-    public function actionTodayError()
+    public $enableCsrfValidation = false;
+    //按照小时分析
+    public function actionExceptionHour()
     {
-        $appkey = Yii::$app->request->post('appkey');
+        $request = Yii::$app->request;
+        $type = $request->post('type');
+        $appkey = $request->post('appkey');
+        $day = $request->post('day');
         for ($i = 0; $i < 24; $i++)
         {
             $hours[][] = $i;
             //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60);
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600);
+            $startTime = date('Y-m-d H:i:s', strtotime($day) + $i * 60 * 60);
+            $endTime = date('Y-m-d H:i:s', strtotime($day) + $i * 60 * 60 + 3600);
             //今天各个小时的错误量
-            $errors[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 0])->count();
-            $errors[$i][] = date('Y-m-d H:00:00',time());
+            $exceptions[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => $type])->count();
+            $exceptions[$i][] = date('Y-m-d H:00:00',strtotime($day) + $i * 60 * 60);
         }
         $result['code'] = 200;
         $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $errors;
+        $result['data']['item'][] = $exceptions;
         HttpResponseUtil::setJsonResponse($result);
     }
 
-    //今天的警告信息
-    public function actionTodayWarn()
+    public function actionExceptionDay()
     {
-        $appkey = Yii::$app->request->post('appkey');
-        for ($i = 0; $i < 24; $i++)
+        $request = Yii::$app->request;
+        $type = $request->post('type');
+        $appkey = $request->post('appkey');
+        $date = $request->post('date');
+        for ($i = 0; $i < $date; $i++)
         {
-            $hours[][] = $i;
+            $days[] = date('Y-m-d',time()-86400*($date - $i - 1));
             //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60);
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600);
-            //今天各个小时的错误量
-            $errors[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 0])->count();
-            $errors[$i][] = date('Y-m-d H:00:00',time());
+            $startTime = date('Y-m-d',time()-86400*($date - $i - 1));
+            $endTime = date('Y-m-d', time()-86400*($date - $i -2));
+            $exceptions[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => $type])->count();
+            $exceptions[$i][] = date('Y-m-d',time()-86400*($date - $i - 1));
         }
         $result['code'] = 200;
-        $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $errors;
+        $result['data']['item'][] = $days;
+        $result['data']['item'][] = $exceptions;
         HttpResponseUtil::setJsonResponse($result);
     }
 
-    //昨天的错误信息
-    public function actionYesterdayError()
-    {
 
-    }
 }

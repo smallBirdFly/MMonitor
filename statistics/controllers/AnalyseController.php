@@ -19,10 +19,10 @@ class AnalyseController extends \yii\web\Controller
 //    今日和昨天访问量
     public function actionToday()
     {
+        Yii::error('123');
         $appkey = Yii::$app->request->post('appkey');
         $startTime = date('Y-m-d',time());
         $endTime = date('Y-m-d',time() + 86400);
-         Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
 //      今天的记录
         $pv = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
         $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
@@ -31,8 +31,10 @@ class AnalyseController extends \yii\web\Controller
         $result['data']['today']['pv'] = $pv;
         $result['data']['today']['ip'] = $ip;
 //       昨天的记录
-        $pv = $this->CountPv(date('Y-m-d',time()-86400),date('Y-m-d',time()));
-        $ip = $this->CountIp(date('Y-m-d',time()-86400),date('Y-m-d',time()));
+        $startTime = date('Y-m-d',time() - 86400);
+        $endTime = date('Y-m-d',time());
+        $pv = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();;
+        $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
         $result['data']['yesterday']['pv'] = $pv;
         $result['data']['yesterday']['ip'] = $ip;
         HttpResponseUtil::setJsonResponse($result);
@@ -43,9 +45,13 @@ class AnalyseController extends \yii\web\Controller
  *  @ $start比较的日期
  *  @ $past被比较的日期
  * */
-    private function CompareHours($start,$past,$alone = null)
+    public function actionCompareHours()
     {
-        $appkey = Yii::$app->request->post('appkey');
+        $request = Yii::$app->request;
+        $start = $request->post('startTime');
+        $past = $request->post('endTime');
+        $type = $request->post('type');
+        $appkey = $request->post('appkey');
         for ($i = 0; $i < 24; $i++)
         {
             $hours[][] = $i;
@@ -56,23 +62,27 @@ class AnalyseController extends \yii\web\Controller
             $cstartTime = date('Y-m-d H:i:s',strtotime($startTime)-86400 * $past);
             $cendTime = date('Y-m-d H:i:s',strtotime($endTime)-86400 * $past);
 //            判断是否为求独立访问量
-            if(is_null($alone))
+            if($type == 'pv')
             {
                 //要比较日期各个小时的访问量
-                $ress[$i][] = date('Y-m-d',time());
+                $ress[$i][] = date('Y-m-d',time()- $start * 86400);
                 $ress[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
                 //统计昨天各个小时的pv量
                 $resp[$i][] = date('Y-m-d',time()-86400* $past);
                 $resp[$i][] = Scount::find()->where(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->andWhere(['appkey'=>$appkey,'type'=>1])->count();
             }
-            else
+            else if($type == 'ip')
             {
                 //要比较日期各个小时的独立访问量
-                $ress[$i][] = date('Y-m-d',time());
+                $ress[$i][] = date('Y-m-d',time()- $start * 86400);
                 $ress[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
                 //统计昨天各个小时的ip量
                 $resp[$i][] = date('Y-m-d',time()-86400* $past);
                 $resp[$i][] = Scount::find()->where(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->andWhere(['appkey'=>$appkey,'type'=>1])->groupBy('ip')->count();
+            }
+            else
+            {
+
             }
 
         }
@@ -83,226 +93,33 @@ class AnalyseController extends \yii\web\Controller
         HttpResponseUtil::setJsonResponse($result);
     }
 
-    //今天和昨天pv相比
-    public function actionTodayYesterdayPv()
-    {
-       $this->CompareHours(0,1);
-        /* $appkey = Yii::$app->request->post('appkey');
-        for ($i = 0; $i < 24; $i++)
-        {
-            $hours[][] = $i;
-            //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60);
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600);
-            //今天各个小时的访问量
-            $pvt[$i][] = date('Y-m-d',time());
-            $pvt[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
-            //统计昨天各个小时的pv量
-            $pvy[$i][] = date('Y-m-d',time()-86400);
-            $pvy[$i][] = Scount::find()->where(['>=','time',date('Y-m-d H:i:s',strtotime($startTime)-86400)])->andWhere(['<','time',date('Y-m-d H:i:s',strtotime($endTime)-86400)])->andWhere(['appkey'=>$appkey,'type'=>1])->count();
-        }
-        $result['code'] = 200;
-        $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $pvt;
-        $result['data']['item'][] = $pvy;
-        HttpResponseUtil::setJsonResponse($result);*/
-    }
-
-    //今天和昨天ip相比
-    public function actionTodayYesterdayIp()
-    {
-        $this->CompareHours(0,1,true);
-        /*$appkey = Yii::$app->request->post('appkey');
-        for ($i = 0; $i < 24; $i++)
-        {
-            $hours[][] = $i;
-            //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60);
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600);
-            //今天各个小时的访问量
-            $pvt[$i][] = date('Y-m-d',time());
-            $pvt[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
-            //统计昨天各个小时的pv量
-            $pvy[$i][] = date('Y-m-d',time()-86400);
-            $pvy[$i][] = Scount::find()->where(['>=','time',date('Y-m-d H:i:s',strtotime($startTime)-86400)])->andWhere(['<','time',date('Y-m-d H:i:s',strtotime($endTime)-86400)])->andWhere(['appkey'=>$appkey,'type'=>1])->groupBy('ip')->count();
-        }
-        $result['code'] = 200;
-        $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $pvt;
-        $result['data']['item'][] = $pvy;
-        HttpResponseUtil::setJsonResponse($result);*/
-    }
-
-//今天和7天前pv相比
-    public function actionTodayWeekPv()
-    {
-        $this->CompareHours(0,6);
-       /*$appkey = Yii::$app->request->post('appkey');
-        for ($i = 0; $i < 24; $i++)
-        {
-            $hours[][] = $i;
-            //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60);
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600);
-            //今天各个小时的访问量
-            $pvt[$i][] = date('Y-m-d',time());
-            $pvt[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
-            //统计昨天各个小时的pv量
-            $pvy[$i][] = date('Y-m-d',time()-86400*6);
-            $pvy[$i][] = Scount::find()->where(['>=','time',date('Y-m-d H:i:s',strtotime($startTime)-86400*6)])->andWhere(['<','time',date('Y-m-d H:i:s',strtotime($endTime)-86400*6)])->andWhere(['appkey'=>$appkey,'type'=>1])->count();
-        }
-        $result['code'] = 200;
-        $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $pvt;
-        $result['data']['item'][] = $pvy;
-        HttpResponseUtil::setJsonResponse($result);*/
-    }
-
-//今天和7天前ip相比
-    public function actionTodayWeekIp()
-    {
-        $this->CompareHours(0,6,true);
-      /* $appkey = Yii::$app->request->post('appkey');
-        for ($i = 0; $i < 24; $i++)
-        {
-            $hours[][] = $i;
-            //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60);
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600);
-            //今天各个小时的访问量
-            $pvt[$i][] = date('Y-m-d',time());
-            $pvt[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
-            //统计昨天各个小时的pv量
-            $pvy[$i][] = date('Y-m-d',time()-86400*6);
-            $pvy[$i][] = Scount::find()->where(['>=','time',date('Y-m-d H:i:s',strtotime($startTime)-86400*6)])->andWhere(['<','time',date('Y-m-d H:i:s',strtotime($endTime)-86400*6)])->andWhere(['appkey'=>$appkey,'type'=>1])->groupBy('ip')->count();
-        }
-        $result['code'] = 200;
-        $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $pvt;
-        $result['data']['item'][] = $pvy;
-        HttpResponseUtil::setJsonResponse($result);*/
-    }
-    //昨天和前天pv相比
-    public function actionYesterdayYesterdayPv()
-    {
-        $this->CompareHours(1,2);
-       /* $appkey = Yii::$app->request->post('appkey');
-        for ($i = 0; $i < 24; $i++)
-        {
-            $hours[][] = $i;
-            //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 - 86400);
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600 - 86400);
-            //今天各个小时的访问量
-            $pvt[$i][] = date('Y-m-d',time());
-            $pvt[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
-            //统计昨天各个小时的pv量
-            $pvy[$i][] = date('Y-m-d',time()-86400*2);
-            $pvy[$i][] = Scount::find()->where(['>=','time',date('Y-m-d H:i:s',strtotime($startTime)-86400*2)])->andWhere(['<','time',date('Y-m-d H:i:s',strtotime($endTime)-86400)])->andWhere(['appkey'=>$appkey,'type'=>1])->count();
-        }
-        $result['code'] = 200;
-        $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $pvt;
-        $result['data']['item'][] = $pvy;
-        HttpResponseUtil::setJsonResponse($result);*/
-    }
-
-    //昨天和前天ip相比
-    public function actionYesterdayYesterdayIp()
-    {
-        $this->CompareHours(1,2,true);
-        /*$appkey = Yii::$app->request->post('appkey');
-        for ($i = 0; $i < 24; $i++)
-        {
-            $hours[][] = $i;
-            //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 - 86400);
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600 - 86400);
-            //今天各个小时的访问量
-            $pvt[$i][] = date('Y-m-d',time());
-            $pvt[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
-            //统计昨天各个小时的pv量
-            $pvy[$i][] = date('Y-m-d',time()-86400 * 2);
-            $pvy[$i][] = Scount::find()->where(['>=','time',date('Y-m-d H:i:s',strtotime($startTime)-86400 * 2)])->andWhere(['<','time',date('Y-m-d H:i:s',strtotime($endTime)-86400)])->andWhere(['appkey'=>$appkey,'type'=>1])->groupBy('ip')->count();
-        }
-        $result['code'] = 200;
-        $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $pvt;
-        $result['data']['item'][] = $pvy;
-        HttpResponseUtil::setJsonResponse($result);*/
-    }
-
-//昨天和7天前pv相比
-    public function actionYesterdayWeekPv()
-    {
-        $this->CompareHours(1,7);
-        /*$appkey = Yii::$app->request->post('appkey');
-        for ($i = 0; $i < 24; $i++)
-        {
-            $hours[][] = $i;
-            //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 - 86400);
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600 - 86400);
-            //今天各个小时的访问量
-            $pvt[$i][] = date('Y-m-d',time());
-            $pvt[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
-            //统计昨天各个小时的pv量
-            $pvy[$i][] = date('Y-m-d',time()-86400*7);
-            $pvy[$i][] = Scount::find()->where(['>=','time',date('Y-m-d H:i:s',strtotime($startTime)-86400*7)])->andWhere(['<','time',date('Y-m-d H:i:s',strtotime($endTime)-86400*6)])->andWhere(['appkey'=>$appkey,'type'=>1])->count();
-        }
-        $result['code'] = 200;
-        $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $pvt;
-        $result['data']['item'][] = $pvy;
-        HttpResponseUtil::setJsonResponse($result);*/
-    }
-
-//昨天和7天前ip相比
-    public function actionYesterdayWeekIp()
-    {
-        $this->CompareHours(1,7,true);
-        /*  $appkey = Yii::$app->request->post('appkey');
-        for ($i = 0; $i < 24; $i++)
-        {
-            $hours[][] = $i;
-            //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 - 86400);
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600 - 86400);
-            //今天各个小时的访问量
-            $pvt[$i][] = date('Y-m-d',time());
-            $pvt[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
-            //统计昨天各个小时的pv量
-            $pvy[$i][] = date('Y-m-d',time()-86400*7);
-            $pvy[$i][] = Scount::find()->where(['>=','time',date('Y-m-d H:i:s',strtotime($startTime)-86400*7)])->andWhere(['<','time',date('Y-m-d H:i:s',strtotime($endTime)-86400*6)])->andWhere(['appkey'=>$appkey,'type'=>1])->groupBy('ip')->count();
-        }
-        $result['code'] = 200;
-        $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $pvt;
-        $result['data']['item'][] = $pvy;
-        HttpResponseUtil::setJsonResponse($result);*/
-    }
-
 //按照日期分析
-    private function Days($date,$alone = null)
+    public function actionCompareDays()
     {
-        $appkey = Yii::$app->request->post('appkey');
+        $request = Yii::$app->request;
+        $date = $request->post('date');
+        $type = $request->post('type');
+        $appkey = $request->post('appkey');
         for ($i = 0; $i <= $date; $i++)
         {
             $days[] = date('Y-m-d',time()-86400*($date - $i));
             //当前时间
             $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) - ($date - $i) * 60 * 60 * 24 );
             $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d"))  - ($date - $i)* 60 * 60 * 24  + 86400);
-            if(is_null($alone))
+            if($type == 'pv')
             {
                 //每天的访问量
                 $pv[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
             }
-            else
+            else if($type == 'ip')
             {
                 //每天独立的访问量
                 $pv[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
             }
+            else
+            {
 
+            }
         }
         $result['code'] = 200;
         $result['data']['item'][] = $days;
@@ -310,245 +127,77 @@ class AnalyseController extends \yii\web\Controller
         HttpResponseUtil::setJsonResponse($result);
     }
 
-//    最近7天的pv
-    public function actionWeekPv()
-    {
-        $this->Days(6);
-        /*$appkey = Yii::$app->request->post('appkey');
-        for ($i = 0; $i < 7; $i++)
-        {
-            $days[] = date('Y-m-d',time()-86400*(6-$i));
-            //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) - (6-$i) * 60 * 60 * 24 );
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d"))  - (6-$i)* 60 * 60 * 24  + 86400);
-            //每天各个小时的访问量
-            $pv[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
-        }
-        $result['code'] = 200;
-        $result['data']['item'][] = $days;
-        $result['data']['item'][] = $pv;
-        HttpResponseUtil::setJsonResponse($result);*/
-    }
+    //今天和昨天pv相比
+    //今天和昨天ip相比
+    //今天和7天前pv相比
+    //今天和7天前ip相比
+    //昨天和前天pv相比
+    //昨天和前天ip相比
+    //昨天和7天前pv相比
+    //昨天和7天前ip相比
 
-//    最近7天独立访问的ip
-    public function actionWeekIp()
-    {
-        $this->Days(6,true);
-       /* $appkey = Yii::$app->request->post('appkey');
-        for ($i = 0; $i < 7; $i++)
-        {
-            $days[] = date('Y-m-d',time()-86400*(6-$i));
-            //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) - (6-$i) * 60 * 60 * 24 );
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d"))  - (6-$i)* 60 * 60 * 24  + 86400);
-            //每天各个小时的访问量
-            $ip[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
-        }
-        $result['code'] = 200;
-        $result['data']['item'][] = $days;
-        $result['data']['item'][] = $ip;
-        HttpResponseUtil::setJsonResponse($result);*/
-    }
-
+//最近7天的pv
+//最近7天独立访问的ip
 //最近30天的访问量
-    public function actionMonthPv()
+//最近30天独立访问量
+
+    /*
+     * 按照小时分析pv和ip
+     *  @ $startTime开始日期
+     *  @ $endTime结束日期
+     * */
+    public function actionTrendHours()
     {
-        $this->Days(30);
-       /* $appkey = Yii::$app->request->post('appkey');
-        for ($i = 0; $i < 30; $i++)
+        $request = Yii::$app->request;
+        $appkey = $request->post('appkey');
+        $startTime = $request->post('startTime');
+        $endTime = $request->post('endTime');
+        //当前时间
+        for($i = 0; $i < 24; $i++)
         {
-            $days[] = date('Y-m-d',time()-86400*(29-$i));
-            //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) - (29-$i) * 60 * 60 * 24 );
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d"))  - (29-$i)* 60 * 60 * 24  + 86400);
+            if ($i < 10)
+            {
+                $hours[][] = '0' . $i . ':00 - 0' . $i . ':59';
+            }
+            else
+            {
+                $hours[][] = $i . ':00 - ' . $i . ':59';
+            }
             //每天各个小时的访问量
-            $pv[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
+            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+            //每天各个小时的独立访问量
+            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
         }
+        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
         $result['code'] = 200;
-        $result['data']['item'][] = $days;
-        $result['data']['item'][] = $pv;
-        HttpResponseUtil::setJsonResponse($result);*/
+        $result['data']['sum'][] = $sum;
+        $result['data']['item'][] = $hours;
+        $result['data']['item'][] = $res;
+        HttpResponseUtil::setJsonResponse($result);
     }
-
-    //最近30天独立访问量
-    public function actionMonthIp()
-    {
-        $this->Days(30,true);
-       /* $appkey = Yii::$app->request->post('appkey');
-        for ($i = 0; $i < 30; $i++)
-        {
-            $days[] = date('Y-m-d',time()-86400*(29-$i));
-            //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) - (29-$i) * 60 * 60 * 24 );
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d"))  - (29-$i)* 60 * 60 * 24  + 86400);
-            //每天各个小时的访问量
-            $ip[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
-        }
-        $result['code'] = 200;
-        $result['data']['item'][] = $days;
-        $result['data']['item'][] = $ip;
-        HttpResponseUtil::setJsonResponse($result);*/
-    }
-
-
     //今天按照小时分析pv和ip
-    public function actionTodayHour()
-    {
-        $appkey = Yii::$app->request->post('appkey');
-        //当前时间
-        $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")));
-        $endTime = date('Y-m-d H:i:s', time());
-        for($i = 0; $i < 24; $i++)
-        {
-            if ($i < 10)
-            {
-                $hours[][] = '0' . $i . ':00 - 0' . $i . ':59';
-            }
-            else
-            {
-                $hours[][] = $i . ':00 - ' . $i . ':59';
-            }
-            //每天各个小时的访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            //每天各个小时的独立访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-        }
-        $sum[] = Scount::find()->where(['>=','time',date('Y-m-d',time())])->andWhere(['appkey'=>$appkey,'type'=> 1])->count();
-        $sum[] = Scount::find()->where(['>=','time',date('Y-m-d',time())])->andWhere(['appkey'=>$appkey,'type'=> 1])->groupBy('ip')->count();
-        $result['code'] = 200;
-        $result['data']['sum'][] = $sum;
-        $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $res;
-        HttpResponseUtil::setJsonResponse($result);
-    }
-
     //昨日按照小时分析pv和ip
-    public function actionYesterdayHour()
-    {
-        $appkey = Yii::$app->request->post('appkey');
-        //当前时间
-        $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) - 86400);
-        $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")));
-        for($i = 0; $i < 24; $i++)
-        {
-            if ($i < 10)
-            {
-                $hours[][] = '0' . $i . ':00 - 0' . $i . ':59';
-            }
-            else
-            {
-                $hours[][] = $i . ':00 - ' . $i . ':59';
-            }
-            //每天各个小时的访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            //每天各个小时的独立访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-        }
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-        $result['code'] = 200;
-        $result['data']['sum'][] = $sum;
-        $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $res;
-        HttpResponseUtil::setJsonResponse($result);
-    }
-
     //最近7天按照小时分析pv和ip
-    public function actionWeekHour()
-    {
-        $appkey = Yii::$app->request->post('appkey');
-        //当前时间
-        $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) - 86400*6);
-        $endTime = date('Y-m-d H:i:s', time());
-        for($i = 0; $i < 24; $i++)
-        {
-            if ($i < 10)
-            {
-                $hours[][] = '0' . $i . ':00 - 0' . $i . ':59';
-            }
-            else
-            {
-                $hours[][] = $i . ':00 - ' . $i . ':59';
-            }
-            //7天各个小时的访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            //7天各个小时的独立访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-        }
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-        $result['code'] = 200;
-        $result['data']['sum'][] = $sum;
-        $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $res;
-        HttpResponseUtil::setJsonResponse($result);
-    }
-
-//    最近7天按照星期分析pv和ip
-    public function actionWeekDay()
-    {
-        $appkey = Yii::$app->request->post('appkey');
-        //当前时间
-        $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) - 86400*6);
-        $endTime = date('Y-m-d H:i:s', time());
-        for($i = 1; $i <= 7; $i++)
-        {
-            $days[] = date('Y-m-d',time()-86400*(7-$i));
-            //7天每天的访问量
-            $res[$i-1][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'week'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            //7天每天的独立访问量
-            $res[$i-1][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'week'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-        }
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-        $result['code'] = 200;
-        $result['data']['sum'][] = $sum;
-        $result['data']['item'][] = $days;
-        $result['data']['item'][] = $res;
-        HttpResponseUtil::setJsonResponse($result);
-    }
-
     //最近30天按照小时分析
-    public function actionMonthHour()
-    {
-        $appkey = Yii::$app->request->post('appkey');
-        //当前时间
-        $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) - 86400*29);
-        $endTime = date('Y-m-d H:i:s', time());
-        for($i = 0; $i < 24; $i++)
-        {
-            if ($i < 10)
-            {
-                $hours[][] = '0' . $i . ':00 - 0' . $i . ':59';
-            }
-            else
-            {
-                $hours[][] = $i . ':00 - ' . $i . ':59';
-            }
-            //7天各个小时的访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            //7天各个小时的独立访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-        }
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-        $result['code'] = 200;
-        $result['data']['sum'][] = $sum;
-        $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $res;
-        HttpResponseUtil::setJsonResponse($result);
-    }
+    //某个时间区间按照小时分析
+    //某一天按照小时分析
+    //某一段时间按照小时分析
 
-    //最近30天按照天分析
-    public function actionMonthDay()
+    //按照天数分析pv和ip $startDay开始的日期，$endDay结束的日期
+    public function actionTrendDay()
     {
-        $appkey = Yii::$app->request->post('appkey');
-        for($i = 1; $i <= 30; $i++)
+        $request = Yii::$app->request;
+        $startDay = $request->post('startTime');
+        $endDay = $request->post('endTime');
+        $date = (strtotime($endDay)-strtotime($startDay)) / (86400) + 1;
+        $appkey = $request->post('appkey');
+        for($i = 1; $i <= $date; $i++)
         {
-            $days[] = date('Y-m-d',time()-86400*(30-$i));
+            $days[] = date('Y-m-d',time()-86400*($date-$i));
             //当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) - 86400*(30-$i));
-            $endTime = date('Y-m-d', time() - 86400*(29-$i));
+            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) - 86400*($date-$i));
+            $endTime = date('Y-m-d', time() - 86400*($date-1-$i));
             //7天每天的访问量
             $res[$i-1][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
             //7天每天的独立访问量
@@ -562,37 +211,85 @@ class AnalyseController extends \yii\web\Controller
         $result['data']['item'][] = $res;
         HttpResponseUtil::setJsonResponse($result);
     }
+    //最近7天按照天数分析pv和ip
+    //最近30天按照天分析
+    //最近时间区间内按照天数分析
 
-    //最近30天按照星期分析
-    public function actionMonthWeek()
+    //按照7天分析数据
+    public function actionTrendWeek()
     {
-        $appkey = Yii::$app->request->post('appkey');
-        for($i = 1; $i <= 5; $i++)
+        $request = Yii::$app->request;
+        $startDay = $request->post('startTime');
+        $endDay = $request->post('endTime');
+        $date = (strtotime($endDay)-strtotime($startDay)) / (86400) + 1;
+        //需要循环的此时
+        $count = intval($date%7 == 0 ?  $date/7 :$date/7+1);
+        $appkey = $request->post('appkey');
+//        总数
+        $spv = 0;
+        $sip = 0;
+        for($i = 0; $i <  $count; $i++)
         {
-            $weeks[] = date('Y-m-d',time()- (29-(7*($i-1))) * 86400).' - '.date('Y-m-d',time()- ((29-(7*$i-1))<0 ? 0 : (29-(7*$i-1))) * 86400);
-            $startTime = date('Y-m-d',time()- (29-(7*($i-1))) * 86400);
-            $endTime = date('Y-m-d',time()- ((29-(7*$i-1))<0 ? 0 : (29-(7*$i-1))) * 86400);
+            if($i*7+6 < $date)
+            {
+                //日期区间的显示，开始时间
+                $weeks[] = date('Y-m-d',strtotime($startDay)+ $i*7 * 86400).' - '.date('Y-m-d',strtotime($startDay) + ($i*7+6) * 86400);
+                $pv = 0;
+                $ip = 0;
+                for($j = 0; $j < 7; $j++)
+                {
+                    $startTime = date('Y-m-d',strtotime($startDay)+ ($i*7+$j) * 86400);
+                    $endTime = date('Y-m-d',strtotime($startDay)+ ($i*7+$j) * 86400 + 86400);
+                    //每天的访问量
+                    $pv += Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+//                每天的独立ip数
+                    $ip += Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+                }
+                Yii::error($pv);
+                Yii::error($ip);
+            }
+            else
+            {
+                //日期区间的显示，开始时间
+                $weeks[] = date('Y-m-d',strtotime($startDay)+ $i*7 * 86400).' - '.date('Y-m-d',strtotime($endDay));
+                $pv = 0;
+                $ip = 0;
+                for($j = 0; $j < $date % 7; $j++)
+                {
+                    $startTime = date('Y-m-d',strtotime($startDay)+ ($i*7+$j) * 86400);
+                    $endTime = date('Y-m-d',strtotime($startDay)+ ($i*7+$j) * 86400 + 86400);
+                    //每天的访问量
+                    $pv += Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+//                每天的独立ip数
+                    $ip += Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+                }
+                Yii::error($pv);
+                Yii::error($ip);
+            }
             //7天每天的访问量
-            $res[$i-1][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+            $res[$i][] = $pv;
             //7天每天的独立访问量
-            $res[$i-1][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+            $res[$i][] = $ip;
+            $spv += $pv;
+            $sip += $ip;
         }
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+        $sum[] = $spv;
+        $sum[] = $sip;
         $result['code'] = 200;
         $result['data']['sum'][] = $sum;
         $result['data']['item'][] = $weeks;
         $result['data']['item'][] = $res;
         HttpResponseUtil::setJsonResponse($result);
     }
+    //最近30天按照星期分析
 
-//    具体的某一天的分析
-    public function actionDate()
+    //区间时间内按照星期分析
+    private function CompareTrendHour($startTime,$endTime)
     {
-        $date = Yii::$app->request->post('date');
+        $startTime = date('Y-m-d',strtotime($startTime));
+        $endTime = date('Y-m-d',strtotime($endTime));
         $appkey = Yii::$app->request->post('appkey');
-        $startTime = date('Y-m-d',strtotime($date));
-        $endTime = date('Y-m-d',strtotime($date)-86400);
+        //当前时间
         for($i = 0; $i < 24; $i++)
         {
             if ($i < 10)
@@ -603,26 +300,31 @@ class AnalyseController extends \yii\web\Controller
             {
                 $hours[][] = $i . ':00 - ' . $i . ':59';
             }
-            //每天各个小时的访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            //每天各个小时的独立访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+            //时间1各个小时的访问量
+            $res1[$i][] = $startTime;
+            $res1[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['like','time',$startTime])->count();
+            //时间2各个小时的访问量
+            $res2[$i][] = $endTime;
+            $res2[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['like','time',$endTime])->count();
         }
-        $sum[] = Scount::find()->where(['>=','time',date('Y-m-d',time())])->andWhere(['appkey'=>$appkey,'type'=> 1])->count();
-        $sum[] = Scount::find()->where(['>=','time',date('Y-m-d',time())])->andWhere(['appkey'=>$appkey,'type'=> 1])->groupBy('ip')->count();
+        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$startTime])->count();
+        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$endTime])->count();
         $result['code'] = 200;
         $result['data']['sum'][] = $sum;
         $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $res;
+        $result['data']['item'][] = $res1;
+        $result['data']['item'][] = $res2;
         HttpResponseUtil::setJsonResponse($result);
     }
 
-//某个时间区间按照小时分析
-    public function actionRange()
+    //比较两个时间按照小时分析ip/pv
+    public function actionCompareHourPv()
     {
-        $appkey = Yii::$app->request->post('appkey');
-        $startTime = Yii::$app->request->post('startTime');
-        $endTime = Yii::$app->request->post('endTime');
+        $request = Yii::$app->request;
+        $startTime = date('Y-m-d',strtotime($request->post('compareDay')));
+        $endTime = date('Y-m-d',strtotime($request->post('comparedDay')));
+        $appkey = $request->post('appkey');
+        //当前时间
         for($i = 0; $i < 24; $i++)
         {
             if ($i < 10)
@@ -633,17 +335,152 @@ class AnalyseController extends \yii\web\Controller
             {
                 $hours[][] = $i . ':00 - ' . $i . ':59';
             }
-            //每天各个小时的访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            //每天各个小时的独立访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+            //时间1各个小时的访问量
+            $res1[$i][] = $startTime;
+            $res1[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['like','time',$startTime])->count();
+            //时间2各个小时的访问量
+            $res2[$i][] = $endTime;
+            $res2[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['like','time',$endTime])->count();
         }
-        $sum[] = Scount::find()->where(['>=','time',date('Y-m-d',time())])->andWhere(['appkey'=>$appkey,'type'=> 1])->count();
-        $sum[] = Scount::find()->where(['>=','time',date('Y-m-d',time())])->andWhere(['appkey'=>$appkey,'type'=> 1])->groupBy('ip')->count();
+        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$startTime])->count();
+        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$endTime])->count();
         $result['code'] = 200;
         $result['data']['sum'][] = $sum;
         $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $res;
+        $result['data']['item'][] = $res1;
+        $result['data']['item'][] = $res2;
+        HttpResponseUtil::setJsonResponse($result);
+    }
+
+    public function actionCompareHourIp()
+    {
+        $request = Yii::$app->request;
+        $startTime = date('Y-m-d',strtotime($request->post('compareDay')));
+        $endTime = date('Y-m-d',strtotime($request->post('comparedDay')));
+        $appkey = $request->post('appkey');
+        //当前时间
+        for($i = 0; $i < 24; $i++)
+        {
+            if ($i < 10)
+            {
+                $hours[][] = '0' . $i . ':00 - 0' . $i . ':59';
+            }
+            else
+            {
+                $hours[][] = $i . ':00 - ' . $i . ':59';
+            }
+            //时间1各个小时的访问量
+            $res1[$i][] = $startTime;
+            $res1[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['like','time',$startTime])->count();
+            //时间2各个小时的访问量
+            $res2[$i][] = $endTime;
+            $res2[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['like','time',$endTime])->count();
+        }
+        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$startTime])->count();
+        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$endTime])->count();
+        $result['code'] = 200;
+        $result['data']['sum'][] = $sum;
+        $result['data']['item'][] = $hours;
+        $result['data']['item'][] = $res1;
+        $result['data']['item'][] = $res2;
+        HttpResponseUtil::setJsonResponse($result);
+    }
+
+    //比较两个时间按照天分析ip/pv
+    public function actionRangeDateDay()
+    {
+        $requrest = Yii::$app->request;
+        $compareStartDay = $requrest->post('compareStartDay');
+        $compareEndDay = $requrest->post('compareEndDay');
+        $comparedStartDay = $requrest->post('comparedStartDay');
+        $appkey = Yii::$app->request->post('appkey');
+        $date = (strtotime($compareEndDay) - strtotime($compareStartDay)) / 86400;
+        for ($i = 0; $i <= $date; $i++)
+        {
+            $days[] = date('Y-m-d',time()-86400*($date - $i));
+            //比较的数据
+            $startTime = date('Y-m-d H:i:s',strtotime($compareStartDay) + $i * 86400);
+            $endTime = date('Y-m-d H:i:s',strtotime($compareStartDay) + $i * 86400 + 86400);
+            $res1[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['<=','time',$startTime])->andWhere(['>','time',$endTime]);
+            //被比较的数据
+            $startTime = date('Y-m-d H:i:s',strtotime($comparedStartDay) + $i * 86400);
+            $endTime = date('Y-m-d H:i:s',strtotime($comparedStartDay) + $i * 86400 + 86400);
+            $res2[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['<=','time',$startTime])->andWhere(['>','time',$endTime]);
+
+        }
+        $result['code'] = 200;
+        $result['data']['item'][] = $days;
+        $result['data']['item'][] = $res1;
+        $result['data']['item'][] = $res2;
+        HttpResponseUtil::setJsonResponse($result);
+    }
+
+    //比较两个时间按照星期分析ip/pv
+    public function actionRangeDateWeek()
+    {
+        $requrest = Yii::$app->request;
+        $compareStartDay = $requrest->post('compareStartDay');
+        $compareEndDay = $requrest->post('compareEndDay');
+        $comparedStartDay = $requrest->post('comparedStartDay');
+        $date = (strtotime($compareEndDay)-strtotime($compareStartDay)) / (86400) + 1;
+        //需要循环的此时
+        $count = intval($date%7 == 0 ?  $date/7 :$date/7+1);
+        $appkey = Yii::$app->request->post('appkey');
+//        总数
+        $spv = 0;
+        $sip = 0;
+        for($i = 0; $i <  $count; $i++)
+        {
+            if($i*7+6 < $date)
+            {
+                //日期区间的显示，开始时间
+                $weeks[] = date('Y-m-d',strtotime($compareStartDay)+ $i*7 * 86400).' - '.date('Y-m-d',strtotime($compareStartDay) + ($i*7+6) * 86400);
+                $pv = 0;
+                $ip = 0;
+                for($j = 0; $j < 7; $j++)
+                {
+                    $startTime = date('Y-m-d',strtotime($compareStartDay)+ ($i*7+$j) * 86400);
+                    $endTime = date('Y-m-d',strtotime($compareStartDay)+ ($i*7+$j) * 86400 + 86400);
+                    //每天的访问量
+                    $pv += Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+//                每天的独立ip数
+                    $ip += Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+                }
+                Yii::error($pv);
+                Yii::error($ip);
+            }
+            else
+            {
+                //日期区间的显示，开始时间
+                $weeks[] = date('Y-m-d',strtotime($compareStartDay)+ $i*7 * 86400).' - '.date('Y-m-d',strtotime($compareStartDay));
+                $pv = 0;
+                $ip = 0;
+                for($j = 0; $j < $date % 7; $j++)
+                {
+                    $startTime = date('Y-m-d',strtotime($compareStartDay)+ ($i*7+$j) * 86400);
+                    $endTime = date('Y-m-d',strtotime($compareStartDay)+ ($i*7+$j) * 86400 + 86400);
+                    //每天的访问量
+                    $pv += Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+//                每天的独立ip数
+                    $ip += Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+                }
+                Yii::error($pv);
+                Yii::error($ip);
+            }
+            //7天每天的访问量
+            $res1[$i][] = $pv;
+            //7天每天的独立访问量
+            $res2[$i][] = $ip;
+            $spv += $pv;
+            $sip += $ip;
+        }
+        $sum[] = $spv;
+        $sum[] = $sip;
+        $result['code'] = 200;
+        $result['data']['sum'][] = $sum;
+        $result['data']['item'][] = $weeks;
+        $result['data']['item'][] = $res1;
+        $result['data']['item'][] = $res2;
         HttpResponseUtil::setJsonResponse($result);
     }
 
@@ -663,6 +500,28 @@ class AnalyseController extends \yii\web\Controller
 
     public function actionTest()
     {
-        var_dump(json_decode('{"status":0,"msg":"","data":{"timeSpan":["2016\/12\/19","2016\/12\/18"],"fields":["simple_date_title","time","pv_count"],"items":[[[0],[1],[2],[3],[4],[5],[6],[7],[8],[9],[10],[11],[12],[13],[14],[15],[16],[17],[18],[19],[20],[21],[22],[23]],[["2016\/12\/19",23],["2016\/12\/19",14],["2016\/12\/19",4],["2016\/12\/19",4],["2016\/12\/19",1],["2016\/12\/19",6],["2016\/12\/19",4],["2016\/12\/19",15],["2016\/12\/19",93],["2016\/12\/19",162],["2016\/12\/19",188],["2016\/12\/19",15],["2016\/12\/19","--"],["2016\/12\/19","--"],["2016\/12\/19","--"],["2016\/12\/19","--"],["2016\/12\/19","--"],["2016\/12\/19","--"],["2016\/12\/19","--"],["2016\/12\/19","--"],["2016\/12\/19","--"],["2016\/12\/19","--"],["2016\/12\/19","--"],["2016\/12\/19","--"]],[["2016\/12\/18",31],["2016\/12\/18",10],["2016\/12\/18",6],["2016\/12\/18",10],["2016\/12\/18",10],["2016\/12\/18",1],["2016\/12\/18",6],["2016\/12\/18",11],["2016\/12\/18",52],["2016\/12\/18",66],["2016\/12\/18",87],["2016\/12\/18",77],["2016\/12\/18",44],["2016\/12\/18",44],["2016\/12\/18",84],["2016\/12\/18",100],["2016\/12\/18",66],["2016\/12\/18",51],["2016\/12\/18",26],["2016\/12\/18",35],["2016\/12\/18",59],["2016\/12\/18",60],["2016\/12\/18",31],["2016\/12\/18",32]],[]]}}'));
+        $startDay = Yii::$app->request->post('startTime');
+        $endDay = Yii::$app->request->post('endTime');
+        $date = (strtotime($endDay)-strtotime($startDay)) / (86400) + 1;
+        Yii::error($date);
+        $appkey = Yii::$app->request->post('appkey');
+        for($i = 0; $i <  $date; $i+=7)
+        {
+            //日期区间的显示，开始时间
+            $weeks[] = date('Y-m-d',strtotime($startDay)+ $i * 86400).' - '.date('Y-m-d',($i+6) < $date ? strtotime($startDay) + ($i+6) * 86400 : strtotime($endDay));
+            $startTime = date('Y-m-d',strtotime($startDay)+ $i * 86400);
+            $endTime = date('Y-m-d',($i+6) < $date ? strtotime($startDay) + ($i+6) * 86400 : strtotime($endDay));
+            //7天每天的访问量
+            $res[$i/7][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+            //7天每天的独立访问量
+            $res[$i/7][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+        }
+        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+        $result['code'] = 200;
+        $result['data']['sum'][] = $sum;
+        $result['data']['item'][] = $weeks;
+        $result['data']['item'][] = $res;
+        HttpResponseUtil::setJsonResponse($result);
     }
 }

@@ -98,11 +98,9 @@ class SiteController extends Controller
         {
             $remoteIp = $request->getUserIP();
         }
-//        Yii::error($remoteIp);
         $message['ip'] = $remoteIp;
         $message['time'] = date('Y-m-d H:i:s');
         $message['referrer'] = $request->getReferrer();
-
         //是否为脚本
         if(!$this->check())
         {
@@ -112,18 +110,17 @@ class SiteController extends Controller
             return;
         }
 
-        //没有获取到spmcode的数据无效，丢弃
-        if(empty($request->get('spmcode')))
+        //没有获取到code的数据无效，丢弃
+        if(empty($request->get('code')))
         {
-            $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['referrer'].'        message:'.'没有找到spmcode');
+            $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['referrer'].'        message:'.'没有找到code');
             $result['code'] = 403;
             HttpResponseUtil::setJsonResponse($result);
             return;
         }
-
-//            somcode的最后一位为type值
-        $spmcode = explode('.',$request->get('spmcode'));
-        $type = $spmcode[count($spmcode)-1];
+//      code的最后一位为type值
+        $code = explode('.',$request->get('code'));
+        $type = $code[count($code)-1];
 
         //判断type的值,如果是正常的情况
         if($type == 1 || $type == 2)
@@ -146,22 +143,6 @@ class SiteController extends Controller
                 $message['message'][] = $mess;
             }
         }
-      /*  else if($type == -1)
-        {
-            $messages = $request->get('warm');
-            if(!is_array($request->get('warm')))
-            {
-                $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['referrer'].'        message:'.'不正确的type值');
-                $result['code'] = 405;
-                HttpResponseUtil::setJsonResponse($result);
-                return;
-            }
-            foreach($messages as $mess)
-            {
-                //获取消息
-                $message['message'][] = $mess;
-            }
-        }*/
         else
         {
             $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['referrer'].'        message:'.'不正确的type值');
@@ -169,7 +150,8 @@ class SiteController extends Controller
             HttpResponseUtil::setJsonResponse($result);
             return;
         }
-        $con['spmcode'] = $request->get('spmcode');
+        $con['appkey'] = $code[0];
+        $con['page'] = $code[1];
         $con['content'] = $message;
         //将数据格式化
         $result = json_encode($con);
@@ -240,7 +222,8 @@ class SiteController extends Controller
             foreach($arr as $v)
             {
                 $attr = json_decode($v);
-                $res['spmcode'] = $attr->spmcode;
+                $res['appkey'] = $attr->appkey;
+                $res['page'] = $attr->page;
                 $res['ip'] = $attr->content->ip;
                 $res['time'] = $attr->content->time;
                 $res['referrer'] = $attr->content->referrer;
@@ -259,7 +242,7 @@ class SiteController extends Controller
                 $res['created_at'] = date('Y-m-d H:i:s',time());
                 $rows[] = $res;
             }
-            $db = Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['spmcode','ip','time','referrer','message','created_at'],$rows)->execute();
+            $db = Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['appkey','page','ip','time','referrer','message','created_at'],$rows)->execute();
 
             if(!$db)
             {
@@ -293,39 +276,13 @@ class SiteController extends Controller
     {
         $logger = MMLogger::getLogger(__FUNCTION__);
 //        对当天数据进行统计
-        $categorys = Scount::find()->groupBy(['spmcode','ip','referrer','time','message'])->all();
+        $categorys = Scount::find()->all();
         if(empty($categorys))
         {
             $result['code'] = 201;
             $logger->warn('     time:'.date('Y-m-d H:i:s').'    当前数据表中未存在数据');
             HttpResponseUtil::setJsonResponse($result);
             return;
-        }
-        foreach($categorys as $category)
-        {
-            $num = Scount::find()->where(['spmcode'=> $category->spmcode,'ip'=>$category->ip,'referrer'=>$category->referrer,'time'=>$category->time,'message'=>$category->message])->count();
-            $count = new Daycount();
-            $spmcode = substr($category->spmcode,0,strripos($category->spmcode,'.'));
-            $count->spmcode = $spmcode;
-            $type = explode('.',$category->spmcode);
-            $count->type = $type[count($type)-1];
-            if($type[count($type)-1] == 1)
-            {
-                //访问记录的添加
-                $log = new AccessLog();
-                $log->ip = $category->ip;
-                $log->spmcode = $spmcode;
-                $log->time = $category->time;
-                $log->save();
-            }
-            $count->ip = $category->ip;
-            $count->referrer = $category->referrer;
-            $count->time = $category->time;
-            $count->message = $category->message;
-            $count->num = $num;
-            $count->save();
-
-
         }
         Yii::error('222222');
         //对用户的添加
@@ -348,7 +305,8 @@ class SiteController extends Controller
         $string = null;
         foreach($content as $v)
         {
-            $string .= '(\''.$v->spmcode.'\',';
+            $string .= '(\''.$v->appkey.'\',';
+            $string .= '(\''.$v->page.'\',';
             $string .= '\''.$v->ip.'\',';
             $string .= '\''.$v->time.'\',';
             $string .= '\''.$v->referrer.'\',';
@@ -358,14 +316,15 @@ class SiteController extends Controller
         $tname = 'scount'.time();
         $ctable = 'CREATE TABLE `'.$tname.'` (
                 `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-                  `spmcode` varchar(40) NOT NULL,
+                  `appkey` char(9) NOT NULL,
+                  `page` int(11) NOT NULL,
                   `ip` char(15) NOT NULL COMMENT \'返回的内容\',
                   `time` char(20) NOT NULL,
                   `referrer` varchar(100) NOT NULL,
                   `message` varchar(100) NOT NULL,
                   `created_at` char(20) NOT NULL,
                   PRIMARY KEY (`id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `spmcode`, `ip`,`time`,`referrer`,  `message`,`created_at`) VALUES';
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `appkey`,`page`, `ip`,`time`,`referrer`,  `message`,`created_at`) VALUES';
         $sql =  $ctable.trim($string,',');
         $sqlfile = fopen(Yii::$app->basePath."/web/sql/".$tname.'.sql', "w") or die("Unable to open file!");
         fwrite($sqlfile,$sql);

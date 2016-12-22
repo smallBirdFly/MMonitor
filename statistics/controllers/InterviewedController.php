@@ -17,28 +17,55 @@ class InterviewedController extends Controller
 {
     public $enableCsrfValidation = false;
 
-    //今天访问记录
-    public function actionToday()
+    public function actionInterview()
     {
-        $appkey = Yii::$app->request->post('appkey');
-        //当前时间
-        $startTime = date('Y-m-d', time());
-        $endTime = date('Y-m-d', time()-86400);
-        $pages = Scount::find()->where(['type'=>1,'appkey'=>$appkey])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('page')->all();
-        //访问总数
-        $sumPv = 0;
-//        用户总数
-        $sumIp = 0;
-        foreach($pages as $i=>$page)
+        $request = Yii::$app->request;
+        $appkey = $request->post('appkey');
+        $starDay = strtotime($request->post('startDay'));
+        $endDay = strtotime($request->post('endDay'));
+        if($starDay == $endDay)
         {
-            $page_url = Page::findOne($page->page);
-            $name[][] = $page_url->page_url;
-            $pv = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            $res[$i][] = $pv;
-            $sumPv += $pv;
-            $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-            $res[$i][] = $ip;
-            $sumIp += $ip;
+            $startTime = date('Y-m-d',$starDay);
+            $endTime = date('Y-m-d',$endDay + 86400);
+            $pages = Scount::find()->where(['type'=>1,'appkey'=>$appkey])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('page')->all();
+            //访问总数
+            $sumPv = 0;
+            // 用户总数
+            $sumIp = 0;
+            foreach($pages as $i=>$page)
+            {
+                $page_url = Page::findOne($page->page);
+                $name[][] = $page_url->page_url;
+                $pv = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+                $res[$i][] = $pv;
+                $sumPv += $pv;
+                $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+                $res[$i][] = $ip;
+                $sumIp += $ip;
+            }
+        }
+        else
+        {
+            //当前时间
+            $startTime = date('Y-m-d', $starDay);
+            $endTime = date('Y-m-d', $endDay + 86400);
+            $pages = Scount::find()->where(['type'=>1,'appkey'=>$appkey])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('page')->all();
+            //访问总数
+            $sumPv = 0;
+//        用户总数
+            $sumIp = 0;
+            foreach($pages as $i=>$page)
+            {
+                $page_url = Page::findOne($page->page);
+                $name[][] = $page_url->page_url;
+                $pv = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+                $res[$i][] = $pv;
+                $sumPv += $pv;
+                $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+                $res[$i][] = $ip;
+                $sumIp += $ip;
+            }
+
         }
         $sum[] = $sumPv;
         $sum[] = $sumIp;
@@ -49,137 +76,77 @@ class InterviewedController extends Controller
         HttpResponseUtil::setJsonResponse($result);
     }
 
-//    昨天的访问记录
-    public function actionYesterday()
+    public function actionCompareInterview()
     {
-        $appkey = Yii::$app->request->post('appkey');
-        //当前时间
-        $startTime = date('Y-m-d', strtotime("-1 day"));
-        $endTime = date('Y-m-d', time());
-        $pages = Scount::find()->where(['type'=>1,'appkey'=>$appkey])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('page')->all();
-        //访问总数
-        $sumPv = 0;
-//        用户总数
-        $sumIp = 0;
-        foreach($pages as $i=>$page)
+        $request = Yii::$app->request;
+        $appkey = $request->post('appkey');
+        $compareStartDay = strtotime($request->post('compareStartDay'));
+        $compareEndDay = strtotime($request->post('compareEndDay'));
+        $comparedStartDay = strtotime($request->post('comparedStartDay'));
+        if($compareStartDay == $compareEndDay)
         {
-            $page_url = Page::findOne($page->page);
-            $name[][] = $page_url->page_url;
-            $pv = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            $res[$i][] = $pv;
-            $sumPv += $pv;
-            $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-            $res[$i][] = $ip;
-            $sumIp += $ip;
+            //比较某一天和某一天的
+            $startTime = date('Y-m-d',$compareStartDay);
+            $endTime = date('Y-m-d',$compareStartDay + 86400);
+            $cstartTime = date('Y-m-d',$comparedStartDay);
+            $cendTime = date('Y-m-d',$comparedStartDay + 86400);
+            $pages = Scount::find()->where(['type'=>1,'appkey'=>$appkey])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('page')->all();
+            //访问总数
+            $sumPv = 0;
+            // 用户总数
+            $sumIp = 0;
+            foreach($pages as $i=>$page)
+            {
+                $page_url = Page::findOne($page->page);
+                $name[][] = $page_url->page_url;
+                $pv = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+                $res1[$i][] = $pv;
+                $sumPv += $pv;
+                $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+                $res1[$i][] = $ip;
+                $sumIp += $ip;
+                $cpv = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->count();
+                $cip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->groupBy('ip')->count();
+                $res2[$i][] = $cpv;
+                $res2[$i][] = $cip;
+            }
+        }
+        else
+        {
+            //比较某些天和某些天的
+            $startTime = date('Y-m-d',$compareStartDay);
+            $endTime = date('Y-m-d',$compareEndDay + 86400);
+            $cstartTime = date('Y-m-d',$comparedStartDay);
+            $cendTime = date('Y-m-d',$comparedStartDay + $compareEndDay - $compareStartDay + 86400);
+            $pages = Scount::find()->where(['type'=>1,'appkey'=>$appkey])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('page')->all();
+            //访问总数
+            $sumPv = 0;
+            // 用户总数
+            $sumIp = 0;
+            foreach($pages as $i=>$page)
+            {
+                $page_url = Page::findOne($page->page);
+                $name[][] = $page_url->page_url;
+                $pv = Scount::find()->where(['appkey' => $appkey, 'type' => 1, 'page' => $page_url->id])->andWhere(['>=', 'time', $startTime])->andWhere(['<', 'time', $endTime])->count();
+                $res1[$i][] = $pv;
+                $sumPv += $pv;
+                $ip = Scount::find()->where(['appkey' => $appkey, 'type' => 1, 'page' => $page_url->id])->andWhere(['>=', 'time', $startTime])->andWhere(['<', 'time', $endTime])->groupBy('ip')->count();
+                $res1[$i][] = $ip;
+                $sumIp += $ip;
+                $cpv = Scount::find()->where(['appkey' => $appkey, 'type' => 1, 'page' => $page_url->id])->andWhere(['>=', 'time', $cstartTime])->andWhere(['<', 'time', $cendTime])->count();
+                $cip = Scount::find()->where(['appkey' => $appkey, 'type' => 1, 'page' => $page_url->id])->andWhere(['>=', 'time', $cstartTime])->andWhere(['<', 'time', $cendTime])->groupBy('ip')->count();
+                $res2[$i][] = $cpv;
+                $res2[$i][] = $cip;
+            }
         }
         $sum[] = $sumPv;
         $sum[] = $sumIp;
         $result['code'] = 200;
         $result['data']['sum'][] = $sum;
         $result['data']['item'][] = $name;
-        $result['data']['item'][] = $res;
+        $result['data']['item'][] = $res1;
+        $result['data']['item'][] = $res2;
         HttpResponseUtil::setJsonResponse($result);
     }
-
-    //最近7天访问记录
-    public function actionWeek()
-    {
-        $appkey = Yii::$app->request->post('appkey');
-        //当前时间
-        $startTime = date('Y-m-d', time()-86400*6);
-        $endTime = date('Y-m-d H:i:s', time());
-        Yii::error($startTime);
-        $pages = Scount::find()->where(['type'=>1,'appkey'=>$appkey])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('page')->all();
-        //访问总数
-        $sumPv = 0;
-//        用户总数
-        $sumIp = 0;
-        foreach($pages as $i=>$page)
-        {
-            $page_url = Page::findOne($page->page);
-            $name[][] = $page_url->page_url;
-            $pv = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            $res[$i][] = $pv;
-            $sumPv += $pv;
-            $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-            $res[$i][] = $ip;
-            $sumIp += $ip;
-        }
-        $sum[] = $sumPv;
-        $sum[] = $sumIp;
-        $result['code'] = 200;
-        $result['data']['sum'][] = $sum;
-        $result['data']['item'][] = $name;
-        $result['data']['item'][] = $res;
-        HttpResponseUtil::setJsonResponse($result);
-    }
-
-    //最近30天访问记录
-    public function actionMonth()
-    {
-        $appkey = Yii::$app->request->post('appkey');
-        //当前时间
-        $startTime = date('Y-m-d', time()-86400*29);
-        $endTime = date('Y-m-d H:i:s', time());
-        Yii::error($startTime);
-        $pages = Scount::find()->where(['type'=>1,'appkey'=>$appkey])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('page')->all();
-        //访问总数
-        $sumPv = 0;
-//        用户总数
-        $sumIp = 0;
-        foreach($pages as $i=>$page)
-        {
-            $page_url = Page::findOne($page->page);
-            $name[][] = $page_url->page_url;
-            $pv = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            $res[$i][] = $pv;
-            $sumPv += $pv;
-            $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-            $res[$i][] = $ip;
-            $sumIp += $ip;
-        }
-        $sum[] = $sumPv;
-        $sum[] = $sumIp;
-        $result['code'] = 200;
-        $result['data']['sum'][] = $sum;
-        $result['data']['item'][] = $name;
-        $result['data']['item'][] = $res;
-        HttpResponseUtil::setJsonResponse($result);
-    }
-
-//    某时间区间内的访问记录
-    public function actionRange()
-    {
-        $appkey = Yii::$app->request->post('appkey');
-        //当前时间
-        $startTime = Yii::$app->request->post('startTime');
-        $endTime = Yii::$app->request->post('endTime');
-        $pages = Scount::find()->where(['type'=>1,'appkey'=>$appkey])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('page')->all();
-//        var_dump($pages);die;
-        //访问总数
-        $sumPv = 0;
-//        用户总数
-        $sumIp = 0;
-        foreach($pages as $i=>$page)
-        {
-            $page_url = Page::findOne($page->page);
-            $name[][] = $page_url->page_url;
-            $pv = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            $res[$i][] = $pv;
-            $sumPv += $pv;
-            $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-            $res[$i][] = $ip;
-            $sumIp += $ip;
-        }
-        $sum[] = $sumPv;
-        $sum[] = $sumIp;
-        $result['code'] = 200;
-        $result['data']['sum'][] = $sum;
-        $result['data']['item'][] = $name;
-        $result['data']['item'][] = $res;
-        HttpResponseUtil::setJsonResponse($result);
-    }
-
-
 
 }

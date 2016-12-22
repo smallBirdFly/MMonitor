@@ -241,11 +241,14 @@
 </template>
 
 <script>
+	import $ from '../jquery-1.12.1'
+	import moment from '../../lib/moment.js'
 	var echarts = require('echarts');
 	export default {
 		name: 'app',
-		mounted: () => {
-			var  myChart = echarts.init(document.getElementById('grid1'));
+		methods:{
+			draw(){
+				var  myChart = echarts.init(document.getElementById('grid1'));
 			myChart.setOption({
 			    tooltip : {
 			        trigger: 'axis'
@@ -313,6 +316,28 @@
 			        }
 			    ]
 			});
+			},
+			test(){
+				this.$http.get('http://192.168.1.109/mmonitor/analyse/today?appkey=201612191')
+                .then((response) => {
+                    if(response.data.code=='200'){
+                        var len=response.data.data.content.length;
+                        if(len == '0'){
+                            console.log('无数据');
+                        }else{}
+                        this.goodsData = response.data.data.content
+                    }else{
+                        console.log('获取数据失败')
+                    }
+                })
+                .catch(function(response) {
+                    console.log(response.data)
+                })
+			}
+		},
+		mounted() {
+			this.draw();
+			this.test();
 		}
 	}
 </script>
