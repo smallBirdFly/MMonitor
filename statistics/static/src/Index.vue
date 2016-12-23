@@ -242,102 +242,219 @@
 
 <script>
 	import $ from '../jquery-1.12.1'
-	import moment from '../../lib/moment.js'
 	var echarts = require('echarts');
 	export default {
 		name: 'app',
 		methods:{
-			draw(){
+		//昨日今日ip量
+			draw1(){
+				$.ajax({
+					url:'http://192.168.1.109/mmonitor/analyse/compare-hours',
+					method:'post',
+					dataType:'json',
+					data:{
+						appkey:'201612192',
+						startTime:'1',
+						endTime:'6',
+						type:'ip'
+					},
+					success:function(data){
+						console.log(data.data.item[0])
+					// 填入数据
+						myChart.setOption({
+							xAxis: {
+								data: data.data.item[0]
+							},
+							series: [{
+								// 根据名字对应到相应的系列
+								name:'昨日',
+								data: data.data.item[1]
+							},
+							{
+								// 根据名字对应到相应的系列
+								name:'今日',
+								data: data.data.item[2]
+							}
+							]
+						});
+					}
+				});
 				var  myChart = echarts.init(document.getElementById('grid1'));
-			myChart.setOption({
-			    tooltip : {
-			        trigger: 'axis'
-			    },
-			    legend: {
-			        data:['昨日','今日']
-			    },
-			    calculable: true,
-			    xAxis : [
-			        {
-			            type : 'category',
-			            boundaryGap : false,
-			            data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
-			        }
-			    ],
-			    yAxis : [
-			        {
-			            type : 'value'
-			        }
-			    ],
-			    series : [
-			        {
-			            name:'昨日',
-			            type:'line',
-			            areaStyle: {normal: {}},
-			            data:[120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20]
-			        },
-			        {
-			            name:'今日',
-			            type:'line',
-			            areaStyle: {normal: {}},
-			            data:[220, 182, 191, 234, 290, 330, 310,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]
-			        }
-			    ]
-			});
-			var  myChart = echarts.init(document.getElementById('grid3'));
-			myChart.setOption({
-			    tooltip : {
-			        trigger: 'axis'
-			    },
-			    grid: {
-			        left: '3%',
-			        right: '4%',
-			        bottom: '3%',
-			        containLabel: true
-			    },
-			    xAxis : [
-			        {
-			            type : 'category',
-			            boundaryGap : false,
-			            data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
-			        }
-			    ],
-			    yAxis : [
-			        {
-			            type : 'value'
-			        }
-			    ],
-			    series : [
-			        {
-			            name:'浏览量',
-			            type:'line',
-			            areaStyle: {normal: {}},
-			            data:[120, 132, 101, 134, 90, 230, 210,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]
-			        }
-			    ]
-			});
+				myChart.setOption({
+					tooltip : {
+						trigger: 'axis'
+					},
+					legend: {
+						data:['昨日','今日']
+					},
+					grid: {
+						left: '3%',
+						right: '4%',
+						bottom: '3%',
+						containLabel: true
+					},
+					calculable: true,
+					xAxis : [
+						{
+							type : 'category',
+							boundaryGap : false,
+							data : []
+						  //  data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
+						}
+					],
+					yAxis : [
+						{
+							type : 'value'
+						}
+					],
+					series : [
+						{
+							name:'昨日',
+							type:'line',
+							areaStyle: {normal: {}},
+							data:[]
+						},
+						{
+							name:'今日',
+							type:'line',
+							areaStyle: {normal: {}},
+					  //      <!--data:[220, 182, 191, 234, 290, 330, 310,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]-->
+							data:[]
+						}
+					]
+				});
 			},
-			test(){
-				this.$http.get('http://192.168.1.109/mmonitor/analyse/today?appkey=201612191')
-                .then((response) => {
-                    if(response.data.code=='200'){
-                        var len=response.data.data.content.length;
-                        if(len == '0'){
-                            console.log('无数据');
-                        }else{}
-                        this.goodsData = response.data.data.content
-                    }else{
-                        console.log('获取数据失败')
-                    }
-                })
-                .catch(function(response) {
-                    console.log(response.data)
-                })
-			}
+			//最近7天ip数
+			draw2(){
+				// 异步加载数据
+				var  myChart = echarts.init(document.getElementById('grid3'));
+				myChart.setOption({
+					tooltip : {
+						trigger: 'axis'
+					},
+					grid: {
+						left: '3%',
+						right: '4%',
+						bottom: '3%',
+						containLabel: true
+					},
+					xAxis : [
+						{
+							type : 'category',
+							boundaryGap : false,
+							data : []
+						}
+					],
+					yAxis : [
+						{
+							type : 'value'
+						}
+					],
+					series : [
+						{
+							name:'浏览量',
+							type:'line',
+							areaStyle: {normal: {}},
+						   // data:[120, 132, 101, 134, 90, 230, 210,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]
+							data:[]
+						}
+					]
+				});
+				$.ajax({
+						url:'http://192.168.1.109/mmonitor/analyse/compare-hours',
+						method:'post',
+						dataType:'json',
+						data:{
+							appkey:'201612192',
+							startTime:'1',
+							endTime:'6',
+							type:'ip'
+						},
+						success:function(data){
+							console.log(data.data.item[0])
+						// 填入数据
+							myChart.setOption({
+								xAxis: {
+									data: data.data.item[0]
+								},
+								series: [{
+									// 根据名字对应到相应的系列
+									name: '销量',
+									data: data.data.item[2]
+								}]
+							});
+						}
+				});
+			},
+			//最近30天的pv量
+			draw3(){
+				$.ajax({
+					url:'http://192.168.1.109/mmonitor/analyse/compare-days',
+					method:'post',
+					dataType:'json',
+					data:{
+						appkey:'201612191',
+						date:30,
+						type:'pv'
+					},
+					success:function(data){
+						console.log(data.data.item[0])
+					// 填入数据
+						myChart.setOption({
+							xAxis: {
+								data: data.data.item[0]
+							},
+							series: [{
+								// 根据名字对应到相应的系列
+								name:'最近30天',
+								data: data.data.item[1]
+							},
+							]
+						});
+					}
+				});
+				var  myChart = echarts.init(document.getElementById('grid1'));
+				myChart.setOption({
+					tooltip : {
+						trigger: 'axis'
+					},
+					legend: {
+						data:['最近30天']
+					},
+					grid: {
+						left: '3%',
+						right: '4%',
+						bottom: '3%',
+						containLabel: true
+					},
+					calculable: true,
+					xAxis : [
+						{
+							type : 'category',
+							boundaryGap : false,
+							data : []
+						  //  data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
+						}
+					],
+					yAxis : [
+						{
+							type : 'value'
+						}
+					],
+					series : [
+						{
+							name:'最近30天',
+							type:'line',
+							areaStyle: {normal: {}},
+							data:[]
+						},
+					]
+				});
+			},
 		},
 		mounted() {
-			this.draw();
-			this.test();
+			this.draw3();
+			this.draw2();
 		}
 	}
 </script>

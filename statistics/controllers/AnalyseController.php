@@ -6,16 +6,28 @@
  * Time: 9:40
  */
 namespace statistics\controllers;
+
 use common\utils\HttpResponseUtil;
 use statistics\models\Daycount;
 use statistics\models\Scount;
 use statistics\models\Webs;
+use statistics\component\AuthFilter;
+
 use Yii;
 
 class AnalyseController extends \yii\web\Controller
 {
     public $enableCsrfValidation = false;
 
+    public function behaviors()
+    {
+        return [
+            'auth' => [
+                'class' => AuthFilter::className(),
+                'except' => ['login'],
+            ]
+        ];
+    }
 //    今日和昨天访问量
     public function actionToday()
     {
@@ -48,13 +60,14 @@ class AnalyseController extends \yii\web\Controller
     public function actionCompareHours()
     {
         $request = Yii::$app->request;
+        Yii::error($request->post());
         $start = $request->post('startTime');
         $past = $request->post('endTime');
         $type = $request->post('type');
         $appkey = $request->post('appkey');
         for ($i = 0; $i < 24; $i++)
         {
-            $hours[][] = $i;
+            $hours[] = $i;
             //比较时间
             $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60- $start * 86400);
             $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600 - $start * 86400);
@@ -65,24 +78,25 @@ class AnalyseController extends \yii\web\Controller
             if($type == 'pv')
             {
                 //要比较日期各个小时的访问量
-                $ress[$i][] = date('Y-m-d',time()- $start * 86400);
-                $ress[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
+                $ress[$i] = date('Y-m-d',time()- $start * 86400);
+                $ress[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
                 //统计昨天各个小时的pv量
-                $resp[$i][] = date('Y-m-d',time()-86400* $past);
-                $resp[$i][] = Scount::find()->where(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->andWhere(['appkey'=>$appkey,'type'=>1])->count();
+                $resp[$i] = date('Y-m-d',time()-86400* $past);
+                $resp[$i] = Scount::find()->where(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->andWhere(['appkey'=>$appkey,'type'=>1])->count();
             }
             else if($type == 'ip')
             {
                 //要比较日期各个小时的独立访问量
-                $ress[$i][] = date('Y-m-d',time()- $start * 86400);
-                $ress[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
+                $ress[$i] = date('Y-m-d',time()- $start * 86400);
+                $ress[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
                 //统计昨天各个小时的ip量
-                $resp[$i][] = date('Y-m-d',time()-86400* $past);
-                $resp[$i][] = Scount::find()->where(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->andWhere(['appkey'=>$appkey,'type'=>1])->groupBy('ip')->count();
+                $resp[$i] = date('Y-m-d',time()-86400* $past);
+                $resp[$i] = Scount::find()->where(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->andWhere(['appkey'=>$appkey,'type'=>1])->groupBy('ip')->count();
             }
             else
             {
-
+                $ress[][] = array();
+                $resp[][] = array();
             }
 
         }
@@ -109,12 +123,12 @@ class AnalyseController extends \yii\web\Controller
             if($type == 'pv')
             {
                 //每天的访问量
-                $pv[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
+                $pv[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
             }
             else if($type == 'ip')
             {
                 //每天独立的访问量
-                $pv[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
+                $pv[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
             }
             else
             {
