@@ -71,9 +71,11 @@ class AnalyseController extends \yii\web\Controller
             //比较时间
             $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60- $start * 86400);
             $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600 - $start * 86400);
+            Yii::error($startTime);
 //            被比较的时间
             $cstartTime = date('Y-m-d H:i:s',strtotime($startTime)-86400 * $past);
             $cendTime = date('Y-m-d H:i:s',strtotime($endTime)-86400 * $past);
+            Yii::error($cstartTime);
 //            判断是否为求独立访问量
             if($type == 'pv')
             {

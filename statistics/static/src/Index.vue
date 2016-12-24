@@ -73,7 +73,7 @@
 		<div class="fold"></div>
 		<div class="table-list">
 			<div class="card-title"><span>今日流量</span></div>
-			<table class="list">
+			<table class="list" >
 				<tbody>
 					<tr class="title">
 						<th></th>
@@ -82,13 +82,13 @@
 					</tr>
 					<tr>
 						<td class="normal">今日</td>
-						<td>399</td>
-						<td>314</td>
+						<td>{{todaypv}}</td>
+						<td>{{todayip}}</td>
 					</tr>
 					<tr>
 						<td class="normal">昨日</td>
-						<td>999</td>
-						<td>741</td>
+						<td>{{yesterdaypv}}</td>
+						<td>{{yesterdayip}}</td>
 					</tr>
 					<tr>
 						<td class="normal">预计今日</td>
@@ -119,7 +119,7 @@
 		<div class="fold"></div>
 		<div class="date-select-bar">
 			<div class="control-bar">
-				<a href="javascript:;">今天</a>
+				<a href="javascript:;" @click="test">今天</a>
 				<a href="javascript:;">昨天</a>
 				<a href="javascript:;">最近7天</a>
 				<a href="javascript:;">最近30天</a>
@@ -130,7 +130,7 @@
 				<div class="table-grid-item">
 					<div class="title clearfix">
 						<span>趋势图</span>
-						<a href="javascript:;">&gt;</a>
+						<router-link to="/tread">&gt;</router-link>
 					</div>
 					<div class="line-row">
 						<div class="control-bar left">
@@ -140,11 +140,11 @@
 						<div class="check-group right">
 							<span>对比：</span>
 							<label>
-								<input type="radio" name="date">
+								<input type="radio" name="date" checked="checked" @change="test">
 								前一日
 							</label>
 							<label>
-								<input type="radio" name="date">
+								<input type="radio" name="date" @change="test">
 								上周同期
 							</label>
 						</div>
@@ -244,22 +244,41 @@
 	import $ from '../jquery-1.12.1'
 	var echarts = require('echarts');
 	export default {
-		name: 'app',
+
+		data(){
+			return {
+				todayip:'',
+				todaypv:'',
+				yesterdayip:'',
+				yesterdaypv:'',
+				s:[startTime:0],
+				s:[endTime:1],
+				s:[type:'pv'],
+			}
+		},
 		methods:{
+			test(){
+				var s=[];
+				s.appkey = '201612192';
+				s.startTime = 0;
+				s.endTime = 1;
+				s.type = 'pv';
+				this.draw(s);
+			},
 		//昨日今日ip量
-			draw1(){
+			yesterdayTodayIp(){
 				$.ajax({
 					url:'http://192.168.1.109/mmonitor/analyse/compare-hours',
 					method:'post',
 					dataType:'json',
 					data:{
 						appkey:'201612192',
-						startTime:'1',
-						endTime:'6',
-						type:'ip'
+						startTime:'0',
+						endTime:'1',
+						type:'pv'
 					},
 					success:function(data){
-						console.log(data.data.item[0])
+						console.log(123);
 					// 填入数据
 						myChart.setOption({
 							xAxis: {
@@ -325,12 +344,45 @@
 				});
 			},
 			//最近7天ip数
-			draw2(){
-				// 异步加载数据
-				var  myChart = echarts.init(document.getElementById('grid3'));
+			draw(data){
+				$.ajax({
+					url:'http://192.168.1.109/mmonitor/analyse/compare-hours',
+					method:'post',
+					dataType:'json',
+					data:{
+						appkey:data.appkey,
+						startTime:data.startTime,
+						endTime:data.endTime,
+						type:data.type
+					},
+					success:function(data){
+						console.log(123);
+					// 填入数据
+						myChart.setOption({
+							xAxis: {
+								data: data.data.item[0]
+							},
+							series: [{
+								// 根据名字对应到相应的系列
+								name:'昨日',
+								data: data.data.item[1]
+							},
+							{
+								// 根据名字对应到相应的系列
+								name:'今日',
+								data: data.data.item[2]
+							}
+							]
+						});
+					}
+				});
+				var  myChart = echarts.init(document.getElementById('grid1'));
 				myChart.setOption({
 					tooltip : {
 						trigger: 'axis'
+					},
+					legend: {
+						data:['昨日','今日']
 					},
 					grid: {
 						left: '3%',
@@ -338,11 +390,13 @@
 						bottom: '3%',
 						containLabel: true
 					},
+					calculable: true,
 					xAxis : [
 						{
 							type : 'category',
 							boundaryGap : false,
 							data : []
+						  //  data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
 						}
 					],
 					yAxis : [
@@ -352,38 +406,19 @@
 					],
 					series : [
 						{
-							name:'浏览量',
+							name:'昨日',
 							type:'line',
 							areaStyle: {normal: {}},
-						   // data:[120, 132, 101, 134, 90, 230, 210,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]
+							data:[]
+						},
+						{
+							name:'今日',
+							type:'line',
+							areaStyle: {normal: {}},
+					  //      <!--data:[220, 182, 191, 234, 290, 330, 310,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]-->
 							data:[]
 						}
 					]
-				});
-				$.ajax({
-						url:'http://192.168.1.109/mmonitor/analyse/compare-hours',
-						method:'post',
-						dataType:'json',
-						data:{
-							appkey:'201612192',
-							startTime:'1',
-							endTime:'6',
-							type:'ip'
-						},
-						success:function(data){
-							console.log(data.data.item[0])
-						// 填入数据
-							myChart.setOption({
-								xAxis: {
-									data: data.data.item[0]
-								},
-								series: [{
-									// 根据名字对应到相应的系列
-									name: '销量',
-									data: data.data.item[2]
-								}]
-							});
-						}
 				});
 			},
 			//最近30天的pv量
@@ -451,10 +486,31 @@
 					]
 				});
 			},
+			//今天和昨天的访问量
+			todayYesterday(){
+				var vm = this;
+				$.ajax({
+					url:'http://192.168.1.109/mmonitor/analyse/today',
+					method:'post',
+					dataType:'json',
+					data:{
+						appkey:'201612191',
+					},
+					success:function(data){
+						console.log(111111);
+						console.log(data.data['today'].pv);
+						//this.today = data.data['today']['pv'];
+						vm.todaypv = data.data['today'].pv;
+						vm.todayip = data.data['today'].ip;
+						vm.yesterdaypv = data.data['yesterday'].pv;
+						vm.yesterdayip = data.data['yesterday'].ip;
+					}
+				});
+			}
 		},
 		mounted() {
-			this.draw3();
-			this.draw2();
+			this.yesterdayTodayIp();
+			this.todayYesterday();
 		}
 	}
 </script>
