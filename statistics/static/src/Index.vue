@@ -119,10 +119,10 @@
 		<div class="fold"></div>
 		<div class="date-select-bar">
 			<div class="control-bar">
-				<a href="javascript:;" @click="test">今天</a>
-				<a href="javascript:;">昨天</a>
-				<a href="javascript:;">最近7天</a>
-				<a href="javascript:;">最近30天</a>
+				<a href="javascript:;" @click="today">今天</a>
+				<a href="javascript:;" @click="yesterday">昨天</a>
+				<a href="javascript:;" @click="week">最近7天</a>
+				<a href="javascript:;" @click="month">最近30天</a>
 			</div>
 		</div>
 		<div class="wrap clearfix">
@@ -134,17 +134,17 @@
 					</div>
 					<div class="line-row">
 						<div class="control-bar left">
-							<a href="javascript:;">浏览量(PV)</a>
-							<a href="javascript:;">IP数</a>
+							<a href="javascript:;" @click="pv">浏览量(PV)</a>
+							<a href="javascript:;" @click="ip">IP数</a>
 						</div>
 						<div class="check-group right">
 							<span>对比：</span>
 							<label>
-								<input type="radio" name="date" checked="checked" @change="test">
+								<input type="radio" name="date" checked="checked" @change="daybefore">
 								前一日
 							</label>
 							<label>
-								<input type="radio" name="date" @change="test">
+								<input type="radio" name="date" @change="weekbefore">
 								上周同期
 							</label>
 						</div>
@@ -243,108 +243,61 @@
 <script>
 	import $ from '../jquery-1.12.1'
 	var echarts = require('echarts');
+	var s = {
+		appkey : '201612191',
+		startTime : 0,
+		endTime: 1,
+		type:'pv'
+	};
 	export default {
 
 		data(){
 			return {
+				compare:'',
+				compared:'',
 				todayip:'',
 				todaypv:'',
 				yesterdayip:'',
 				yesterdaypv:'',
-				s:[startTime:0],
-				s:[endTime:1],
-				s:[type:'pv'],
 			}
 		},
 		methods:{
-			test(){
-				var s=[];
-				s.appkey = '201612192';
+			today(){
+				$(".check-group").show();
 				s.startTime = 0;
-				s.endTime = 1;
-				s.type = 'pv';
-				this.draw(s);
+				this.compareHours(s);
 			},
-		//昨日今日ip量
-			yesterdayTodayIp(){
-				$.ajax({
-					url:'http://192.168.1.109/mmonitor/analyse/compare-hours',
-					method:'post',
-					dataType:'json',
-					data:{
-						appkey:'201612192',
-						startTime:'0',
-						endTime:'1',
-						type:'pv'
-					},
-					success:function(data){
-						console.log(123);
-					// 填入数据
-						myChart.setOption({
-							xAxis: {
-								data: data.data.item[0]
-							},
-							series: [{
-								// 根据名字对应到相应的系列
-								name:'昨日',
-								data: data.data.item[1]
-							},
-							{
-								// 根据名字对应到相应的系列
-								name:'今日',
-								data: data.data.item[2]
-							}
-							]
-						});
-					}
-				});
-				var  myChart = echarts.init(document.getElementById('grid1'));
-				myChart.setOption({
-					tooltip : {
-						trigger: 'axis'
-					},
-					legend: {
-						data:['昨日','今日']
-					},
-					grid: {
-						left: '3%',
-						right: '4%',
-						bottom: '3%',
-						containLabel: true
-					},
-					calculable: true,
-					xAxis : [
-						{
-							type : 'category',
-							boundaryGap : false,
-							data : []
-						  //  data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
-						}
-					],
-					yAxis : [
-						{
-							type : 'value'
-						}
-					],
-					series : [
-						{
-							name:'昨日',
-							type:'line',
-							areaStyle: {normal: {}},
-							data:[]
-						},
-						{
-							name:'今日',
-							type:'line',
-							areaStyle: {normal: {}},
-					  //      <!--data:[220, 182, 191, 234, 290, 330, 310,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]-->
-							data:[]
-						}
-					]
-				});
+			yesterday(){
+				$(".check-group").show();
+				s.startTime = 1;
+				this.compareHours(s);
+			},
+			daybefore(){
+				s.endTime = s.startTime + 1;
+				this.compareHours(s);
+			},
+			weekbefore(){
+				s.endTime = s.startTime + 6;
+				this.compareHours(s);
+			},
+			pv(){
+				s.type = 'pv';
+				this.compareHours(s);
+			},
+			ip(){
+				s.type = 'ip';
+				this.compareHours(s);
+			},
+			week(){
+				$(".check-group").hide();
+			},
+			month(){
+				$(".check-group").hide();
 			},
 			//最近7天ip数
-			draw(data){
+			compareHours(data){
+				var  myChart = echarts.init(document.getElementById('grid1'));
+				var com = this;
 				$.ajax({
 					url:'http://192.168.1.109/mmonitor/analyse/compare-hours',
 					method:'post',
@@ -356,33 +309,36 @@
 						type:data.type
 					},
 					success:function(data){
-						console.log(123);
+						com.compare = data.data.item[0][0];
+						com.compared = data.data.item[0][1];
+						//console.log(com.compare);
+						//console.log(com.compared);
 					// 填入数据
 						myChart.setOption({
 							xAxis: {
-								data: data.data.item[0]
+								data: data.data.item[1]
+							},
+							legend:{
+								data:[com.compared,com.compare]
+								//data:['2016-12-26','2016-12-25']
 							},
 							series: [{
 								// 根据名字对应到相应的系列
-								name:'昨日',
-								data: data.data.item[1]
+								name:data.data.item[0][0],
+								data: data.data.item[2]
 							},
 							{
 								// 根据名字对应到相应的系列
-								name:'今日',
-								data: data.data.item[2]
+								name:data.data.item[0][1],
+								data: data.data.item[3]
 							}
 							]
 						});
 					}
 				});
-				var  myChart = echarts.init(document.getElementById('grid1'));
 				myChart.setOption({
 					tooltip : {
 						trigger: 'axis'
-					},
-					legend: {
-						data:['昨日','今日']
 					},
 					grid: {
 						left: '3%',
@@ -406,13 +362,13 @@
 					],
 					series : [
 						{
-							name:'昨日',
+							name:com.compare,
 							type:'line',
 							areaStyle: {normal: {}},
 							data:[]
 						},
 						{
-							name:'今日',
+							name:com.compared,
 							type:'line',
 							areaStyle: {normal: {}},
 					  //      <!--data:[220, 182, 191, 234, 290, 330, 310,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]-->
@@ -421,80 +377,19 @@
 					]
 				});
 			},
-			//最近30天的pv量
-			draw3(){
-				$.ajax({
-					url:'http://192.168.1.109/mmonitor/analyse/compare-days',
-					method:'post',
-					dataType:'json',
-					data:{
-						appkey:'201612191',
-						date:30,
-						type:'pv'
-					},
-					success:function(data){
-						console.log(data.data.item[0])
-					// 填入数据
-						myChart.setOption({
-							xAxis: {
-								data: data.data.item[0]
-							},
-							series: [{
-								// 根据名字对应到相应的系列
-								name:'最近30天',
-								data: data.data.item[1]
-							},
-							]
-						});
-					}
-				});
-				var  myChart = echarts.init(document.getElementById('grid1'));
-				myChart.setOption({
-					tooltip : {
-						trigger: 'axis'
-					},
-					legend: {
-						data:['最近30天']
-					},
-					grid: {
-						left: '3%',
-						right: '4%',
-						bottom: '3%',
-						containLabel: true
-					},
-					calculable: true,
-					xAxis : [
-						{
-							type : 'category',
-							boundaryGap : false,
-							data : []
-						  //  data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
-						}
-					],
-					yAxis : [
-						{
-							type : 'value'
-						}
-					],
-					series : [
-						{
-							name:'最近30天',
-							type:'line',
-							areaStyle: {normal: {}},
-							data:[]
-						},
-					]
-				});
-			},
+
 			//今天和昨天的访问量
-			todayYesterday(){
+			todayYesterday(data){
 				var vm = this;
 				$.ajax({
 					url:'http://192.168.1.109/mmonitor/analyse/today',
 					method:'post',
 					dataType:'json',
 					data:{
-						appkey:'201612191',
+						appkey:data.appkey,
+						startTime:data.startTime,
+						endTime:data.endTime,
+						type:data.type
 					},
 					success:function(data){
 						console.log(111111);
@@ -506,11 +401,98 @@
 						vm.yesterdayip = data.data['yesterday'].ip;
 					}
 				});
+			},
+
+			//按照天数比较
+			compareDays(){
+				var  myChart = echarts.init(document.getElementById('grid1'));
+				var com = this;
+				$.ajax({
+					url:'http://192.168.1.109/mmonitor/analyse/compare-days',
+					method:'post',
+					dataType:'json',
+					data:{
+						appkey:data.appkey,
+						startTime:data.startTime,
+						endTime:data.endTime,
+						type:data.type
+					},
+					success:function(data){
+						com.compare = data.data.item[0][0];
+						com.compared = data.data.item[0][1];
+						//console.log(com.compare);
+						//console.log(com.compared);
+					// 填入数据
+						myChart.setOption({
+							xAxis: {
+								data: data.data.item[1]
+							},
+							legend:{
+								data:[com.compared,com.compare]
+								//data:['2016-12-26','2016-12-25']
+							},
+							series: [{
+								// 根据名字对应到相应的系列
+								name:data.data.item[0][0],
+								data: data.data.item[2]
+							},
+							{
+								// 根据名字对应到相应的系列
+								name:data.data.item[0][1],
+								data: data.data.item[3]
+							}
+							]
+						});
+					}
+				});
+				myChart.setOption({
+					tooltip : {
+						trigger: 'axis'
+					},
+					grid: {
+						left: '3%',
+						right: '4%',
+						bottom: '3%',
+						containLabel: true
+					},
+					calculable: true,
+					xAxis : [
+						{
+							type : 'category',
+							boundaryGap : false,
+							data : []
+						  //  data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
+						}
+					],
+					yAxis : [
+						{
+							type : 'value'
+						}
+					],
+					series : [
+						{
+							name:com.compare,
+							type:'line',
+							areaStyle: {normal: {}},
+							data:[]
+						},
+						{
+							name:com.compared,
+							type:'line',
+							areaStyle: {normal: {}},
+					  //      <!--data:[220, 182, 191, 234, 290, 330, 310,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]-->
+							data:[]
+						}
+					]
+				});
 			}
 		},
+
+
 		mounted() {
-			this.yesterdayTodayIp();
-			this.todayYesterday();
+			//this.yesterdayTodayIp();
+			//this.todayYesterday();
+			this.today();
 		}
 	}
 </script>

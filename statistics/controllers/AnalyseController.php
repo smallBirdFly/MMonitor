@@ -71,28 +71,22 @@ class AnalyseController extends \yii\web\Controller
             //比较时间
             $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60- $start * 86400);
             $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600 - $start * 86400);
-            Yii::error($startTime);
 //            被比较的时间
             $cstartTime = date('Y-m-d H:i:s',strtotime($startTime)-86400 * $past);
             $cendTime = date('Y-m-d H:i:s',strtotime($endTime)-86400 * $past);
-            Yii::error($cstartTime);
 //            判断是否为求独立访问量
             if($type == 'pv')
             {
                 //要比较日期各个小时的访问量
-                $ress[$i] = date('Y-m-d',time()- $start * 86400);
                 $ress[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
                 //统计昨天各个小时的pv量
-                $resp[$i] = date('Y-m-d',time()-86400* $past);
                 $resp[$i] = Scount::find()->where(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->andWhere(['appkey'=>$appkey,'type'=>1])->count();
             }
             else if($type == 'ip')
             {
                 //要比较日期各个小时的独立访问量
-                $ress[$i] = date('Y-m-d',time()- $start * 86400);
                 $ress[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
                 //统计昨天各个小时的ip量
-                $resp[$i] = date('Y-m-d',time()-86400* $past);
                 $resp[$i] = Scount::find()->where(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->andWhere(['appkey'=>$appkey,'type'=>1])->groupBy('ip')->count();
             }
             else
@@ -102,7 +96,12 @@ class AnalyseController extends \yii\web\Controller
             }
 
         }
+        $date[] = date('Y-m-d',strtotime($startTime));
+        $date[] = date('Y-m-d',strtotime($cstartTime));
+        Yii::error($startTime);
+        Yii::error($cstartTime);
         $result['code'] = 200;
+        $result['data']['item'][] = $date;
         $result['data']['item'][] = $hours;
         $result['data']['item'][] = $ress;
         $result['data']['item'][] = $resp;
@@ -137,7 +136,10 @@ class AnalyseController extends \yii\web\Controller
 
             }
         }
+        $date[] = date("Y-m-d",strtotime($startTime));
+        $date[] = date("Y-m-d",strtotime($endTime));
         $result['code'] = 200;
+        $result['data']['item'][] = $date;
         $result['data']['item'][] = $days;
         $result['data']['item'][] = $pv;
         HttpResponseUtil::setJsonResponse($result);
