@@ -98,8 +98,6 @@ class AnalyseController extends \yii\web\Controller
         }
         $date[] = date('Y-m-d',strtotime($startTime));
         $date[] = date('Y-m-d',strtotime($cstartTime));
-        Yii::error($startTime);
-        Yii::error($cstartTime);
         $result['code'] = 200;
         $result['data']['item'][] = $date;
         $result['data']['item'][] = $hours;
@@ -136,10 +134,7 @@ class AnalyseController extends \yii\web\Controller
 
             }
         }
-        $date[] = date("Y-m-d",strtotime($startTime));
-        $date[] = date("Y-m-d",strtotime($endTime));
         $result['code'] = 200;
-        $result['data']['item'][] = $date;
         $result['data']['item'][] = $days;
         $result['data']['item'][] = $pv;
         HttpResponseUtil::setJsonResponse($result);

@@ -1,5 +1,32 @@
 <template>
 	<div id="app">
+        <h5>趋势分析</h5>
+        <div class="date-select-bar">
+            <div class="control-bar">
+                <a href="javascript:;" @click="today" class="date">今天</a>
+                <a href="javascript:;" @click="yesterday" class="date">昨天</a>
+                <a href="javascript:;" @click="week" class="date">最近7天</a>
+                <a href="javascript:;" @click="month" class="date">最近30天</a>
+                <div class="block">
+                    <span class="demonstration">选择日期</span>
+                    <el-date-picker
+                            v-model="value1"
+                            type="date"
+                            placeholder="选择日期">
+                    </el-date-picker>
+                </div>
+                <span><input v-model='checked' type="checkbox" class="compare">对比</span>
+                <div class="block" v-if="dataShow==true">
+                    <span class="demonstration">选择日期</span>
+                    <el-date-picker
+                            v-model="value2"
+                            type="date"
+                            placeholder="选择日期">
+                    </el-date-picker>
+                </div>
+            </div>
+            
+        </div>
         <div id="grid1"></div>
     </div>
 </template>
@@ -8,8 +35,45 @@
     import $ from '../jquery-1.12.1'
 	var echarts = require('echarts');
 	export default {
-		name:'app',
+		data(){
+		    return {
+		        value1:'',
+		        dataShow:false,
+		        checked:false
+		    }
+		},
+		computed:{
+			dataShow :function(){
+				if(this.checked==true){
+					return true;
+				}else if(this.checked==false){
+					return false;
+				}
+			}
+		},
 		methods:{
+			/*test(){
+				var self = this;
+				$(".compare").click(function(){
+					if($(this).is(':checked')){
+						self.datashow = true;
+						console.log(1111);
+						console.log(self.datashow);
+					}
+				});	
+			},*/
+			today(){
+
+			},
+			yesterday(){
+
+			},
+			week(){
+
+			},
+			month(){
+
+			},
 		    draw1(){
 		        $.ajax({
 					url:'http://192.168.1.109/mmonitor/analyse/compare-hours',
@@ -90,6 +154,7 @@
 		},
 		mounted() {
 			this.draw1();
+			//this.test();
 		}
 	}
 </script>
@@ -101,8 +166,18 @@
       -moz-osx-font-smoothing: grayscale;
       color: #2c3e50;
     }
-
     #grid1 {
 	height: 315px;
+    }
+    .date-select-bar {
+        margin-top: 18px;
+        border: 1px solid #dfe0e0;
+        overflow: hidden;
+    }
+    .compare{
+		display: inline;
+    }
+    .block{
+    	display: inline;
     }
 </style>
