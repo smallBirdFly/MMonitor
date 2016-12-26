@@ -119,10 +119,10 @@
 		<div class="fold"></div>
 		<div class="date-select-bar">
 			<div class="control-bar">
-				<a href="javascript:;" @click="today">今天</a>
-				<a href="javascript:;" @click="yesterday">昨天</a>
-				<a href="javascript:;" @click="week">最近7天</a>
-				<a href="javascript:;" @click="month">最近30天</a>
+				<a href="javascript:;" @click="today" class="date">今天</a>
+				<a href="javascript:;" @click="yesterday" class="date">昨天</a>
+				<a href="javascript:;" @click="week" class="date">最近7天</a>
+				<a href="javascript:;" @click="month" class="date">最近30天</a>
 			</div>
 		</div>
 		<div class="wrap clearfix">
@@ -134,13 +134,14 @@
 					</div>
 					<div class="line-row">
 						<div class="control-bar left">
-							<a href="javascript:;" @click="pv">浏览量(PV)</a>
-							<a href="javascript:;" @click="ip">IP数</a>
+							<a href="javascript:;" @click="pv" class="type-visit">浏览量(PV)</a>
+							<a href="javascript:;" @click="ip" class="type-visit">IP数</a>
 						</div>
 						<div class="check-group right">
 							<span>对比：</span>
 							<label>
 								<input type="radio" name="date" checked="checked" @change="daybefore">
+
 								前一日
 							</label>
 							<label>
@@ -222,6 +223,14 @@
 				</div>
 			</div>
 			<div class="row3 left">
+			    <div class="exception_date-select-bar">
+                    <div class="control-bar">
+                        <a href="javascript:;" @click="err" class="date">今天</a>
+                        <a href="javascript:;" @click="yesterday" class="date">昨天</a>
+                        <a href="javascript:;" @click="week" class="date">最近7天</a>
+                        <a href="javascript:;" @click="month" class="date">最近30天</a>
+                    </div>
+                </div>
 				<div class="table-grid-item">
 					<div class="title clearfix">
 						<span>异常统计</span>
@@ -249,8 +258,20 @@
 		endTime: 1,
 		type:'pv'
 	};
-	export default {
 
+	var d = {
+		appkey : '201612191',
+		date:6,
+		type:'pv'
+	};
+	//异常初始化参数
+    var err_s = {
+    	appkey : '201612194',
+    	type : 0,
+    	day : 0
+    };
+	//访问的类型，浏览量或独立访问量
+	export default {
 		data(){
 			return {
 				compare:'',
@@ -259,10 +280,19 @@
 				todaypv:'',
 				yesterdayip:'',
 				yesterdaypv:'',
+				type:'pv量',
+				//用于标注是按照天还是按照小时来分析ip和pv
+				tag:1
 			}
 		},
 		methods:{
 			today(){
+				$(".date").click(function(){
+					$(this).css('background','green').siblings().css("background-color","white");;
+				});
+				$(".type-visit").click(function(){
+					$(this).css('background','green').siblings().css("background-color","white");;
+				});
 				$(".check-group").show();
 				s.startTime = 0;
 				this.compareHours(s);
@@ -281,23 +311,120 @@
 				this.compareHours(s);
 			},
 			pv(){
-				s.type = 'pv';
-				this.compareHours(s);
+				if(this.tag == 1){
+					s.type = 'pv';
+					this.compareHours(s);
+				}
+				else
+				{
+					this.type = 'pv量'	;
+					d.type = 'pv';
+					this.compareDays(d);
+				}
 			},
 			ip(){
-				s.type = 'ip';
-				this.compareHours(s);
+				if(this.tag == 0)
+				{
+					this.type = 'ip量'	;
+					d.type = 'ip';
+					this.compareDays(d);
+				}
+				else
+				{
+					s.type = 'ip';
+					this.compareHours(s);
+				}
 			},
 			week(){
 				$(".check-group").hide();
+				d.date = 6;
+				this.compareDays(d);
 			},
 			month(){
 				$(".check-group").hide();
+				d.date = 29;
+				this.compareDays(d);
+			},
+			err(){
+                this.exceptionHours(err_s);
+			},
+			warning(){
+                this.exceptionHours(err_s);
+			},
+			exceptionHours(data){
+			    var  myChart = echarts.init(document.getElementById('grid3'));
+                var com = this;
+                this.tag = 1;
+                $.ajax({
+                	url:'http://192.168.1.126/mmonitor/exceptions/exception-hours',
+                	method:'post',
+                	dataType:'json',
+                	data:{
+                		appkey:201612194,
+                		type:0,
+                		day:0
+                	},
+                	success:function(data){
+                		com.compare = data.data.item[0];
+                		console.log(data.data.item[2]);
+                		// 填入数据
+                		myChart.setOption({
+                			xAxis: {
+                			    data: data.data.item[1]
+                			},
+                			legend:{
+                				data:[com.compare]
+                				//data:['2016-12-26','2016-12-25']
+                			},
+                			series: [
+                                {
+                                    // 根据名字对应到相应的系列
+                                    name:com.compare,
+                                    data: data.data.item[2]
+                                }
+                			]
+                		});
+                	}
+                });
+                myChart.setOption({
+                	tooltip : {
+                		trigger: 'axis'
+                	},
+                		grid: {
+                			left: '3%',
+                			right: '4%',
+                			bottom: '3%',
+                			containLabel: true
+                		},
+                			calculable: true,
+                			xAxis : [
+                				{
+                					type : 'category',
+                					boundaryGap : false,
+                					data : []
+                				    //  data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
+                				}
+                			],
+                			yAxis : [
+                				{
+                					type : 'value'
+                				}
+                			],
+                			series : [
+                				{
+                					name:com.compare,
+                					type:'line',
+                					areaStyle: {normal: {}},
+                					data:[]
+                				}
+                			]
+                });
 			},
 			//最近7天ip数
 			compareHours(data){
 				var  myChart = echarts.init(document.getElementById('grid1'));
 				var com = this;
+				this.tag = 1;
 				$.ajax({
 					url:'http://192.168.1.109/mmonitor/analyse/compare-hours',
 					method:'post',
@@ -404,45 +531,38 @@
 			},
 
 			//按照天数比较
-			compareDays(){
+			compareDays(data){
 				var  myChart = echarts.init(document.getElementById('grid1'));
 				var com = this;
+				this.tag = 0;
 				$.ajax({
 					url:'http://192.168.1.109/mmonitor/analyse/compare-days',
 					method:'post',
 					dataType:'json',
 					data:{
 						appkey:data.appkey,
-						startTime:data.startTime,
-						endTime:data.endTime,
+						date:data.date,
 						type:data.type
 					},
 					success:function(data){
-						com.compare = data.data.item[0][0];
-						com.compared = data.data.item[0][1];
-						//console.log(com.compare);
-						//console.log(com.compared);
-					// 填入数据
-						myChart.setOption({
-							xAxis: {
-								data: data.data.item[1]
-							},
-							legend:{
-								data:[com.compared,com.compare]
-								//data:['2016-12-26','2016-12-25']
-							},
-							series: [{
-								// 根据名字对应到相应的系列
-								name:data.data.item[0][0],
-								data: data.data.item[2]
-							},
-							{
-								// 根据名字对应到相应的系列
-								name:data.data.item[0][1],
-								data: data.data.item[3]
-							}
-							]
-						});
+						if(data.code == 200){
+						// 填入数据
+							myChart.setOption({
+								xAxis: {
+									data: data.data.item[0]
+								},
+								legend:{
+									data:[com.type]
+									//data:['2016-12-26','2016-12-25']
+								},
+								series: [{
+									// 根据名字对应到相应的系列
+									name:com.type,
+									data: data.data.item[1]
+								}
+								]
+							});
+						}
 					}
 				});
 				myChart.setOption({
@@ -471,28 +591,20 @@
 					],
 					series : [
 						{
-							name:com.compare,
+							name:com.type,
 							type:'line',
 							areaStyle: {normal: {}},
-							data:[]
-						},
-						{
-							name:com.compared,
-							type:'line',
-							areaStyle: {normal: {}},
-					  //      <!--data:[220, 182, 191, 234, 290, 330, 310,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]-->
 							data:[]
 						}
 					]
 				});
 			}
 		},
-
-
 		mounted() {
 			//this.yesterdayTodayIp();
 			//this.todayYesterday();
 			this.today();
+			this.err();
 		}
 	}
 </script>
@@ -658,5 +770,8 @@ a {
 }
 .check-group input {
 	vertical-align: middle;
+}
+.date{
+	background:white;
 }
 </style>
