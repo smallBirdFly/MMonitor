@@ -41,7 +41,11 @@ class ExceptionsController extends Controller
             $startTime = date('Y-m-d H:i:s', strtotime($day) + $i * 60 * 60);
             $endTime = date('Y-m-d H:i:s', strtotime($day) + $i * 60 * 60 + 3600);
             //今天各个小时的错误量
+<<<<<<< HEAD
             $exceptions[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => $type])->count();
+=======
+            $exceptions[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => $type])->count();
+>>>>>>> 0d020adb14b49a55026a7c944217d618909c9039
         }
         $result['code'] = 200;
         $date = date('Y-m-d',time()-86400*$day);
@@ -63,7 +67,11 @@ class ExceptionsController extends Controller
             //当前时间
             $startTime = date('Y-m-d',time()-86400*($date - $i - 1));
             $endTime = date('Y-m-d', time()-86400*($date - $i -2));
+<<<<<<< HEAD
             $exceptions[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => $type])->count();
+=======
+            $exceptions[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => $type])->count();
+>>>>>>> 0d020adb14b49a55026a7c944217d618909c9039
         }
         Yii::error($days);
         $result['code'] = 200;
