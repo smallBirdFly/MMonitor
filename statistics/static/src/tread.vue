@@ -24,6 +24,12 @@
                             placeholder="选择日期">
                     </el-date-picker>
                 </div>
+                <div style="float:right">
+	                <a href="javascript:;" @click="today" class="analysis-time">按时</a>
+	                <a href="javascript:;" @click="yesterday" class="analysis-time">按天</a>
+	                <a href="javascript:;" @click="week" class="analysis-time">按周</a>
+	                <a href="javascript:;" @click="month" class="date">按月</a>
+                </div>
             </div>
             
         </div>
@@ -34,10 +40,16 @@
 <script>
     import $ from '../jquery-1.12.1'
 	var echarts = require('echarts');
+	var trend = {
+		appkey:'201612191',
+		startTime:'2016-12-01',
+		endTime:'2061-12-25'
+	};
 	export default {
 		data(){
 		    return {
 		        value1:'',
+		        value2:'',
 		        dataShow:false,
 		        checked:false
 		    }
@@ -179,5 +191,8 @@
     }
     .block{
     	display: inline;
+    }
+    .analysis-time{
+    	float: right;
     }
 </style>

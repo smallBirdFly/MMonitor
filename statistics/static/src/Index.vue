@@ -258,24 +258,17 @@
 		endTime: 1,
 		type:'pv'
 	};
-<<<<<<< HEAD
-
-=======
->>>>>>> 0d020adb14b49a55026a7c944217d618909c9039
 	var d = {
 		appkey : '201612191',
 		date:6,
 		type:'pv'
 	};
-<<<<<<< HEAD
 	//异常初始化参数
     var err_s = {
     	appkey : '201612194',
     	type : 0,
     	day : 0
     };
-=======
->>>>>>> 0d020adb14b49a55026a7c944217d618909c9039
 	//访问的类型，浏览量或独立访问量
 	export default {
 		data(){
@@ -287,11 +280,8 @@
 				yesterdayip:'',
 				yesterdaypv:'',
 				type:'pv量',
-<<<<<<< HEAD
 				//用于标注是按照天还是按照小时来分析ip和pv
-=======
 				//用于标注是按照天还是按照小时俩分析ip和pv
->>>>>>> 0d020adb14b49a55026a7c944217d618909c9039
 				tag:1
 			}
 		},
@@ -354,7 +344,6 @@
 				$(".check-group").hide();
 				d.date = 29;
 				this.compareDays(d);
-<<<<<<< HEAD
 			},
 			err(){
                 this.exceptionHours(err_s);
@@ -430,8 +419,6 @@
                 				}
                 			]
                 });
-=======
->>>>>>> 0d020adb14b49a55026a7c944217d618909c9039
 			},
 			//最近7天ip数
 			compareHours(data){

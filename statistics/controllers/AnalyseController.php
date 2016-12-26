@@ -163,30 +163,33 @@ class AnalyseController extends \yii\web\Controller
     {
         $request = Yii::$app->request;
         $appkey = $request->post('appkey');
-        $startTime = $request->post('startTime');
-        $endTime = $request->post('endTime');
+        $startTime = date('Y-m-d',time()-$request->post('startTime') * 86400);
+        $endTime = date('Y-m-d',time()-$request->post('endTime') * 86400);
+//        Yii::error($startTime);
+//        Yii::error($endTime);
         //当前时间
         for($i = 0; $i < 24; $i++)
         {
             if ($i < 10)
             {
-                $hours[][] = '0' . $i . ':00 - 0' . $i . ':59';
+                $hours[] = '0' . $i . ':00 - 0' . $i . ':59';
             }
             else
             {
-                $hours[][] = $i . ':00 - ' . $i . ':59';
+                $hours[] = $i . ':00 - ' . $i . ':59';
             }
             //每天各个小时的访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+            $pv[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
             //每天各个小时的独立访问量
-            $res[$i][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+            $ip[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
         }
         $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
         $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
         $result['code'] = 200;
         $result['data']['sum'][] = $sum;
         $result['data']['item'][] = $hours;
-        $result['data']['item'][] = $res;
+        $result['data']['item'][] = $pv;
+        $result['data']['item'][] = $ip;
         HttpResponseUtil::setJsonResponse($result);
     }
     //今天按照小时分析pv和ip
