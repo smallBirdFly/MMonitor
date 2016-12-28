@@ -25,7 +25,7 @@ class AuthFilter extends \yii\base\ActionFilter
                     'code'=>200
                 );
                 return HttpResponseUtil::setJsonResponse($ret);
-            } Yii::error(123);
+            }
         return parent::beforeAction($action);
         if(SessionUtil::isLogin())
         {

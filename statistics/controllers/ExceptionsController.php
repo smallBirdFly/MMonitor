@@ -87,7 +87,9 @@ class ExceptionsController extends Controller
             $res = $command->query($sql);*/
 
             $exceptions[$i][] = $i;
-            $exceptions[$i][] = Scount::find()->where(['>=', 'time', strtotime($startTime3)])->andWhere(['<', 'time', strtotime($endTime3)])->andWhere(['appkey'=>$appkey ,'type' => $type])->count();
+            $exceptions[$i][] = Scount::find()->Where(['appkey'=>$appkey ,'type' => $type])->andWhere(['>=', 'time', $startTime3])->andWhere(['<', 'time', $endTime3])->count();
+
+//            $pv = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
         }
         $result['code'] = 200;
         $result['data']['item'][] = $date;
@@ -97,7 +99,7 @@ class ExceptionsController extends Controller
     }
 
 
-    public function actionExceptionDays()
+    /*public function actionExceptionDays()
     {
         $request = Yii::$app->request;
         $type = $request->post('type');
@@ -116,5 +118,5 @@ class ExceptionsController extends Controller
         $result['data']['item'][] = $days;
         $result['data']['item'][] = $exceptions;
         HttpResponseUtil::setJsonResponse($result);
-    }
+    }*/
 }
