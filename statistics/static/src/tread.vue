@@ -33,6 +33,10 @@
                             placeholder="选择日期">
                     </el-date-picker>
                 </div>
+                <div style="float:right" v-if="dataShow == true">
+                	<a href="javascript:;" @click="pv" class="compare-type" style="background:green">PV</a>
+                	<a href="javascript:;" @click="ip" class="compare-type">IP</a>
+                </div>
                 <div style="float:right">
 	                <a href="javascript:;" @click="hours" class="analysis-time" style="background:green">按时</a>
 	                <a href="javascript:;" @click="days" class="analysis-time">按天</a>
@@ -51,14 +55,16 @@
     import moment from 'moment'
 	var echarts = require('echarts');
 	var trend = {
-		appkey:'201612191',
-		startTime:0,
-		endTime:-1
+		appkey : '201612191',
+		startTime : moment().format('YYYY-MM-DD'),
+		endTime : moment().format('YYYY-MM-DD')
 	};
-	var compareDate = {
+	//比较的初始化数据
+	var compareData = {
 		appkey : '201612191',
 		compareStartDay : moment().format('YYYY-MM-DD'),
 		compareEndDay : moment().add(1,'days').format('YYYY-MM-DD'),
+		comparedStartDay : ""
 	};
 	export default {
 		data(){
@@ -76,16 +82,17 @@
 		        compareIp:'',
 		        comparePv:'',
 		        // 比较的初始化类型
-		        compareType:'hour',
-		        // 距离现在的天数
-		        dateStarts:'',
-		        dateEnds:'',
+		        compareTypeTime:'hour',
+		        // 开始日期
+		        startDate:'',
+		        // 结束日期
+		        endDate:'',
 		        //比较的开始日期
 		        dateCompare:'',
 		        // 标记是比较的类型
 		        tag:'today',
-		        // 被比较的日期
-
+		        // 比较的类型
+		        compareType:'pv',
 		    }
 		},
 		computed:{
@@ -105,96 +112,147 @@
 			}
 		},
 		methods:{
+			//选择比较的方式
+			pv(){
+				this.compareType = 'pv';
+			},
+			ip(){
+				this.compareType = 'ip';
+			},
+
+			//pv和ip分析
 			today(){
-				console.log(compareDate);
+				//console.log(compareDate);
 				$(".date").click(function(){
-					$(this).css('background','green').siblings().css("background-color","white");;
+					$(this).css('background','green').siblings().css("background-color","white");
 				});
 				$(".analysis-time").click(function(){
-					$(this).css('background','green').siblings().css("background-color","white");;
+					$(this).css('background','green').siblings().css("background-color","white");
 				});
-				trend.startTime = 0;
-				trend.endTime = -1;
+				$(".compare-type").click(function(){
+					console.log(123);
+					$(this).css('background','green').siblings().css("background-color","white");
+				});
+				trend.startTime = moment().format('YYYY-MM-DD');
+				trend.endTime = moment().format('YYYY-MM-DD');
 				this.tag = 'today';
 				this.trendHours(trend);
 			},
 			yesterday(){
-				trend.startTime = 1;
-				trend.endTime = 0;
+				trend.startTime = moment().add(-1,'days').format('YYYY-MM-DD');
+				trend.endTime = moment().add(-1,'days').format('YYYY-MM-DD');
 				this.tag = 'yesterday';
 				this.trendHours(trend);
 			},
 			week(){
 				this.tag = 'week';
-				if(this.compareType == 'hour'){
-					trend.startTime = 6;
-					trend.endTime = -1;
+				// 最近7天
+				trend.startTime = moment().add(-6,'days').format('YYYY-MM-DD');
+				trend.endTime = moment().format('YYYY-MM-DD');
+				if(this.compareTypeTime == 'hour'){
 					this.trendHours(trend);
-				}else if(this.compareType == 'day'){
-					trend.startTime = 7;
-					trend.endTime = 0;
+				}else if(this.compareTypeTime == 'day'){
 					this.trendDays(trend);
 				}
 			},
 			month(){
 				this.tag = 'month';
-				if(this.compareType == 'hour'){
-					trend.startTime = 29;
-					trend.endTime = -1;
+				// 最近30天
+				trend.startTime = moment().add(-29,'days').format('YYYY-MM-DD');
+				trend.endTime = moment().format('YYYY-MM-DD');
+				if(this.compareTypeTime == 'hour'){
 					this.trendHours(trend);
-				}else if(this.compareType == 'day'){
-					trend.startTime = 30;
-					trend.endTime = 0;
+				}else if(this.compareTypeTime == 'day'){
 					this.trendDays(trend);
-				}else if(this.compareType == 'week'){
-					trend.startTime = 29;
-					trend.endTime = -1;
+				}else if(this.compareTypeTime== 'week'){
 					this.trendWeeks(trend);
 				}
 			},
 			//按照时间区间分析情况
 			range(){
 				this.tag = 'range';
-				if(this.compareType == 'hour'){
-					trend.startTime = this.dateStarts;
-					trend.endTime = this.dateEnds - 1;
+				trend.startTime = this.startDate;
+				trend.endTime = this.endDate;
+				if(this.compareTypeTime == 'hour'){
 					this.trendHours(trend);
-				}else if(this.compareType == 'day'){
-					if(this.rangeShow == true){
-						trend.startTime = this.dateStarts + 1;
-						trend.endTime = this.dateEnds;
-						this.trendDays(trend);
-					}else{
-						alert('必须是一个时间区间才行');
-						return;
-					}
-					
+				}else if(this.compareTypeTime == 'day'){
+					this.trendDays(trend);	
+				}else if(this.compareTypeTime == 'week'){
+					this.trendWeeks(trend);
+				}else if(this.compareTypeTime == 'month'){
+					this.trendMonth(trend);
 				}
 			},
+
 			compareToday(){
-				this.comparePv();
+				compareData.compareStartDay = moment().format('YYYY-MM-DD'),
+				compareData.compareEndDay = compareData.compareStartDay,
+				compareData.comparedStartDay = this.dateCompare;
+				this.compareHour(compareData);
 			},
 			compareYesterday(){
-
+				compareData.compareStartDay = moment().add(-1,'days').format('YYYY-MM-DD');
+				compareData.compareEndDay = compareData.compareStartDay;
+				compareData.comparedStartDay = this.dateCompare;
+				this.compareHour(compareData);
 			},
 			compareWeek(){
-
+				console.log(this.compareTypeTime);
+				compareData.compareStartDay = moment().add(-6,'days').format('YYYY-MM-DD');
+				compareData.compareEndDay =  moment().format('YYYY-MM-DD');
+				compareData.comparedStartDay = this.dateCompare;
+				if(this.compareTypeTime == 'hour'){
+					this.compareHour(compareData);
+				}else if(this.compareTypeTime == 'day'){
+					this.compareDay(compareData);
+				}
 			},
 			compareMonth(){
-
+				console.log(this.compareTypeTime);
+				compareData.compareStartDay = moment().add(-29,'days').format('YYYY-MM-DD');
+				compareData.compareEndDay =  moment().format('YYYY-MM-DD');
+				compareData.comparedStartDay = this.dateCompare;
+				if(this.compareTypeTime == 'hour'){
+					this.compareHour(compareData);
+				}else if(this.compareTypeTime == 'day'){
+					this.compareDay(compareData);
+				}else if(this.compareTypeTime == 'week'){
+					this.compareWeeks(compareData);
+				}
 			},
+			compareRange(){
+				console.log(this.compareTypeTime);
+				compareData.compareStartDay = this.startDate;
+				compareData.compareEndDay = this.endDate;
+				compareData.comparedStartDay = this.dateCompare;
+				if(this.compareTypeTime == 'hour'){
+					console.log(compareData.compareStartDay);
+					console.log(compareData.compareEndDay);
+					console.log(compareData.comparedStartDay);
+					this.compareHour(compareData);
+				}else if(this.compareTypeTime == 'day'){
+					this.compareDay(compareData);
+				}else if(this.compareTypeTime == 'week'){
+					this.compareWeeks(compareData);
+				}else if(this.compareTypeTime == 'month'){
+					this.compareMonths(compareData);
+				}
+			},
+
 			hours(){
-				this.compareType = 'hour';
+				this.compareTypeTime = 'hour';
 			},
 			days(){
-				this.compareType = 'day';
+				this.compareTypeTime = 'day';
 			},
 			weeks(){
-				this.compareType = 'week';
+				this.compareTypeTime = 'week';
 			},
 			months(){
-				this.compareType = 'month';
+				this.compareTypeTime = 'month';
 			},
+
+			// 按照小时分析pv/ip
 			trendHours(data){
 			    var  myChart = echarts.init(document.getElementById('grid1'));
                 var com = this;
@@ -209,13 +267,8 @@
 					},
 					success:function(data){
 						if(data.code == 200){
-							if(com.rangeShow == false){
-								com.compareIp = data.data.item[0][0] + ' ip';
-								com.comparePv = data.data.item[0][0] + ' pv';
-							}else{
-								com.compareIp = data.data.item[0][0] + ' - ' + data.data.item[0][1] + ' ip';
-								com.comparePv = data.data.item[0][0] + ' - ' + data.data.item[0][1] + ' pv';
-							}
+							com.compareIp = data.data.item[0][0] + ' ip';
+							com.comparePv = data.data.item[0][0] + ' pv';
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[1]
@@ -280,6 +333,7 @@
 						]
 				});
 			},
+			// 按照天数分析pv/ip
 			trendDays(data){
 				var  myChart = echarts.init(document.getElementById('grid1'));
                 var com = this;
@@ -294,8 +348,8 @@
 					},
 					success:function(data){
 						if(data.code == 200){
-							com.compareIp = data.data.item[0][0] + ' - ' + data.data.item[0][data.data.item[0].length -1] + ' ip';
-							com.comparePv = data.data.item[0][0] + ' - ' + data.data.item[0][data.data.item[0].length -1] + ' pv';
+							com.compareIp = data.data.item[0][0] + '-' + data.data.item[0][data.data.item[0].length -1] + ' ip';
+							com.comparePv = data.data.item[0][0] + '-' + data.data.item[0][data.data.item[0].length -1] + ' pv';
 							/*if(com.rangeShow == false){
 								return;	
 							}else{
@@ -362,6 +416,7 @@
 						]
 				});
 			},
+			// 按照星期分析pv/ip
 			trendWeeks(data){
 				var  myChart = echarts.init(document.getElementById('grid1'));
                 var com = this;
@@ -375,7 +430,6 @@
 						endTime:data.endTime
 					},
 					success:function(data){
-						// console.log(data.data.item[0][data.data.item[0].length -1]);
 						if(data.code == 200){
 							com.compareIp = '独立IP';
 							com.comparePv = '访问量';
@@ -439,52 +493,389 @@
 						]
 				});
 			},
-			compareHourPv(data){
-
+			//按照月份分析pv和ip
+			trendMonth(data){
+				var  myChart = echarts.init(document.getElementById('grid1'));
+                var com = this;
+				$.ajax({
+					url:'http://192.168.1.109/mmonitor/analyse/trend-months',
+					method:'post',
+					dateType:'json',
+					data:{
+						appkey:data.appkey,
+						startTime:data.startTime,
+						endTime:data.endTime
+					},
+					success:function(data){
+						// console.log(data.data.item[0][data.data.item[0].length -1]);
+						console.log(data.code);
+						if(data.code == 200){
+							com.compareIp = '独立IP';
+							com.comparePv = '访问量';
+							myChart.setOption({
+								xAxis:{
+									data:data.data.item[0]
+								},
+								legend:{
+	                				data:[com.compareIp,com.comparePv]
+	                			},
+								series : [{
+									name:com.comparePv,
+									data:data.data.item[1],
+								},
+								{
+									name:com.compareIp,
+									data:data.data.item[2],
+								}
+								],
+							});
+						}
+						
+					}
+				});
+				myChart.setOption({
+						tooltip : {
+						trigger: 'axis'
+						},
+						grid: {
+							left: '3%',
+							right: '4%',
+							bottom: '3%',
+							containLabel: true
+						},
+						calculable: true,
+						xAxis : [
+							{
+								type : 'category',
+								boundaryGap : false,
+								data : []
+							}
+						],
+						yAxis : [
+							{
+								type : 'value'
+							}
+						],
+						series : [
+							{
+								name:com.comparePv,
+								type:'line',
+								areaStyle: {normal: {}},
+								data:[]
+							},
+							{
+								name:com.compareIp,
+								type:'line',
+								areaStyle: {normal: {}},
+								data:[]
+							}
+						]
+				});
 			},
-			compareHourIp(data){
+
+			// 按照小时比较两个时间内的pv/ip量
+			compareHour(data){
+				var  myChart = echarts.init(document.getElementById('grid1'));
+                var com = this;
+                var url = '';
+                if(this.compareType == 'pv'){
+                	url = 'http://192.168.1.109/mmonitor/analyse/compare-hour-pv'
+                }else if(this.compareType == 'ip'){
+                	url = 'http://192.168.1.109/mmonitor/analyse/compare-hour-ip';
+                }
+                //console.log(url);
+				$.ajax({
+					url:url,
+					method:'post',
+					dateType:'json',
+					data:{
+						appkey:data.appkey,
+						compareStartDay : data.compareStartDay,
+						compareEndDay : data.compareEndDay,
+						comparedStartDay : data.comparedStartDay
+					},
+					success:function(data){
+						// console.log(data.data.item[0][data.data.item[0].length -1]);
+						if(data.code == 200){
+							com.comparePv = data.data.item[0][0] + com.compareType;
+							com.compareIp = data.data.item[0][1] + com.compareType;
+							myChart.setOption({
+								xAxis:{
+									data:data.data.item[1]
+								},
+								legend:{
+	                				data:[com.comparePv,com.compareIp]
+	                			},
+								series : [{
+									name:com.comparePv,
+									data:data.data.item[2],
+								},
+								{
+									name:com.compareIp,
+									data:data.data.item[3],
+								}
+								],
+							});
+						}
+						
+					}
+				});
+				myChart.setOption({
+						tooltip : {
+						trigger: 'axis'
+						},
+						grid: {
+							left: '3%',
+							right: '4%',
+							bottom: '3%',
+							containLabel: true
+						},
+						calculable: true,
+						xAxis : [
+							{
+								type : 'category',
+								boundaryGap : false,
+								data : []
+							}
+						],
+						yAxis : [
+							{
+								type : 'value'
+							}
+						],
+						series : [
+							{
+								name:com.comparePv,
+								type:'line',
+								areaStyle: {normal: {}},
+								data:[]
+							},
+							{
+								name:com.compareIp,
+								type:'line',
+								areaStyle: {normal: {}},
+								data:[]
+							}
+						]
+				});
+			},
+			// 按照天数比较两个时间内的pv/ip量
+			compareDay(data){
+				var  myChart = echarts.init(document.getElementById('grid1'));
+                var com = this;
+                var url = '';
+                if(this.compareType == 'pv'){
+                	url = 'http://192.168.1.109/mmonitor/analyse/compare-day-pv'
+                }else if(this.compareType == 'ip'){
+                	url = 'http://192.168.1.109/mmonitor/analyse/compare-day-ip';
+                }
+                //console.log(url);
+				$.ajax({
+					url:url,
+					method:'post',
+					dateType:'json',
+					data:{
+						appkey:data.appkey,
+						compareStartDay : data.compareStartDay,
+						compareEndDay : data.compareEndDay,
+						comparedStartDay : data.comparedStartDay
+					},
+					success:function(data){
+						// console.log(data.data.item[0][data.data.item[0].length -1]);
+						if(data.code == 200){
+							com.comparePv = data.data.item[0][0] + com.compareType;
+							com.compareIp = data.data.item[0][1] + com.compareType;
+							myChart.setOption({
+								xAxis:{
+									data:data.data.item[1]
+								},
+								legend:{
+	                				data:[com.compareIp,com.comparePv]
+	                			},
+								series : [{
+									name:com.comparePv,
+									data:data.data.item[2],
+								},
+								{
+									name:com.compareIp,
+									data:data.data.item[3],
+								}
+								],
+							});
+						}
+						
+					}
+				});
+				myChart.setOption({
+						tooltip : {
+						trigger: 'axis'
+						},
+						grid: {
+							left: '3%',
+							right: '4%',
+							bottom: '3%',
+							containLabel: true
+						},
+						calculable: true,
+						xAxis : [
+							{
+								type : 'category',
+								boundaryGap : false,
+								data : []
+							}
+						],
+						yAxis : [
+							{
+								type : 'value'
+							}
+						],
+						series : [
+							{
+								name:com.comparePv,
+								type:'line',
+								areaStyle: {normal: {}},
+								data:[]
+							},
+							{
+								name:com.compareIp,
+								type:'line',
+								areaStyle: {normal: {}},
+								data:[]
+							}
+						]
+				});
+			},
+			compareWeeks(data){
+				var  myChart = echarts.init(document.getElementById('grid1'));
+                var com = this;
+                var url = '';
+                if(this.compareType == 'pv'){
+                	url = 'http://192.168.1.109/mmonitor/analyse/compare-week-pv'
+                }else if(this.compareType == 'ip'){
+                	url = 'http://192.168.1.109/mmonitor/analyse/compare-week-ip';
+                }
+                //console.log(url);
+				$.ajax({
+					url:url,
+					method:'post',
+					dateType:'json',
+					data:{
+						appkey:data.appkey,
+						compareStartDay : data.compareStartDay,
+						compareEndDay : data.compareEndDay,
+						comparedStartDay : data.comparedStartDay
+					},
+					success:function(data){
+						// console.log(data.data.item[0][data.data.item[0].length -1]);
+						if(data.code == 200){
+							com.comparePv = data.data.item[0][0] + com.compareType;
+							com.compareIp = data.data.item[0][1] + com.compareType;
+							myChart.setOption({
+								xAxis:{
+									data:data.data.item[1]
+								},
+								legend:{
+	                				data:[com.compareIp,com.comparePv]
+	                			},
+								series : [{
+									name:com.comparePv,
+									data:data.data.item[2],
+								},
+								{
+									name:com.compareIp,
+									data:data.data.item[3],
+								}
+								],
+							});
+						}
+						
+					}
+				});
+				myChart.setOption({
+						tooltip : {
+						trigger: 'axis'
+						},
+						grid: {
+							left: '3%',
+							right: '4%',
+							bottom: '3%',
+							containLabel: true
+						},
+						calculable: true,
+						xAxis : [
+							{
+								type : 'category',
+								boundaryGap : false,
+								data : []
+							}
+						],
+						yAxis : [
+							{
+								type : 'value'
+							}
+						],
+						series : [
+							{
+								name:com.comparePv,
+								type:'line',
+								areaStyle: {normal: {}},
+								data:[]
+							},
+							{
+								name:com.compareIp,
+								type:'line',
+								areaStyle: {normal: {}},
+								data:[]
+							}
+						]
+				});
+			},
+			compareMonths(data){
 
 			},
 		},
 		watch:{
 			dateStart:function(val) {
 				if(val) {
-					this.dateStarts = moment(val).format('YYYY-MM-DD').toString();
-					//获取距离现在的天数
-					var now = moment().format('YYYY-MM-DD HH:mm:ss');
-					//console.log(moment(now,'YYYY-MM-DD').unix());
-					this.dateStarts = (moment(now,'YYYY-MM-DD').unix() - moment(this.dateStarts,"YYYY-MM-DD").unix())/86400;
-					// console.log(this.dateStarts);
-					if(this.dateEnd){
+					this.startDate = moment(val).format('YYYY-MM-DD').toString();
+					// console.log(moment(val).unix());
+					if(this.checked == false){
+						if(this.endDate && this.rangeShow == true){
+							if(moment(val).unix() >  moment(this.endDate).unix()){
+								alert('开始时间必须小于结束时间');
+								return;
+							}
 						this.range();
-					}else if(this.rangeShow == false){
-						this.dateEnds = this.dateStarts - 1;
-						this.range();
-					}
+						}else if(this.rangeShow == false){
+							this.endDate = this.startDate;
+							//console.log(123);
+							this.range();
+						} 
+					}else{
+						this.compareRange();
+					}	
 				}
+				//console.log(this.startDate);
+				// console.log(this.endDate);
 			},
 			dateEnd:function(val){
 				if(val){
-					this.dateEnds = moment(val).format('YYYY-MM-DD').toString();
-					//获取距离现在的天数
-					var now = moment().format('YYYY-MM-DD HH:mm:ss');
-					//console.log(moment(now,'YYYY-MM-DD').unix());
-					this.dateEnds = (moment(now,'YYYY-MM-DD').unix() - moment(this.dateEnds,"YYYY-MM-DD").unix())/86400;
-					// console.log(this.dateEnds);
+					this.endDate = moment(val).format('YYYY-MM-DD').toString();
 					if(this.dateStart){
-						if(this.dateEnds - this.dateStarts < 0){
+						if(this.endDate){
 							this.range();
-						}else{
+						}else if(moment(val).unix() <  moment(this.startDate).unix()){
 							alert('开始时间必须小于结束时间');
 							return;
-						}
-						
+						}	
 					}else{
-						
+						alert('选择开始时间');
+						return;
 					}
 				}
 			},
 			choseDate : function(val){
+				// console.log(this.tag);
 				if(val){
 					this.dateCompare = moment(val).format('YYYY-MM-DD').toString();
 					if(this.tag == 'today'){
@@ -495,6 +886,8 @@
 						this.compareWeek();
 					}else if(this.tag == 'month'){
 						this.compareMonth();
+					}else if(this.tag == 'range'){
+						this.compareRange();
 					}
 				}
 			}
