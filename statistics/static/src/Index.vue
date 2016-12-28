@@ -141,7 +141,6 @@
 							<span>对比：</span>
 							<label>
 								<input type="radio" name="date" checked="checked" @change="daybefore">
-
 								前一日
 							</label>
 							<label>
@@ -238,8 +237,8 @@
 					</div>
 					<div class="line-row">
 						<div class="control-bar left">
-							<a href="javascript:;">错误量</a>
-							<a href="javascript:;">警告量</a>
+							<a href="javascript:;" @click="err()">错误量</a>
+							<a href="javascript:;" @click="warning()">警告量</a>
 						</div>
 					</div>
 					<div id="grid3"></div>
@@ -346,6 +345,7 @@
 				this.compareDays(d);
 			},
 			err(){
+				console.log('haha');
                 this.exceptionHours(err_s);
 			},
 			warning(){
@@ -353,7 +353,7 @@
 			},
 			exceptionHours(data){
 			    var  myChart = echarts.init(document.getElementById('grid3'));
-                var com = this;
+                var  com = this;
                 this.tag = 1;
                 $.ajax({
                 	url:'http://192.168.1.126/mmonitor/exceptions/exception-hours',
@@ -363,6 +363,75 @@
                 		appkey:201612194,
                 		type:0,
                 		day:0
+                	},
+                	success:function(data){
+                		com.compare = data.data.item[0];
+                		console.log(data.data.item[2]);
+                		// 填入数据
+                		myChart.setOption({
+                			xAxis: {
+                			    data: data.data.item[1]
+                			},
+                			legend:{
+                				data:[com.compare]
+                				//data:['2016-12-26','2016-12-25']
+                			},
+                			series: [
+                                {
+                                    // 根据名字对应到相应的系列
+                                    name:com.compare,
+                                    data: data.data.item[2]
+                                }
+                			]
+                		});
+                	}
+                });
+                myChart.setOption({
+                	tooltip : {
+                		trigger: 'axis'
+                	},
+                		grid: {
+                			left: '3%',
+                			right: '4%',
+                			bottom: '3%',
+                			containLabel: true
+                		},
+                			calculable: true,
+                			xAxis : [
+                				{
+                					type : 'category',
+                					boundaryGap : false,
+                					data : []
+                				    //  data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
+                				}
+                			],
+                			yAxis : [
+                				{
+                					type : 'value'
+                				}
+                			],
+                			series : [
+                				{
+                					name:com.compare,
+                					type:'line',
+                					areaStyle: {normal: {}},
+                					data:[]
+                				}
+                			]
+                });
+			},
+			exceptionDays(data){
+			    var  myChart = echarts.init(document.getElementById('grid3'));
+                var com = this;
+                this.tag = 1;
+                $.ajax({
+                	url:'http://192.168.1.126/mmonitor/exceptions/exception-days',
+                	method:'post',
+                	dataType:'json',
+                	data:{
+                		appkey:201612194,
+                		type:0,
+                		day:29
                 	},
                 	success:function(data){
                 		com.compare = data.data.item[0];
