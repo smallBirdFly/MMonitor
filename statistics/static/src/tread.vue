@@ -3,10 +3,10 @@
         <h5>趋势分析</h5>
         <div class="date-select-bar">
             <div class="control-bar">
-                <a href="javascript:;" @click="today" class="date" style="background:green">今天</a>
-                <a href="javascript:;" @click="yesterday" class="date">昨天</a>
-                <a href="javascript:;" @click="week" class="date">最近7天</a>
-                <a href="javascript:;" @click="month" class="date">最近30天</a>
+                <a href="javascript:;" @click="tod" class="date" style="background:green">今天</a>
+                <a href="javascript:;" @click="yes" class="date">昨天</a>
+                <a href="javascript:;" @click="wee" class="date">最近7天</a>
+                <a href="javascript:;" @click="mon" class="date">最近30天</a>
                 <div class="block">
                     <span class="demonstration">选择开始日期</span>
                     <el-date-picker
@@ -25,7 +25,7 @@
                     </el-date-picker>
                 </div>
                 <span><input v-model='checked' type="checkbox" class="compare">对比</span>
-                <div class="block" v-if="dataShow==true">
+                <div class="block" v-if="compareDate==true">
                     <span class="demonstration">选择日期</span>
                     <el-date-picker
                             v-model="choseDate"
@@ -33,8 +33,8 @@
                             placeholder="选择日期">
                     </el-date-picker>
                 </div>
-                <div style="float:right" v-if="dataShow == true">
-                	<a href="javascript:;" @click="pv" class="compare-type" style="background:green">PV</a>
+                <div style="float:right" v-if="compareDate == true">
+                	<a href="javascript:;" @click="pv" class="compare-type">PV</a>
                 	<a href="javascript:;" @click="ip" class="compare-type">IP</a>
                 </div>
                 <div style="float:right">
@@ -88,7 +88,7 @@
 		        dateEnd:'',
 		        choseDate:'',
 		        //范围和比较
-		        dataShow:false,
+		        compareDate:false,
 		        rangeShow:false,
 		        checked:false,
 		        checkedr:false,
@@ -112,7 +112,7 @@
 		    }
 		},
 		computed:{
-			dataShow :function(){
+			compareDate :function(){
 				if(this.checked==true){
 					return true;
 				}else if(this.checked==false){
@@ -128,14 +128,61 @@
 			}
 		},
 		methods:{
-			//选择比较的方式
-			pv(){
-				this.compareType = 'pv';
+			hours(){
+				this.compareTypeTime = 'hour';
+				this.common();
 			},
-			ip(){
-				this.compareType = 'ip';
+			days(){
+				this.compareTypeTime = 'day';
+				this.common();
 			},
+			weeks(){
+				this.compareTypeTime = 'week';
+				this.common();
+			},
+			months(){
+				this.compareTypeTime = 'month';
+				this.common();
+			},
+			tod(){
+				this.tag = 'today';
+				this.common();
+			},
+			yes(){
+				this.tag = 'yesterday';
+				this.common();
+			},
+			wee(){
+				this.tag = 'week';
+				this.common();
+			},
+			mon(){
+				this.tag = 'month';
+				this.common();
+			},
+			ran(){
+				this.tag = 'range';
+				this.common();
+			},
+			common(){
+				//比较的情况
+				if(this.checked == true){
 
+				}else{	//不比较的情况
+					// 选择的是今天
+					if(this.tag == 'today'){
+						this.today();
+					}else if(this.tag == 'yesterday'){
+						this.yesterday();
+					}else if(this.tag == 'week'){
+						this.week();
+					}else if(this.tag == 'month'){
+						this.month();
+					}else if(this.tag == 'range'){
+						this.range();
+					}
+				}
+			},
 			//pv和ip分析
 			today(){
 				//console.log(compareDate);
@@ -143,10 +190,6 @@
 					$(this).css('background','green').siblings().css("background-color","white");
 				});
 				$(".analysis-time").click(function(){
-					$(this).css('background','green').siblings().css("background-color","white");
-				});
-				$(".compare-type").click(function(){
-					console.log(123);
 					$(this).css('background','green').siblings().css("background-color","white");
 				});
 				trend.startTime = moment().format('YYYY-MM-DD');
@@ -157,11 +200,9 @@
 			yesterday(){
 				trend.startTime = moment().add(-1,'days').format('YYYY-MM-DD');
 				trend.endTime = moment().add(-1,'days').format('YYYY-MM-DD');
-				this.tag = 'yesterday';
 				this.trendHours(trend);
 			},
 			week(){
-				this.tag = 'week';
 				// 最近7天
 				trend.startTime = moment().add(-6,'days').format('YYYY-MM-DD');
 				trend.endTime = moment().format('YYYY-MM-DD');
@@ -172,7 +213,6 @@
 				}
 			},
 			month(){
-				this.tag = 'month';
 				// 最近30天
 				trend.startTime = moment().add(-29,'days').format('YYYY-MM-DD');
 				trend.endTime = moment().format('YYYY-MM-DD');
@@ -186,7 +226,6 @@
 			},
 			//按照时间区间分析情况
 			range(){
-				this.tag = 'range';
 				trend.startTime = this.startDate;
 				trend.endTime = this.endDate;
 				if(this.compareTypeTime == 'hour'){
@@ -255,17 +294,13 @@
 				}
 			},
 
-			hours(){
-				this.compareTypeTime = 'hour';
+
+			//选择比较的方式
+			pv(){
+				this.compareType = 'pv';
 			},
-			days(){
-				this.compareTypeTime = 'day';
-			},
-			weeks(){
-				this.compareTypeTime = 'week';
-			},
-			months(){
-				this.compareTypeTime = 'month';
+			ip(){
+				this.compareType = 'ip';
 			},
 
 			// 按照小时分析pv/ip
@@ -1010,18 +1045,18 @@
 			dateStart:function(val) {
 				if(val) {
 					this.startDate = moment(val).format('YYYY-MM-DD').toString();
-					// console.log(moment(val).unix());
-					if(this.checked == false){
+					if(this.range == false){
 						if(this.endDate && this.rangeShow == true){
 							if(moment(val).unix() >  moment(this.endDate).unix()){
 								alert('开始时间必须小于结束时间');
 								return;
 							}
-						this.range();
+						this.ran();
 						}else if(this.rangeShow == false){
 							this.endDate = this.startDate;
-							//console.log(123);
-							this.range();
+							this.endDate = this.startDate;
+							//console.log(this.endDate);
+							this.ran();
 						} 
 					}else{
 						this.compareRange();
@@ -1034,11 +1069,11 @@
 				if(val){
 					this.endDate = moment(val).format('YYYY-MM-DD').toString();
 					if(this.dateStart){
-						if(this.endDate){
-							this.range();
-						}else if(moment(val).unix() <  moment(this.startDate).unix()){
+						if(moment(val).unix() <  moment(this.startDate).unix()){
 							alert('开始时间必须小于结束时间');
 							return;
+						}else{
+							this.ranges();
 						}	
 					}else{
 						alert('选择开始时间');
