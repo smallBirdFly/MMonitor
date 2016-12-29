@@ -72,8 +72,11 @@
 		</div> -->
 		<div class="title-top">
 			<h3>统计分析</h3>
-			<select class="sel">
-				<option v-for="appkey in this.appkeys" :value="appkey[0]" v-on:change="appkeyChange">{{appkey[1]}}</option>
+			<div>
+
+			</div>
+			<select class="sel" v-model="selected">
+				<option v-for="appkey in this.appkeys" :value="appkey[0]">{{appkey[1]}}</option>
 			</select>
 		</div>
 		<div class="table-list">
@@ -95,7 +98,7 @@
 						<td>{{yesterdaypv}}</td>
 						<td>{{yesterdayip}}</td>
 					</tr>
-					<tr>
+					<!-- <tr>
 						<td class="normal">预计今日</td>
 						<td>1604</td>
 						<td>1179</td>
@@ -116,7 +119,7 @@
 						<td class="normal">历史峰值</td>
 						<td>4475</td>
 						<td>2211</td>
-					</tr>
+					</tr> -->
 					<tr class="empty-tr-2 fade"><td colspan="3"></td></tr>
 				</tbody>
 			</table>
@@ -171,7 +174,12 @@
 									<th>浏览量(PV)</th>
 									<th>占比</th>
 								</tr>
-								<tr>
+								<tr v-for="url in this.urls">
+									<td>{{url[0]}}</td>
+									<td>{{url[1]}}</td>
+									<td><div style='background-color:#DCEBFE;:width="url[2]"'>{{url[2]}}</div></td>
+								</tr>
+								<!-- <tr>
 									<td>http://www.mamaxinjia.com</td>
 									<td>999</td>
 									<td><div style="background-color:#DCEBFE; width:90%;">90%</div></td>
@@ -220,7 +228,7 @@
 									<td>http://www.mamaxinjia.com</td>
 									<td>999</td>
 									<td><div style="background-color:#DCEBFE; width:5%;">5%</div></td>
-								</tr>
+								</tr> -->
 							</thead>
 						</table>
 					</div>
@@ -264,7 +272,6 @@
 	};
 	var appkey = '201612191';
 	var d = {
-		appkey : '201612191',
 		date:6,
 		type:'pv'
 	};
@@ -289,12 +296,11 @@
 				tag:1,
 				//所有的appkey
 				appkeys:'',
+				selected:'',
+				urls:'',
 			}
 		},
 		methods:{
-			appkeyChange(){
-				console.log(2);
-			},
 			today(){
 				$(".date").click(function(){
 					$(this).css('background','green').siblings().css("background-color","white");;
@@ -508,7 +514,7 @@
 					method:'post',
 					dataType:'json',
 					data:{
-						appkey:data.appkey,
+						appkey:appkey,
 						startTime:data.startTime,
 						endTime:data.endTime,
 						type:data.type
@@ -557,7 +563,6 @@
 							type : 'category',
 							boundaryGap : false,
 							data : []
-						  //  data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
 						}
 					],
 					yAxis : [
@@ -576,7 +581,6 @@
 							name:com.compared,
 							type:'line',
 							areaStyle: {normal: {}},
-					  //      <!--data:[220, 182, 191, 234, 290, 330, 310,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]-->
 							data:[]
 						}
 					]
@@ -592,7 +596,7 @@
 					method:'post',
 					dataType:'json',
 					data:{
-						appkey:data.appkey,
+						appkey:appkey,
 						date:data.date,
 						type:data.type
 					},
@@ -679,18 +683,43 @@
 					method:'post',
 					dataType:'json',
 					data:{
+						// appkey:appkey,
+					},
+					success:function(data){
+						vm.appkeys = data.data.item;
+					}
+				});
+			},
+			// 查询该appkey下所站点信息
+			urlAll(){
+				var vm = this;
+				$.ajax({
+					url:'http://192.168.1.109/mmonitor/analyse/entry',
+					method:'post',
+					dataType:'json',
+					data:{
 						appkey:appkey,
 					},
 					success:function(data){
-						vm.appkeys = data.data.content;
+						vm.urls = data.data.item[0];
 					}
 				});
 			}
+			
+		},
+		watch:{
+			selected: function(val) {
+            	if(val != appkey){
+            		appkey = val;
+            		this.today();
+            	}       
+            }
 		},
 		mounted() {
 			this.today();
 			this.todayYesterday();
 			this.appkeyAll();
+			this.urlAll();
 		}
 	}
 </script>

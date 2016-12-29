@@ -10,6 +10,7 @@ namespace statistics\controllers;
 use common\components\MMLogger;
 use common\utils\HttpResponseUtil;
 use statistics\models\Daycount;
+use statistics\models\Page;
 use statistics\models\Scount;
 use statistics\models\Webs;
 use statistics\component\AuthFilter;
@@ -62,7 +63,25 @@ class AnalyseController extends \yii\web\Controller
             $arr[$i][] = $appkey['domain_name'];
         }
         $result['code'] = 200;
-        $result['data']['content'] = $arr;
+        $result['data']['item'] = $arr;
+        HttpResponseUtil::setJsonResponse($result);
+    }
+
+    //入口
+    public function actionEntry()
+    {
+        $appkey = Yii::$app->request->post('appkey');
+        $webs = Page::find()->where(['appkey'=>$appkey])->all();
+        $count = Scount::find()->where(['appkey'=>$appkey,'type'=>1])->count();
+        foreach($webs as $i=>$web)
+        {
+            $href[$i][] = $web['page_url'];
+            $num = Scount::find()->where(['appkey'=>$appkey,'page'=>$web['id'],'type'=>1])->count();
+            $href[$i][] = $num;
+            $href[$i][] = round($num/$count*100,2);
+        }
+        $result['code'] = 200;
+        $result['data']['item'][] = $href;
         HttpResponseUtil::setJsonResponse($result);
     }
 
@@ -127,6 +146,8 @@ class AnalyseController extends \yii\web\Controller
         $date = $request->post('date');
         $type = $request->post('type');
         $appkey = $request->post('appkey');
+        $logger = MMLogger::getLogger(__FUNCTION__);
+        $logger->error($request->post());
         for ($i = 0; $i <= $date; $i++)
         {
             $days[] = date('Y-m-d',time()-86400*($date - $i));
