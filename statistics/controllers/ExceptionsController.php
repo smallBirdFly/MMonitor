@@ -61,6 +61,8 @@ class ExceptionsController extends Controller
         //以年月日的格式显示 开始时间 和 结束时间，为了便于调试，则另起变量名
         $startTime2 = date('Y-m-d H:i:s',$startTime1);
         $endTime2 = date('Y-m-d H:i:s',$endTime1);
+        echo $startTime2;
+        echo $endTime2;
         /*$logger->error($startTime2);    //打印出第二种格式看下是否出错
         $logger->error($endTime2);*/
 
@@ -69,27 +71,12 @@ class ExceptionsController extends Controller
             $hours[] = $i;
             //按每天24个小时的区间，格式化得到24个时间区间
             $startTime3 = date('Y-m-d H:i:s',$startTime1 + $i * $h);
-            $endTime3 = date('Y-m-d H:i:s',$endTime1 + ($i+1) * $h);
+            $endTime3 = date('Y-m-d H:i:s',$startTime1 + ($i+1) * $h);
             /*$logger->error($startTime3);    //打印出第二种格式看下是否出错
             $logger->error($endTime3);*/
 
-            /*//当前时间
-            $startTime = date('Y-m-d H:i:s', strtotime($day) + $i * 60 * 60);
-            $endTime = date('Y-m-d H:i:s', strtotime($day) + $i * 60 * 60 + 3600);
-            //今天各个小时的错误量
-            $exceptions[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => $type])->count();
-            $exceptions[$i][] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => $type])->count();*/
-
-            /*//用mysql的原生方式查询数据库
-            $connection = Yii::$app->db;
-            $sql = "select * from scount where type = ".$type."and appkey = "."$appkey";
-            $command = $connection->createCommand($sql);
-            $res = $command->query($sql);*/
-
             $exceptions[$i][] = $i;
             $exceptions[$i][] = Scount::find()->Where(['appkey'=>$appkey ,'type' => $type])->andWhere(['>=', 'time', $startTime3])->andWhere(['<', 'time', $endTime3])->count();
-
-//            $pv = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page_url->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
         }
         $result['code'] = 200;
         $result['data']['item'][] = $date;
@@ -97,26 +84,4 @@ class ExceptionsController extends Controller
         $result['data']['item'][] = $exceptions;
         HttpResponseUtil::setJsonResponse($result);
     }
-
-
-    /*public function actionExceptionDays()
-    {
-        $request = Yii::$app->request;
-        $type = $request->post('type');
-        $appkey = $request->post('appkey');
-        $date = $request->post('day');
-        for ($i = 0; $i < $date; $i++)
-        {
-            $days[] = date('Y-m-d',time()-86400*($date - $i - 1));
-            $startTime = date('Y-m-d',time()-86400*($date - $i - 1));
-            $endTime = date('Y-m-d', time()-86400*($date - $i -2));
-            $exceptions[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => $type])->count();
-            $exceptions[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => $type])->count();
-        }
-        Yii::error($days);
-        $result['code'] = 200;
-        $result['data']['item'][] = $days;
-        $result['data']['item'][] = $exceptions;
-        HttpResponseUtil::setJsonResponse($result);
-    }*/
 }
