@@ -10,6 +10,7 @@
 <script>
     import Index from './Index.vue'
     import Tread from './tread.vue'
+    import Visit from './visit.vue'
 
     export default{
         data () {
@@ -20,12 +21,14 @@
         },
         components: {
             Index,
-            Tread
+            Tread,
+            Visit
         },
         routes: [
             { path: '/', component: Index },
             { path: '/tread', component: Tread },
-            { path: '/preview', component: Index }
+            { path: '/preview', component: Index },
+            {path: '/visit',component:Visit}
         ]
     }
 </script>

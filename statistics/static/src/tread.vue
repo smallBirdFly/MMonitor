@@ -47,6 +47,20 @@
             
         </div>
         <div id="grid1"></div>
+        <div>
+        	<table>
+        		<tr>
+        			<th>时间</th>
+        			<th>PV量</th>
+        			<th>IP量</th>
+        		</tr>
+        		<tr v-for="cont in content">
+        			<td>{{cont[0]}}</td>
+        			<td>{{cont[1]}}</td>
+        			<td>{{cont[2]}}</td>
+        		</tr>
+        	</table>
+    	</div>
     </div>
 </template>
 
@@ -63,7 +77,7 @@
 	var compareData = {
 		appkey : '201612191',
 		compareStartDay : moment().format('YYYY-MM-DD'),
-		compareEndDay : moment().add(1,'days').format('YYYY-MM-DD'),
+		compareEndDay : moment().format('YYYY-MM-DD'),
 		comparedStartDay : ""
 	};
 	export default {
@@ -93,6 +107,8 @@
 		        tag:'today',
 		        // 比较的类型
 		        compareType:'pv',
+		        // 输出时间
+		        content:''
 		    }
 		},
 		computed:{
@@ -197,7 +213,7 @@
 				this.compareHour(compareData);
 			},
 			compareWeek(){
-				console.log(this.compareTypeTime);
+				//console.log(this.compareTypeTime);
 				compareData.compareStartDay = moment().add(-6,'days').format('YYYY-MM-DD');
 				compareData.compareEndDay =  moment().format('YYYY-MM-DD');
 				compareData.comparedStartDay = this.dateCompare;
@@ -208,7 +224,7 @@
 				}
 			},
 			compareMonth(){
-				console.log(this.compareTypeTime);
+				//console.log(this.compareTypeTime);
 				compareData.compareStartDay = moment().add(-29,'days').format('YYYY-MM-DD');
 				compareData.compareEndDay =  moment().format('YYYY-MM-DD');
 				compareData.comparedStartDay = this.dateCompare;
@@ -221,7 +237,7 @@
 				}
 			},
 			compareRange(){
-				console.log(this.compareTypeTime);
+				//console.log(this.compareTypeTime);
 				compareData.compareStartDay = this.startDate;
 				compareData.compareEndDay = this.endDate;
 				compareData.comparedStartDay = this.dateCompare;
@@ -269,6 +285,17 @@
 						if(data.code == 200){
 							com.compareIp = data.data.item[0][0] + ' ip';
 							com.comparePv = data.data.item[0][0] + ' pv';
+							var arrs = new Array();
+							for(var i = 0; i < data.data.item[1].length; i++){
+								var arr = new Array();
+								arr[0]= data.data.item[1][i];
+								arr[1]= data.data.item[2][i];
+								arr[2]= data.data.item[3][i];
+								arrs[i] = arr;
+								// console.log(arr);
+							}
+							com.content = arrs;
+							// console.log(com.content);
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[1]
@@ -350,11 +377,16 @@
 						if(data.code == 200){
 							com.compareIp = data.data.item[0][0] + '-' + data.data.item[0][data.data.item[0].length -1] + ' ip';
 							com.comparePv = data.data.item[0][0] + '-' + data.data.item[0][data.data.item[0].length -1] + ' pv';
-							/*if(com.rangeShow == false){
-								return;	
-							}else{
-								
-							}*/
+							var arrs = new Array();
+							for(var i = 0; i < data.data.item[1].length; i++){
+								var arr = new Array();
+								arr[0]= data.data.item[0][i];
+								arr[1]= data.data.item[1][i];
+								arr[2]= data.data.item[2][i];
+								arrs[i] = arr;
+								// console.log(arr);
+							}
+							com.content = arrs;
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[0]
@@ -433,6 +465,16 @@
 						if(data.code == 200){
 							com.compareIp = '独立IP';
 							com.comparePv = '访问量';
+							var arrs = new Array();
+							for(var i = 0; i < data.data.item[1].length; i++){
+								var arr = new Array();
+								arr[0]= data.data.item[0][i];
+								arr[1]= data.data.item[1][i];
+								arr[2]= data.data.item[2][i];
+								arrs[i] = arr;
+								// console.log(arr);
+							}
+							com.content = arrs;
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[0]
@@ -507,11 +549,19 @@
 						endTime:data.endTime
 					},
 					success:function(data){
-						// console.log(data.data.item[0][data.data.item[0].length -1]);
-						console.log(data.code);
 						if(data.code == 200){
 							com.compareIp = '独立IP';
 							com.comparePv = '访问量';
+							var arrs = new Array();
+							for(var i = 0; i < data.data.item[1].length; i++){
+								var arr = new Array();
+								arr[0]= data.data.item[0][i];
+								arr[1]= data.data.item[1][i];
+								arr[2]= data.data.item[2][i];
+								arrs[i] = arr;
+								// console.log(arr);
+							}
+							com.content = arrs;
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[0]
@@ -599,6 +649,16 @@
 						if(data.code == 200){
 							com.comparePv = data.data.item[0][0] + com.compareType;
 							com.compareIp = data.data.item[0][1] + com.compareType;
+							var arrs = new Array();
+							for(var i = 0; i < data.data.item[1].length; i++){
+								var arr = new Array();
+								arr[0]= data.data.item[1][i];
+								arr[1]= data.data.item[2][i];
+								arr[2]= data.data.item[3][i];
+								arrs[i] = arr;
+								// console.log(arr);
+							}
+							com.content = arrs;
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[1]
@@ -685,6 +745,16 @@
 						if(data.code == 200){
 							com.comparePv = data.data.item[0][0] + com.compareType;
 							com.compareIp = data.data.item[0][1] + com.compareType;
+							var arrs = new Array();
+							for(var i = 0; i < data.data.item[1].length; i++){
+								var arr = new Array();
+								arr[0]= data.data.item[1][i];
+								arr[1]= data.data.item[2][i];
+								arr[2]= data.data.item[3][i];
+								arrs[i] = arr;
+								// console.log(arr);
+							}
+							com.content = arrs;
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[1]
@@ -770,6 +840,16 @@
 						if(data.code == 200){
 							com.comparePv = data.data.item[0][0] + com.compareType;
 							com.compareIp = data.data.item[0][1] + com.compareType;
+							var arrs = new Array();
+							for(var i = 0; i < data.data.item[1].length; i++){
+								var arr = new Array();
+								arr[0]= data.data.item[1][i];
+								arr[1]= data.data.item[2][i];
+								arr[2]= data.data.item[3][i];
+								arrs[i] = arr;
+								// console.log(arr);
+							}
+							com.content = arrs;
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[1]
@@ -831,7 +911,99 @@
 				});
 			},
 			compareMonths(data){
-
+				var  myChart = echarts.init(document.getElementById('grid1'));
+                var com = this;
+                var url = '';
+                if(this.compareType == 'pv'){
+                	url = 'http://192.168.1.109/mmonitor/analyse/compare-month-pv'
+                }else if(this.compareType == 'ip'){
+                	url = 'http://192.168.1.109/mmonitor/analyse/compare-month-ip';
+                }
+                //console.log(url);
+				$.ajax({
+					url:url,
+					method:'post',
+					dateType:'json',
+					data:{
+						appkey:data.appkey,
+						compareStartDay : data.compareStartDay,
+						compareEndDay : data.compareEndDay,
+						comparedStartDay : data.comparedStartDay
+					},
+					success:function(data){
+						// console.log(data.data.item[0][data.data.item[0].length -1]);
+						if(data.code == 200){
+							com.comparePv = data.data.item[0][0] + com.compareType;
+							com.compareIp = data.data.item[0][1] + com.compareType;
+							var arrs = new Array();
+							for(var i = 0; i < data.data.item[1].length; i++){
+								var arr = new Array();
+								arr[0]= data.data.item[1][i];
+								arr[1]= data.data.item[2][i];
+								arr[2]= data.data.item[3][i];
+								arrs[i] = arr;
+								// console.log(arr);
+							}
+							com.content = arrs;
+							myChart.setOption({
+								xAxis:{
+									data:data.data.item[1]
+								},
+								legend:{
+	                				data:[com.compareIp,com.comparePv]
+	                			},
+								series : [{
+									name:com.comparePv,
+									data:data.data.item[2],
+								},
+								{
+									name:com.compareIp,
+									data:data.data.item[3],
+								}
+								],
+							});
+						}
+						
+					}
+				});
+				myChart.setOption({
+						tooltip : {
+						trigger: 'axis'
+						},
+						grid: {
+							left: '3%',
+							right: '4%',
+							bottom: '3%',
+							containLabel: true
+						},
+						calculable: true,
+						xAxis : [
+							{
+								type : 'category',
+								boundaryGap : false,
+								data : []
+							}
+						],
+						yAxis : [
+							{
+								type : 'value'
+							}
+						],
+						series : [
+							{
+								name:com.comparePv,
+								type:'line',
+								areaStyle: {normal: {}},
+								data:[]
+							},
+							{
+								name:com.compareIp,
+								type:'line',
+								areaStyle: {normal: {}},
+								data:[]
+							}
+						]
+				});
 			},
 		},
 		watch:{
