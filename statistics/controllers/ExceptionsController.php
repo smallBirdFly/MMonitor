@@ -29,6 +29,14 @@ class ExceptionsController extends Controller
     //按照小时分析
     public function actionExceptionHours()
     {
+        /*
+        参数说明：
+            appkey  id
+            type = 0 警告
+            type = 1 错误
+            day = 0 今天
+            day = 1 昨天
+        */
         //接收到传递过来的参数
         $request = Yii::$app->request;
         $appkey = $request->post('appkey');
