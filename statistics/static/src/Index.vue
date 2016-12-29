@@ -1,6 +1,6 @@
 <template>
 	<div id="app">
-		<div class="table-list">
+		<!-- <div class="table-list">
 			<div class="card-title"><span>业务系统列表</span></div>
 			<table class="list">
 				<tbody>
@@ -69,8 +69,13 @@
 					<tr class="empty-tr fade"></tr>
 				</tbody>
 			</table>
+		</div> -->
+		<div class="title-top">
+			<h3>统计分析</h3>
+			<select class="sel">
+				<option v-for="appkey in this.appkeys" :value="appkey[0]" v-on:change="appkeyChange">{{appkey[1]}}</option>
+			</select>
 		</div>
-		<div class="fold"></div>
 		<div class="table-list">
 			<div class="card-title"><span>今日流量</span></div>
 			<table class="list" >
@@ -156,7 +161,7 @@
 				<div class="table-grid-item" id="grid2">
 					<div class="title clearfix">
 						<span class="left">Top10受访页面</span>
-						<a href="javascript:;" class="right">&gt;</a>
+						<router-link to="/visit">&gt;</router-link>
 					</div>
 					<div class="table-data">
 						<table>
@@ -258,6 +263,7 @@
 		endTime: 1,
 		type:'pv'
 	};
+	var appkey = '201612191';
 	var d = {
 		appkey : '201612191',
 		date:6,
@@ -281,11 +287,15 @@
 				yesterdaypv:'',
 				type:'pv量',
 				//用于标注是按照天还是按照小时来分析ip和pv
-				//用于标注是按照天还是按照小时俩分析ip和pv
-				tag:1
+				tag:1,
+				//所有的appkey
+				appkeys:'',
 			}
 		},
 		methods:{
+			appkeyChange(){
+				console.log(2);
+			},
 			today(){
 				$(".date").click(function(){
 					$(this).css('background','green').siblings().css("background-color","white");;
@@ -346,8 +356,7 @@
 				this.compareDays(d);
 			},
 			err(){
-				console.log('haha');
-                this.exceptionHours(err_s);
+
 			},
 			warning(){
                 this.exceptionHours(err_s);
@@ -505,32 +514,6 @@
 					]
 				});
 			},
-
-			//今天和昨天的访问量
-			todayYesterday(data){
-				var vm = this;
-				$.ajax({
-					url:'http://192.168.1.109/mmonitor/analyse/today',
-					method:'post',
-					dataType:'json',
-					data:{
-						appkey:data.appkey,
-						startTime:data.startTime,
-						endTime:data.endTime,
-						type:data.type
-					},
-					success:function(data){
-						console.log(111111);
-						console.log(data.data['today'].pv);
-						//this.today = data.data['today']['pv'];
-						vm.todaypv = data.data['today'].pv;
-						vm.todayip = data.data['today'].ip;
-						vm.yesterdaypv = data.data['yesterday'].pv;
-						vm.yesterdayip = data.data['yesterday'].ip;
-					}
-				});
-			},
-
 			//按照天数比较
 			compareDays(data){
 				var  myChart = echarts.init(document.getElementById('grid1'));
@@ -599,13 +582,47 @@
 						}
 					]
 				});
+			},
+			//今天和昨天的访问量
+			todayYesterday(){
+				var vm = this;
+				$.ajax({
+					url:'http://192.168.1.109/mmonitor/analyse/today',
+					method:'post',
+					dataType:'json',
+					data:{
+						appkey:appkey,
+					},
+					success:function(data){
+						// console.log(data.data['today'].pv);
+						//this.today = data.data['today']['pv'];
+						vm.todaypv = data.data['today'].pv;
+						vm.todayip = data.data['today'].ip;
+						vm.yesterdaypv = data.data['yesterday'].pv;
+						vm.yesterdayip = data.data['yesterday'].ip;
+					}
+				});
+			},
+			//查询所有的appkey
+			appkeyAll(){
+				var vm = this;
+				$.ajax({
+					url:'http://192.168.1.109/mmonitor/analyse/appkey',
+					method:'post',
+					dataType:'json',
+					data:{
+						appkey:appkey,
+					},
+					success:function(data){
+						vm.appkeys = data.data.content;
+					}
+				});
 			}
 		},
 		mounted() {
-			//this.yesterdayTodayIp();
-			//this.todayYesterday();
 			this.today();
-			this.err();
+			this.todayYesterday();
+			this.appkeyAll();
 		}
 	}
 </script>
@@ -774,5 +791,21 @@ a {
 }
 .date{
 	background:white;
+}
+.title-top{
+	height: 30px;
+	border: 1px solid #dedede;
+	border-top: 1px solid #f0f0f0;
+	background-color: #3385e3;
+}
+h3{
+	margin-top: 2px;
+	color: white;
+	display: inline;
+}
+.sel{
+	float: right;
+	margin:5px 5px; 
+	background-color: #3385e3;
 }
 </style>

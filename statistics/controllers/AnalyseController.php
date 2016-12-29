@@ -32,7 +32,6 @@ class AnalyseController extends \yii\web\Controller
 //    今日和昨天访问量
     public function actionToday()
     {
-        Yii::error('123');
         $appkey = Yii::$app->request->post('appkey');
         $startTime = date('Y-m-d',time());
         $endTime = date('Y-m-d',time() + 86400);
@@ -50,6 +49,20 @@ class AnalyseController extends \yii\web\Controller
         $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
         $result['data']['yesterday']['pv'] = $pv;
         $result['data']['yesterday']['ip'] = $ip;
+        HttpResponseUtil::setJsonResponse($result);
+    }
+
+//    获取所有的appkey
+    public function actionAppkey()
+    {
+        $appkeys = Webs::find()->asArray()->all();
+        foreach($appkeys as $i=>$appkey)
+        {
+            $arr[$i][] = $appkey['appkey'];
+            $arr[$i][] = $appkey['domain_name'];
+        }
+        $result['code'] = 200;
+        $result['data']['content'] = $arr;
         HttpResponseUtil::setJsonResponse($result);
     }
 
@@ -547,15 +560,15 @@ class AnalyseController extends \yii\web\Controller
     //比较两个时间按照星期分析ip/pv
     public function actionCompareWeekPv()
     {
-        $requrest = Yii::$app->request;
-        $compareStartDay = $requrest->post('compareStartDay');
-        $compareEndDay = $requrest->post('compareEndDay');
-        $comparedStartDay = $requrest->post('comparedStartDay');
+        $request = Yii::$app->request;
+        $compareStartDay = $request->post('compareStartDay');
+        $compareEndDay = $request->post('compareEndDay');
+        $comparedStartDay = $request->post('comparedStartDay');
         $comparedEndDay = date('Y-m-d',strtotime($comparedStartDay) + strtotime($compareEndDay) - strtotime($compareStartDay));
         $date = (strtotime($compareEndDay)-strtotime($compareStartDay)) / (86400) + 1;
         //需要循环的此时
         $count = intval($date%7 == 0 ?  $date/7 :$date/7+1);
-        $appkey = $requrest->post('appkey');
+        $appkey = $request->post('appkey');
         if($count == 0)
         {
             return;
@@ -606,15 +619,15 @@ class AnalyseController extends \yii\web\Controller
 
     public function actionCompareWeekIp()
     {
-        $requrest = Yii::$app->request;
-        $compareStartDay = $requrest->post('compareStartDay');
-        $compareEndDay = $requrest->post('compareEndDay');
-        $comparedStartDay = $requrest->post('comparedStartDay');
+        $request = Yii::$app->request;
+        $compareStartDay = $request->post('compareStartDay');
+        $compareEndDay = $request->post('compareEndDay');
+        $comparedStartDay = $request->post('comparedStartDay');
         $comparedEndDay = date('Y-m-d',strtotime($comparedStartDay) + strtotime($compareEndDay) - strtotime($compareStartDay));
         $date = (strtotime($compareEndDay)-strtotime($compareStartDay)) / (86400) + 1;
         //需要循环的此时
         $count = intval($date%7 == 0 ?  $date/7 :$date/7+1);
-        $appkey = $requrest->post('appkey');
+        $appkey = $request->post('appkey');
         if($count == 0)
         {
             return;
@@ -675,7 +688,136 @@ class AnalyseController extends \yii\web\Controller
         HttpResponseUtil::setJsonResponse($result);
     }
 
+    //比较两个时间按照星期分析ip/pv
+    public function actionCompareMonthPv()
+    {
+        $request = Yii::$app->request;
+        $compareStartDay = $request->post('compareStartDay');
+        $compareEndDay = $request->post('compareEndDay');
+        //中间相差的天数
+        $days = (strtotime($compareEndDay) - strtotime($compareStartDay)) / 864000;
+        $comparedStartDay = $request->post('comparedStartDay');
+        //求出比较的结束时间
+        $comparedEndDay = date("Y-m-d",strtotime($comparedStartDay) + 86400 * $days);
+        $appkey = $request->post('appkey');
+        if(date('Y-m',strtotime($compareStartDay)) == date('Y-m',strtotime($compareEndDay)))
+        {
+            //同一个月不能分析
+            $result['code'] = 201;
+            $result['data']['message'] = '时间区间未跨过两个月';
+            HttpResponseUtil::setJsonResponse($result);
+            return;
+        }
+        //将日期改成数组
+        $compareStartDayA = explode('-',$compareStartDay);
+        $compareEndDayA = explode('-',$compareEndDay);
+        $comparedStartDayA = explode('-',$comparedStartDay);
+        //中间的月数
+        $months =  ($compareEndDayA[0] - $compareStartDayA[0])*12 + $compareEndDayA[1] - $compareStartDayA[1];
+        for($i = 0 ; $i <= $months; $i++)
+        {
+            $res = $compareStartDayA[0].'-'.$compareStartDayA[1];
+            //获取时间1所有的月份
+            $month1[$i] = date('Y-m',strtotime($res));
+            if($compareStartDayA[1] % 12 == 0)
+            {
+                $compareStartDayA[0]++;
+                $compareStartDayA[1] = 1;
+            }
+            else
+            {
+                $compareStartDayA[1]++;
+            }
+            $res1[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$month1[$i]])->count();
+            $res = $comparedStartDayA[0].'-'.$comparedStartDayA[1];
+            //获取时间1所有的月份
+            $month2[$i] = date('Y-m',strtotime($res));
+            if($comparedStartDayA[1] % 12 == 0)
+            {
+                $comparedStartDayA[0]++;
+                $comparedStartDayA[1] = 1;
+            }
+            else
+            {
+                $comparedStartDayA[1]++;
+            }
+            $month[] = $month1[$i].'与'.$month2[$i];
+            $res2[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$month2[$i]])->count();
+        }
+        $day[] = $compareStartDay .' - '.$compareEndDay;
+        $day[] = $comparedStartDay .' - '.$comparedEndDay;
+        $result['code'] = 200;
+        $result['data']['item'][] = $day;
+        $result['data']['item'][]=$month;
+        $result['data']['item'][]=$res1;
+        $result['data']['item'][]=$res2;
+        HttpResponseUtil::setJsonResponse($result);
+    }
 
+    public function actionCompareMonthIp()
+    {
+        $request = Yii::$app->request;
+        $compareStartDay = $request->post('compareStartDay');
+        $compareEndDay = $request->post('compareEndDay');
+        //中间相差的天数
+        $days = (strtotime($compareEndDay) - strtotime($compareStartDay)) / 864000;
+        $comparedStartDay = $request->post('comparedStartDay');
+        //求出比较的结束时间
+        $comparedEndDay = date("Y-m-d",strtotime($comparedStartDay) + 86400 * $days);
+        $appkey = $request->post('appkey');
+        if(date('Y-m',strtotime($compareStartDay)) == date('Y-m',strtotime($compareEndDay)))
+        {
+            //同一个月不能分析
+            $result['code'] = 201;
+            $result['data']['message'] = '时间区间未跨过两个月';
+            HttpResponseUtil::setJsonResponse($result);
+            return;
+        }
+        //将日期改成数组
+        $compareStartDayA = explode('-',$compareStartDay);
+        $compareEndDayA = explode('-',$compareEndDay);
+        $comparedStartDayA = explode('-',$comparedStartDay);
+        //中间的月数
+        $months =  ($compareEndDayA[0] - $compareStartDayA[0])*12 + $compareEndDayA[1] - $compareStartDayA[1];
+        for($i = 0 ; $i <= $months; $i++)
+        {
+            $res = $compareStartDayA[0].'-'.$compareStartDayA[1];
+            //获取时间1所有的月份
+            $month1[$i] = date('Y-m',strtotime($res));
+            if($compareStartDayA[1] % 12 == 0)
+            {
+                $compareStartDayA[0]++;
+                $compareStartDayA[1] = 1;
+            }
+            else
+            {
+                $compareStartDayA[1]++;
+            }
+            $res1[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$month1[$i]])->groupBy('ip')->count();
+            $res = $comparedStartDayA[0].'-'.$comparedStartDayA[1];
+            //获取时间1所有的月份
+            $month2[$i] = date('Y-m',strtotime($res));
+            if($comparedStartDayA[1] % 12 == 0)
+            {
+                $comparedStartDayA[0]++;
+                $comparedStartDayA[1] = 1;
+            }
+            else
+            {
+                $comparedStartDayA[1]++;
+            }
+            $month[] = $month1[$i].'与'.$month2[$i];
+            $res2[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$month2[$i]])->groupBy('ip')->count();
+        }
+        $day[] = $compareStartDay .' - '.$compareEndDay;
+        $day[] = $comparedStartDay .' - '.$comparedEndDay;
+        $result['code'] = 200;
+        $result['data']['item'][] = $day;
+        $result['data']['item'][]=$month;
+        $result['data']['item'][]=$res1;
+        $result['data']['item'][]=$res2;
+        HttpResponseUtil::setJsonResponse($result);
+    }
 
 
 
