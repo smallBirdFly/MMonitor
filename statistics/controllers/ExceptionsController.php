@@ -46,8 +46,8 @@ class ExceptionsController extends Controller
         $today = getdate(); //得到一个数组
         $totalSeconds = ($today['hours'])*$h + ($today['minutes'])*$m + ($today['seconds']); //得出当天的总秒数
 
-        //0为今天，1为昨天，得到所请求的 当天开始时间
-        if($type==1){
+        //day = 0为今天，1为昨天，得到所请求的 当天开始时间
+        if($day==1){
             //表示昨天
             $startTime1 = $today['0'] - $totalSeconds - $d; //得到昨天 0 时的时间戳
         }else{
@@ -56,27 +56,18 @@ class ExceptionsController extends Controller
         }
         $endTime1 = $startTime1 + $d;   //得到昨天 24 时的时间戳
         $date = date('Y-m-d',$startTime1);   //得到今天的 年月日 ，以便后面使用
-        //echo '今天-开始时间：'.date('Y-m-d H:i:s',$startTime1).'结束时间：'.date('Y-m-d H:i:s',$endTime1);
-
-        //以年月日的格式显示 开始时间 和 结束时间，为了便于调试，则另起变量名
-        $startTime2 = date('Y-m-d H:i:s',$startTime1);
-        $endTime2 = date('Y-m-d H:i:s',$endTime1);
-        echo $startTime2;
-        echo $endTime2;
-        /*$logger->error($startTime2);    //打印出第二种格式看下是否出错
-        $logger->error($endTime2);*/
+        //echo '今天-开始时间：'.date('Y-m-d H:i:s',$startTime1).'结束时间：'.date('Y-m-d H:i:s',$endTime1).'<br/>';
 
         for ($i = 0; $i < 24; $i++)
         {
             $hours[] = $i;
             //按每天24个小时的区间，格式化得到24个时间区间
-            $startTime3 = date('Y-m-d H:i:s',$startTime1 + $i * $h);
-            $endTime3 = date('Y-m-d H:i:s',$startTime1 + ($i+1) * $h);
-            /*$logger->error($startTime3);    //打印出第二种格式看下是否出错
-            $logger->error($endTime3);*/
-
+            $startTime2 = date('Y-m-d H:i:s',$startTime1 + $i * $h);
+            $endTime2 = date('Y-m-d H:i:s',$startTime1 + ($i+1) * $h);
+            /*$logger->error($startTime2);    //打印出第二种格式看下是否出错
+            $logger->error($endTime2);*/
             $exceptions[$i][] = $i;
-            $exceptions[$i][] = Scount::find()->Where(['appkey'=>$appkey ,'type' => $type])->andWhere(['>=', 'time', $startTime3])->andWhere(['<', 'time', $endTime3])->count();
+            $exceptions[$i][] = Scount::find()->Where([ 'appkey'=>$appkey ,'type' => $type ])->andWhere([ '>=', 'time', $startTime2 ])->andWhere([ '<', 'time', $endTime2 ])->count();
         }
         $result['code'] = 200;
         $result['data']['item'][] = $date;
