@@ -236,14 +236,14 @@
 			</div>
 			<div class="row3 left">
 				<!-- 时间条 -->
-			    <!-- <div class="exception_date-select-bar">
+			    <div class="exception_date-select-bar">
                     <div class="control-bar">
                         <a href="javascript:;" @click="err" class="date">今天</a>
                         <a href="javascript:;" @click="yesterday" class="date">昨天</a>
                         <a href="javascript:;" @click="week" class="date">最近7天</a>
                         <a href="javascript:;" @click="month" class="date">最近30天</a>
                     </div>
-                </div> -->
+                </div>
 				<div class="table-grid-item">
 					<div class="title clearfix">
 						<span>异常统计</span>
@@ -314,10 +314,10 @@
 		methods:{
 			today(){
 				$(".date").click(function(){
-					$(this).css('background','green').siblings().css("background-color","white");;
+					$(this).css('background','green').siblings().css("background-color","white");
 				});
 				$(".type-visit").click(function(){
-					$(this).css('background','green').siblings().css("background-color","white");;
+					$(this).css('background','green').siblings().css("background-color","white");
 				});
 				$(".check-group").show();
 				s.startTime = 0;

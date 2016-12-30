@@ -150,7 +150,8 @@ class ExceptionsController extends Controller
             //按每天24个小时的区间，格式化得到24个时间区间
             $startTime2 = date('Y-m-d H:i:s',$startTime + $i * $h);
             $endTime2 = date('Y-m-d H:i:s',$startTime + ($i+1) * $h);
-            $time_interval = date('H:i:s',$startTime + $i * $h).'-'.date('H:i:s',$startTime + ($i+1) * $h);
+            //得到 00：00-00:59 的时间区间
+            $time_interval = date('H:i',$startTime + $i * $h).'-'.date('H:i',($startTime + ($i+1) * $h)-$m);
             /*$logger->error($startTime2);    //打印出第二种格式看下是否出错
             $logger->error($endTime2);
             $logger->error($time_interval);*/
