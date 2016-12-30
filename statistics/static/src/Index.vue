@@ -235,14 +235,15 @@
 				</div>
 			</div>
 			<div class="row3 left">
-			    <div class="exception_date-select-bar">
+				<!-- 时间条 -->
+			    <!-- <div class="exception_date-select-bar">
                     <div class="control-bar">
                         <a href="javascript:;" @click="err" class="date">今天</a>
                         <a href="javascript:;" @click="yesterday" class="date">昨天</a>
                         <a href="javascript:;" @click="week" class="date">最近7天</a>
                         <a href="javascript:;" @click="month" class="date">最近30天</a>
                     </div>
-                </div>
+                </div> -->
 				<div class="table-grid-item">
 					<div class="title clearfix">
 						<span>异常统计</span>
@@ -684,11 +685,8 @@
 			this.today();
 			this.todayYesterday();
 			this.appkeyAll();
-<<<<<<< HEAD
 			this.err();
-=======
 			this.urlAll();
->>>>>>> e5ab9b82e5cf6fb1899f57d4274fade6a8c156f3
 		}
 	}
 </script>

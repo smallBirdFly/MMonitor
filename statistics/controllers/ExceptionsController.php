@@ -150,8 +150,12 @@ class ExceptionsController extends Controller
             //按每天24个小时的区间，格式化得到24个时间区间
             $startTime2 = date('Y-m-d H:i:s',$startTime + $i * $h);
             $endTime2 = date('Y-m-d H:i:s',$startTime + ($i+1) * $h);
+            $time_interval = date('H:i:s',$startTime + $i * $h).'-'.date('H:i:s',$startTime + ($i+1) * $h);
             /*$logger->error($startTime2);    //打印出第二种格式看下是否出错
-            $logger->error($endTime2);*/
+            $logger->error($endTime2);
+            $logger->error($time_interval);*/
+            //得到时间区间
+            $interval[] = $time_interval;
             //查找当天的异常
             $err_exceptions[$i] = $i;
             $err_exceptions[$i] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' => '0' ])->andWhere([ '>=', 'time', $startTime2 ])->andWhere([ '<', 'time', $endTime2 ])->count();
@@ -161,6 +165,7 @@ class ExceptionsController extends Controller
         $result['code'] = 200;
         $result['data']['item'][] = $date;
         $result['data']['item'][] = $hours;
+        $result['data']['item'][] = $interval;
         $result['data']['item'][] = $war_exceptions;
         $result['data']['item'][] = $err_exceptions;
         HttpResponseUtil::setJsonResponse($result);

@@ -11,6 +11,7 @@
     import Index from './Index.vue'
     import Tread from './tread.vue'
     import Visit from './visit.vue'
+    import Exception from './exception.vue'
 
     export default{
         data () {
@@ -28,7 +29,8 @@
             { path: '/', component: Index },
             { path: '/tread', component: Tread },
             { path: '/preview', component: Index },
-            {path: '/visit',component:Visit}
+            {path: '/visit',component:Visit},
+            {path: '/exception',component:Exception}
         ]
     }
 </script>
