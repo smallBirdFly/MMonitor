@@ -352,7 +352,7 @@
 								arr[0]= data.data.item[1][i];
 								arr[1]= data.data.item[2][i];
 								arr[2]= data.data.item[3][i];
-								arrs[i] = arr;
+								arrs[i] = arr[i];
 								// console.log(arr);
 							}
 							com.content = arrs;
