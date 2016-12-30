@@ -267,11 +267,20 @@ class AnalyseController extends \yii\web\Controller
             $resPv[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
             //7天每天的独立访问量
             $resIp[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-            $logger->error($startTime);
-            $logger->error($endTime);
+
         }
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+        $tmp1 = 0;
+        $tmp2 = 0;
+        foreach($resPv as $item)
+        {
+            $tmp1 += $item;
+        }
+        foreach($resIp as $item)
+        {
+            $tmp2 += $item;
+        }
+        $sum[] = $tmp1;
+        $sum[] = $tmp2;
         $result['code'] = 200;
         $result['data']['sum'][] = $sum;
         $result['data']['item'][] = $days;
@@ -375,6 +384,9 @@ class AnalyseController extends \yii\web\Controller
         $endDayA = explode('-',$endDay);
         //中间的月数
         $months =  ($endDayA[0] - $startDayA[0])*12 + $endDayA[1] - $startDayA[1];
+        //总数统计
+        $sIP = 0;
+        $sPv = 0;
         for($i = 0; $i <= $months; $i++)
         {
             $res = $startDayA[0].'-'.$startDayA[1];
@@ -389,10 +401,17 @@ class AnalyseController extends \yii\web\Controller
             {
                 $startDayA[1]++;
             }
-            $resPv[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$month[$i]])->count();
-            $resIp[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$month[$i]])->groupBy('ip')->count();
+            $tmp = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$month[$i]])->count();
+            $resPv[] = $tmp;
+            $sPv += $tmp;
+            $tmps = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['like','time',$month[$i]])->groupBy('ip')->count();
+            $resIp[] = $tmps;
+            $sIP += $tmps;
         }
+        $sum[] = $sPv;
+        $sum[] = $sIP;
         $result['code'] = 200;
+        $result['data']['sum'][] = $sum;
         $result['data']['item'][] = $month;
         $result['data']['item'][] = $resPv;
         $result['data']['item'][] = $resIp;
@@ -515,20 +534,29 @@ class AnalyseController extends \yii\web\Controller
         $compareEndDay = date('Y-m-d',strtotime($compareEndDay) + 86400);
         $appkey = $request->post('appkey');
         $days = (strtotime($compareEndDay) - strtotime($compareStartDay)) / 86400;
+        //分析的总数
+        $sPv1 = 0;
+        $sPv2 = 0;
         for ($i = 0; $i < $days; $i++)
         {
-            $day[] = $i;
+            $day[] = date('Y-m-d',strtotime($compareStartDay)+86400*$i).'与'.date('Y-m-d',strtotime($comparedStartDay)+86400*$i);
             //比较的数据
             $startTime = date('Y-m-d H:i:s',strtotime($compareStartDay) + $i * 86400);
             $endTime = date('Y-m-d H:i:s',strtotime($compareStartDay) + $i * 86400 + 86400);
-            $res1[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+            $tmp = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+            $res1[] = $tmp;
+            $sPv1 += $tmp;
             //被比较的数据
             $startTime = date('Y-m-d H:i:s',strtotime($comparedStartDay) + $i * 86400);
             $endTime = date('Y-m-d H:i:s',strtotime($comparedStartDay) + $i * 86400 + 86400);
-            $res2[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-
+            $tmps = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+            $res2[] = $tmps;
+            $sPv2 += $tmps;
         }
+        $sum[] = $sPv1;
+        $sum[] = $sPv2;
         $result['code'] = 200;
+        $result['data']['sum'][] = $sum;
         $result['data']['item'][] = $date;
         $result['data']['item'][] = $day;
         $result['data']['item'][] = $res1;
@@ -557,20 +585,29 @@ class AnalyseController extends \yii\web\Controller
         $compareEndDay = date('Y-m-d',strtotime($compareEndDay) + 86400);
         $appkey = $request->post('appkey');
         $days = (strtotime($compareEndDay) - strtotime($compareStartDay)) / 86400;
+        //分析的总数
+        $sIp1 = 0;
+        $sIp2 = 0;
         for ($i = 0; $i < $days; $i++)
         {
-            $day[] = $i;
+            $day[] = date('Y-m-d',strtotime($compareStartDay)+86400*$i).'与'.date('Y-m-d',strtotime($comparedStartDay)+86400*$i);
             //比较的数据
             $startTime = date('Y-m-d H:i:s',strtotime($compareStartDay) + $i * 86400);
             $endTime = date('Y-m-d H:i:s',strtotime($compareStartDay) + $i * 86400 + 86400);
-            $res1[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+            $tmp = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+            $res1[] = $tmp;
+            $sIp1 += $tmp;
             //被比较的数据
             $startTime = date('Y-m-d H:i:s',strtotime($comparedStartDay) + $i * 86400);
             $endTime = date('Y-m-d H:i:s',strtotime($comparedStartDay) + $i * 86400 + 86400);
-            $res2[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-
+            $tmps = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+            $res2[] = $tmps;
+            $sIp2 += $tmps;
         }
+        $sum[] = $sIp1;
+        $sum[] = $sIp2;
         $result['code'] = 200;
+        $result['data']['sum'][] = $sum;
         $result['data']['item'][] = $date;
         $result['data']['item'][] = $day;
         $result['data']['item'][] = $res1;
@@ -630,7 +667,20 @@ class AnalyseController extends \yii\web\Controller
         }
         $day[] = $compareStartDay .' - '.$compareEndDay;
         $day[] = $comparedStartDay .' - '.$comparedEndDay;
+        $tmp1 = 0;
+        $tmp2 = 0;
+        foreach($res1 as $item)
+        {
+            $tmp1 += $item;
+        }
+        foreach($res2 as $item)
+        {
+            $tmp2 += $item;
+        }
+        $sum[] = $tmp1;
+        $sum[] = $tmp2;
         $result['code'] = 200;
+        $result['data']['sum'][] = $sum;
         $result['data']['item'][] = $day;
         $result['data']['item'][] = $weeks;
         $result['data']['item'][] = $res1;
@@ -696,12 +746,25 @@ class AnalyseController extends \yii\web\Controller
 
                 $weeks[] = $start.'与'.date('Y-m-d',strtotime($comparedStartDay) + 86400 * ($i)*7).' - '.$comparedEndDay;
             }
+            $res1[] = $compareIp;
+            $res2[] = $comparedIp;
         }
-        $res1[] = $compareIp;
-        $res2[] = $comparedIp;
         $day[] = $compareStartDay .' - '.$compareEndDay;
         $day[] = $comparedStartDay .' - '.$comparedEndDay;
+        $tmp1 = 0;
+        $tmp2 = 0;
+        foreach($res1 as $item)
+        {
+            $tmp1 += $item;
+        }
+        foreach($res2 as $item)
+        {
+            $tmp2 += $item;
+        }
+        $sum[] = $tmp1;
+        $sum[] = $tmp2;
         $result['code'] = 200;
+        $result['data']['sum'][] = $sum;
         $result['data']['item'][] = $day;
         $result['data']['item'][] = $weeks;
         $result['data']['item'][] = $res1;
@@ -767,7 +830,20 @@ class AnalyseController extends \yii\web\Controller
         }
         $day[] = $compareStartDay .' - '.$compareEndDay;
         $day[] = $comparedStartDay .' - '.$comparedEndDay;
+        $tmp1 = 0;
+        $tmp2 = 0;
+        foreach($res1 as $item)
+        {
+            $tmp1 += $item;
+        }
+        foreach($res2 as $item)
+        {
+            $tmp2 += $item;
+        }
+        $sum[] = $tmp1;
+        $sum[] = $tmp2;
         $result['code'] = 200;
+        $result['data']['sum'][] = $sum;
         $result['data']['item'][] = $day;
         $result['data']['item'][]=$month;
         $result['data']['item'][]=$res1;
@@ -832,7 +908,20 @@ class AnalyseController extends \yii\web\Controller
         }
         $day[] = $compareStartDay .' - '.$compareEndDay;
         $day[] = $comparedStartDay .' - '.$comparedEndDay;
+        $tmp1 = 0;
+        $tmp2 = 0;
+        foreach($res1 as $item)
+        {
+            $tmp1 += $item;
+        }
+        foreach($res2 as $item)
+        {
+            $tmp2 += $item;
+        }
+        $sum[] = $tmp1;
+        $sum[] = $tmp2;
         $result['code'] = 200;
+        $result['data']['sum'][] = $sum;
         $result['data']['item'][] = $day;
         $result['data']['item'][]=$month;
         $result['data']['item'][]=$res1;
@@ -853,28 +942,7 @@ class AnalyseController extends \yii\web\Controller
 
     public function actionTest()
     {
-        $startDay = Yii::$app->request->post('startTime');
-        $endDay = Yii::$app->request->post('endTime');
-        $date = (strtotime($endDay)-strtotime($startDay)) / (86400) + 1;
-        Yii::error($date);
-        $appkey = Yii::$app->request->post('appkey');
-        for($i = 0; $i <  $date; $i+=7)
-        {
-            //日期区间的显示，开始时间
-            $weeks[] = date('Y-m-d',strtotime($startDay)+ $i * 86400).' - '.date('Y-m-d',($i+6) < $date ? strtotime($startDay) + ($i+6) * 86400 : strtotime($endDay));
-            $startTime = date('Y-m-d',strtotime($startDay)+ $i * 86400);
-            $endTime = date('Y-m-d',($i+6) < $date ? strtotime($startDay) + ($i+6) * 86400 : strtotime($endDay));
-            //7天每天的访问量
-            $res[$i/7][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            //7天每天的独立访问量
-            $res[$i/7][] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-        }
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-        $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
-        $result['code'] = 200;
-        $result['data']['sum'][] = $sum;
-        $result['data']['item'][] = $weeks;
-        $result['data']['item'][] = $res;
-        HttpResponseUtil::setJsonResponse($result);
+        $test = '2012-12-12';
+        echo date_add('Y-m-d',$test);
     }
 }
