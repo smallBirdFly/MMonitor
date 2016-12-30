@@ -170,4 +170,40 @@ class ExceptionsController extends Controller
         $result['data']['item'][] = $err_exceptions;
         HttpResponseUtil::setJsonResponse($result);
     }
+
+    //按照天数分析最近7或者30天的异常和错误
+    public function actionExceptionDays()
+    {
+        //需要分析的天数
+        $type = Yii::$app->request->post('type');
+        if($type == 'week')
+        {
+            $date = 7;
+        }
+        else if($type == 'month')
+        {
+            $date = 30;
+        }
+        else
+        {
+            $result['code'] = 201;
+            $result['data']['item'][] = '不正确的type值';
+        }
+        $appkey = Yii::$app->request->post('appkey');
+        for($i = 1; $i <= $date; $i++)
+        {
+            //当前时间
+            $startTime = date('Y-m-d', time() - 86400 * $i);
+            $endTime = date('Y-m-d', strtotime($startTime) + 86400);
+            //每天的错误量
+            $resErr[] = Scount::find()->where(['appkey' => $appkey,'type'=> 0])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+            //每天的异常
+            $resWar[] = Scount::find()->where(['appkey' => $appkey,'type'=> -1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+
+        }
+        $result['code'] = 200;
+        $result['data']['item'][] = $resErr;
+        $result['data']['item'][] = $resErr;
+        HttpResponseUtil::setJsonResponse($result);
+    }
 }

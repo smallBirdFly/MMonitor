@@ -5,6 +5,8 @@
             <div class="control-bar">
                 <a href="javascript:;" @click="today" class="date" style="background:white">今天</a>
                 <a href="javascript:;" @click="yesterday" class="date">昨天</a>
+                <a href="javascript:;" @click="week" class="date">最近7天</a>
+                <a href="javascript:;" @click="month" class="date">最近30天</a>
             </div>
             
         </div>
@@ -53,6 +55,12 @@
 			yesterday(){
                 this.exceptionHoursOneDay(yes_s);
 			},
+            week(){
+
+            },
+            month(){
+
+            },
 			exceptionHoursOneDay(param){
 			    var  myChart = echarts.init(document.getElementById('grid3'));
                 var  com = this;

@@ -1,10 +1,11 @@
 <template>
 	<div id="app">
+		<h5>受访页面</h5>
 		<div class="control-bar">
-                <a href="javascript:;" @click="today" class="date" style="background:green">今天</a>
-                <a href="javascript:;" @click="yesterday" class="date">昨天</a>
-                <a href="javascript:;" @click="week" class="date">最近7天</a>
-                <a href="javascript:;" @click="month" class="date">最近30天</a>
+                <a href="javascript:;" @click="tod" class="date" style="background:green">今天</a>
+                <a href="javascript:;" @click="yes" class="date">昨天</a>
+                <a href="javascript:;" @click="wee" class="date">最近7天</a>
+                <a href="javascript:;" @click="mon" class="date">最近30天</a>
                 <div class="block">
                     <span class="demonstration">选择开始日期</span>
                     <el-date-picker
@@ -23,7 +24,7 @@
                     </el-date-picker>
                 </div>
                 <span><input v-model='checked' type="checkbox" class="compare">对比</span>
-                <div class="block" v-if="dataShow==true">
+                <div class="block" v-if="compareDate==true">
                     <span class="demonstration">选择日期</span>
                     <el-date-picker
                             v-model="choseDate"
@@ -33,7 +34,7 @@
                 </div>
             </div>
         <div class="visit-sum">
-        	<table>
+        	<table class="visit-table"> 
 	        	<tr>
 	        		<td>
 	        			<span>浏览量</span><br>
@@ -46,21 +47,21 @@
 	        	</tr>
         	</table>
         </div>
-        <div class="visit-table">
-        	<table>
+        <div>
+        	<table class="visit-table">
         		<tr>
         			<th>页面URL</th>
         			<th>浏览量(PV)</th>
         			<th>访客数(IP)</th>
         			<th>时间</th>
         		</tr>
-        		<tr v-for="content in contents" v-if="visitCompare == false">
+        		<tr v-for="content in contents" v-if="compareDate == false">
         			<td>{{content[0]}}</td>
         			<td>{{content[1]}}</td>
         			<td>{{content[2]}}</td>
         			<td>{{date}}</td>
         		</tr>
-        		<tr v-for="content in contents" v-if="visitCompare == true">
+        		<tr v-for="content in contents" v-if="compareDate == true">
         			<td>{{content[0]}}</td>
         			<td>
         				<span>{{content[2]}}</span><br>
@@ -109,13 +110,16 @@
 		    	contents:'',
 		    	//日期
 		    	date:'',
-		    	visitCompare:false,
 		    	//标记正在比较的时间
-		    	tag:'today'
+		    	tag:'today',
+		    	compareDate:false,
+		    	rangeShow:false, 
+		    	// 标记是比较的类型
+		        tag:'today',
 		    }
 		},
 		computed:{
-			dataShow :function(){
+			compareDate :function(){
 				if(this.checked==true){
 					return true;
 				}else if(this.checked==false){
@@ -131,9 +135,63 @@
 			}
 		},
 		methods:{
+			tod(){
+				this.tag = 'today';
+				this.common();
+			},
+			yes(){
+				this.tag = 'yesterday';
+				this.common();
+			},
+			wee(){
+				this.tag = 'week';
+				this.common();
+			},
+			mon(){
+				this.tag = 'month';
+				this.common();
+			},
+			ran(){
+				this.tag = 'range';
+				this.common();
+			},
+			common(){
+				//比较的情况
+				if(this.compareDate == true){
+					if(this.tag == 'today'){
+						compareData.compareStartDay = moment().format('YYYY-MM-DD');
+						compareData.compareEndDay = moment().format('YYYY-MM-DD');
+					}else if(this.tag == 'yesterday'){
+						compareData.compareStartDay = moment().add(-1,'days').format('YYYY-MM-DD');
+						compareData.compareEndDay = compareData.compareStartDay;
+					}else if(this.tag == 'week'){
+						compareData.compareStartDay = moment().add(-6,'days').format('YYYY-MM-DD');
+						compareData.compareEndDay =  moment().format('YYYY-MM-DD');
+					}else if(this.tag == 'month'){
+						compareData.compareStartDay = moment().add(-29,'days').format('YYYY-MM-DD');
+						compareData.compareEndDay =  moment().format('YYYY-MM-DD');
+					}else if(this.tag == 'range'){
+						compareData.compareStartDay = this.startDate;
+						compareData.compareEndDay = this.endDate;
+					}
+					this.compareInterview(compareData);
+				}else{	//不比较的情况
+					// 选择的是今天
+					if(this.tag == 'today'){
+						this.today();
+					}else if(this.tag == 'yesterday'){
+						this.yesterday();
+					}else if(this.tag == 'week'){
+						this.week();
+					}else if(this.tag == 'month'){
+						this.month();
+					}else if(this.tag == 'range'){
+						this.range();
+					}
+				}
+			},
 			//pv和ip分析
 			today(){
-				this.tag = 'today';
 				$(".date").click(function(){
 					$(this).css('background','green').siblings().css("background-color","white");
 				});
@@ -142,28 +200,24 @@
 				this.interview(trend);
 			},
 			yesterday(){
-				this.tag = 'yesterday';
 				trend.startTime = moment().add(-1,'days').format('YYYY-MM-DD');
 				trend.endTime = moment().add(-1,'days').format('YYYY-MM-DD');
 				this.interview(trend);
 			},
 			week(){
 				// 最近7天
-				this.tag = 'week';
 				trend.startTime = moment().add(-6,'days').format('YYYY-MM-DD');
 				trend.endTime = moment().format('YYYY-MM-DD');
 				this.interview(trend);
 			},
 			month(){
 				// 最近30天
-				this.tag = 'month';
 				trend.startTime = moment().add(-29,'days').format('YYYY-MM-DD');
 				trend.endTime = moment().format('YYYY-MM-DD');
 				this.interview(trend);
 			},
 			//按照时间区间分析情况
 			range(){
-				this.tag = 'range';
 				trend.startTime = this.startDate;
 				trend.endTime = this.endDate;
 				this.interview(trend);
@@ -212,21 +266,32 @@
 		watch:{
 			dateStart:function(val) {
 				if(val) {
+					this.ran();
 					this.startDate = moment(val).format('YYYY-MM-DD').toString();
-					// console.log(moment(val).unix());
-					if(this.checked == false){
-						this.visitCompare = false;
-						if(this.endDate && this.rangeShow == true){
+					//console.log(this.compareDate);
+					if(this.compareDate == false){
+						if(this.rangeShow == true){
 							if(moment(val).unix() >  moment(this.endDate).unix()){
 								alert('开始时间必须小于结束时间');
 								return;
 							}
-						this.range();
+						this.range(trend);
 						}else if(this.rangeShow == false){
 							this.endDate = this.startDate;
+							this.range(trend);
 						} 
 					}else{
-						
+						if(this.rangeShow == true){
+							if(moment(val).unix() >  moment(this.endDate).unix()){
+								alert('开始时间必须小于结束时间');
+								return;
+							}
+							this.common();
+						}else if(this.rangeShow == false){
+							this.endDate = this.startDate;
+						console.log(this.startDate);
+							this.common();
+						} 
 					}	
 				}
 				//console.log(this.startDate);
@@ -234,49 +299,31 @@
 			},
 			dateEnd:function(val){
 				if(val){
+					this.ran();
 					this.endDate = moment(val).format('YYYY-MM-DD').toString();
-					if(this.checked == false){
-						this.visitCompare = false;
-					}
-					if(this.dateStart){
-						if(this.endDate){
-						}else if(moment(val).unix() <  moment(this.startDate).unix()){
-							alert('开始时间必须小于结束时间');
-							return;
-						}	
+					if(this.compareDate == false){
+						this.range(trend);
 					}else{
-						alert('选择开始时间');
-						return;
+						if(this.dateStart){
+							if(this.endDate){
+								this.common();
+							}else if(moment(val).unix() <  moment(this.startDate).unix()){
+								alert('开始时间必须小于结束时间');
+								return;
+							}	
+						}else{
+							alert('选择开始时间');
+							return;
+						}
 					}
+					
 				}
 			},
 			choseDate : function(val){
 				// console.log(this.tag);
 				if(val){
-					this.visitCompare = true;
-					//this.dateCompare = moment(val).format('YYYY-MM-DD').toString();
-					if(this.tag == 'today'){
-						compareData.compareStartDay = moment().format('YYYY-MM-DD');
-						compareData.compareEndDay = moment().format('YYYY-MM-DD');
-						compareData.comparedStartDay = moment(val).format('YYYY-MM-DD').toString();
-					}else if(this.tag == 'yesterday'){
-						compareData.compareStartDay = moment().add(-1,'days').format('YYYY-MM-DD');
-						compareData.compareEndDay = compareData.compareStartDay;
-						compareData.comparedStartDay = moment(val).format('YYYY-MM-DD').toString();
-					}else if(this.tag == 'week'){
-						compareData.compareStartDay = moment().add(-6,'days').format('YYYY-MM-DD');
-						compareData.compareEndDay =  moment().format('YYYY-MM-DD');
-						compareData.comparedStartDay = moment(val).format('YYYY-MM-DD').toString();
-					}else if(this.tag == 'month'){
-						compareData.compareStartDay = moment().add(-29,'days').format('YYYY-MM-DD');
-						compareData.compareEndDay =  moment().format('YYYY-MM-DD');
-						compareData.comparedStartDay = moment(val).format('YYYY-MM-DD').toString();
-					}else if(this.tag == 'range'){
-						compareData.compareStartDay = this.startDate;
-						compareData.compareEndDay = this.endDate;
-						compareData.comparedStartDay = moment(val).format('YYYY-MM-DD').toString();
-					}
-					this.compareInterview(compareData);
+					compareData.comparedStartDay = moment(val).format('YYYY-MM-DD').toString();
+					this.common();
 				}
 			}
 		},
@@ -303,5 +350,15 @@
     }
     .block{
     	display: inline;
+    }
+    .visit-table{
+    	height: 100%;
+    	margin: 0px auto;
+    }
+    .visit-table td{
+    	text-align: center;
+    	padding:5px;
+    	margin: 3px;
+    	background: #dfe0e0;
     }
 </style>
