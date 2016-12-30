@@ -1,6 +1,6 @@
 <template>
 	<div id="app">
-        <h5>趋势分析</h5>
+        <h3>趋势分析</h3>
         <div class="date-select-bar">
             <div class="control-bar">
                 <a href="javascript:;" @click="tod" class="date" style="background:green">今天</a>
@@ -48,8 +48,13 @@
         </div>
         <div id="grid1"></div>
         <div>
-        	<table>
-        		<tr>
+        	<table class="count-table">
+        		<tr v-if="compareDate == true">
+        			<th>时间</th>
+        			<th>{{this.time[0]}}{{this.compareType}}量</th>
+        			<th>{{this.time[1]}}{{this.compareType}}量</th>
+        		</tr>
+        		<tr v-if="compareDate == false">
         			<th>时间</th>
         			<th>PV量</th>
         			<th>IP量</th>
@@ -58,6 +63,11 @@
         			<td>{{cont[0]}}</td>
         			<td>{{cont[1]}}</td>
         			<td>{{cont[2]}}</td>
+        		</tr>
+        		<tr>
+        			<td>合计</td>
+        			<td>{{sum[0]}}</td>
+        			<td>{{sum[1]}}</td>
         		</tr>
         	</table>
     	</div>
@@ -108,7 +118,11 @@
 		        // 比较的类型
 		        compareType:'pv',
 		        // 输出时间
-		        content:''
+		        content:'',
+		        //总数
+		        sum:'',
+		        //表格比较的时间
+		        time:''
 		    }
 		},
 		computed:{
@@ -164,10 +178,29 @@
 				this.tag = 'range';
 				this.common();
 			},
+			//选择比较的方式
+			pv(){
+				this.compareType = 'pv';
+				this.common();
+			},
+			ip(){
+				this.compareType = 'ip';
+				this.common();
+			},
 			common(){
 				//比较的情况
-				if(this.checked == true){
-
+				if(this.compareDate == true){
+					if(this.tag == 'today'){
+						this.compareToday();
+					}else if(this.tag == 'yesterday'){
+						this.compareYesterday();
+					}else if(this.tag == 'week'){
+						this.compareWeek();
+					}else if(this.tag == 'month'){
+						this.compareMonth();
+					}else if(this.tag == 'range'){
+						this.compareRange();
+					}
 				}else{	//不比较的情况
 					// 选择的是今天
 					if(this.tag == 'today'){
@@ -295,13 +328,6 @@
 			},
 
 
-			//选择比较的方式
-			pv(){
-				this.compareType = 'pv';
-			},
-			ip(){
-				this.compareType = 'ip';
-			},
 
 			// 按照小时分析pv/ip
 			trendHours(data){
@@ -330,6 +356,7 @@
 								// console.log(arr);
 							}
 							com.content = arrs;
+							com.sum = data.data.sum[0];
 							// console.log(com.content);
 							myChart.setOption({
 								xAxis:{
@@ -422,6 +449,7 @@
 								// console.log(arr);
 							}
 							com.content = arrs;
+							com.sum = data.data.sum[0];
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[0]
@@ -510,6 +538,7 @@
 								// console.log(arr);
 							}
 							com.content = arrs;
+							com.sum = data.data.sum[0];
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[0]
@@ -597,6 +626,7 @@
 								// console.log(arr);
 							}
 							com.content = arrs;
+							com.sum = data.data.sum[0];
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[0]
@@ -694,6 +724,8 @@
 								// console.log(arr);
 							}
 							com.content = arrs;
+							com.time = data.data.item[0];
+							com.sum = data.data.sum[0];
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[1]
@@ -790,6 +822,8 @@
 								// console.log(arr);
 							}
 							com.content = arrs;
+							com.time = data.data.item[0];
+							com.sum = data.data.sum[0];
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[1]
@@ -885,6 +919,8 @@
 								// console.log(arr);
 							}
 							com.content = arrs;
+							com.time = data.data.item[0];
+							com.sum = data.data.sum[0];
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[1]
@@ -980,6 +1016,8 @@
 								// console.log(arr);
 							}
 							com.content = arrs;
+							com.time = data.data.item[0];
+							com.sum = data.data.sum[0];
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[1]
@@ -1045,7 +1083,7 @@
 			dateStart:function(val) {
 				if(val) {
 					this.startDate = moment(val).format('YYYY-MM-DD').toString();
-					if(this.range == false){
+					if(this.compareDate == false){
 						if(this.endDate && this.rangeShow == true){
 							if(moment(val).unix() >  moment(this.endDate).unix()){
 								alert('开始时间必须小于结束时间');
@@ -1059,7 +1097,18 @@
 							this.ran();
 						} 
 					}else{
+						if(this.endDate && this.rangeShow == true && this.dateCompare){
+							if(moment(val).unix() >  moment(this.endDate).unix()){
+								alert('开始时间必须小于结束时间');
+								return;
+							}
 						this.compareRange();
+						}else if(this.rangeShow == false){
+							this.endDate = this.startDate;
+							this.endDate = this.startDate;
+							//console.log(this.endDate);
+							this.compareRange();
+						} 
 					}	
 				}
 				//console.log(this.startDate);
@@ -1073,7 +1122,11 @@
 							alert('开始时间必须小于结束时间');
 							return;
 						}else{
-							this.ranges();
+							if(this.dateCompare){
+								this.compareRange();
+							}else{
+								this.ran();
+							}
 						}	
 					}else{
 						alert('选择开始时间');
@@ -1085,17 +1138,7 @@
 				// console.log(this.tag);
 				if(val){
 					this.dateCompare = moment(val).format('YYYY-MM-DD').toString();
-					if(this.tag == 'today'){
-						this.compareToday();
-					}else if(this.tag == 'yesterday'){
-						this.compareYesterday();
-					}else if(this.tag == 'week'){
-						this.compareWeek();
-					}else if(this.tag == 'month'){
-						this.compareMonth();
-					}else if(this.tag == 'range'){
-						this.compareRange();
-					}
+					this.common();
 				}
 			}
 		},
@@ -1128,5 +1171,15 @@
     }
     .analysis-time{
     	float: right;
+    }
+    .count-table{
+    	height: 100%;
+    	margin: 0px auto;
+    }
+    .count-table td{
+    	text-align: center;
+    	padding:5px;
+    	margin: 3px;
+    	background: #dfe0e0;
     }
 </style>
