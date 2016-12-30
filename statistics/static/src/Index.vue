@@ -236,14 +236,14 @@
 			</div>
 			<div class="row3 left">
 				<!-- 时间条 -->
-			    <div class="exception_date-select-bar">
+			    <!-- <div class="exception_date-select-bar">
                     <div class="control-bar">
                         <a href="javascript:;" @click="err" class="date">今天</a>
                         <a href="javascript:;" @click="yesterday" class="date">昨天</a>
                         <a href="javascript:;" @click="week" class="date">最近7天</a>
                         <a href="javascript:;" @click="month" class="date">最近30天</a>
                     </div>
-                </div>
+                </div> -->
 				<div class="table-grid-item">
 					<div class="title clearfix">
 						<span>异常统计</span>
@@ -372,17 +372,17 @@
 				this.compareDays(d);
 			},
 			err(){
-				this.exceptionHours(err_s);
+				this.exceptionHoursOneDayShow(err_s);
 			},
 			warning(){
-                this.exceptionHours(exc_s);
+                this.exceptionHoursOneDayShow(exc_s);
 			},
-			exceptionHours(param){
+			exceptionHoursOneDayShow(param){
 			    var  myChart = echarts.init(document.getElementById('grid3'));
                 var  com = this;
                 // this.tag = 1;
                 $.ajax({
-                	url:'http://192.168.1.126/mmonitor/exceptions/exception-hours',
+                	url:'http://192.168.1.126/mmonitor/exceptions/exception-hours-one-day-show',
                 	method:'post',
                 	dataType:'json',
                 	data:{
@@ -391,38 +391,30 @@
                 		day : param.day
                 	},
                 	success:function(data){
-                		com.compared = data.data.item.yesterday[0];
-                		com.compare = data.data.item.today[0];
-                		// var hours = data.data.item.today[1];
-                		// var to_data = data.data.item.today[2];
-                		// var ye_data = data.data.item.yesterday[2];
-                		// console.log('总的小时数'+ hours);
-                		// console.log('今天的时间'+com.compare);
-                		// console.log('今天的数据' + to_data);
-                		// console.log('昨天的时间'+com.compared);
-                		// console.log('昨天的数据' + ye_data);
+                		var code = data.code;
+                		var date_name = data.data.item[0];
+                		var hours = data.data.item[1];
+                		var date_data = data.data.item[2];
+                		console.log('状态码：'+ code);
+                		console.log('当天的日期'+ date_name);
+                		console.log('当天的小时数' + hours);
+                		console.log('当天的数据' + date_data);
                 		// 填入数据
                 		myChart.setOption({
                 			xAxis: {
-                			    data: data.data.item.today[1]
+                			    data: hours
                 			    // data: ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
                 			},
                 			legend:{
-                				data: [com.compared,com.compare]
-                				//data:['2016-12-26','2016-12-25']
+                				data: date_name
+                				//data:['2016-12-26']
                 			},
                 			series: [
                                 {
-                                    // 根据名字对应到相应的系列
+                                    //根据名字对应到相应的系列
                                     //画出昨天的图
-                                    name : data.data.item.yesterday[0],
-                                    data : data.data.item.yesterday[2]
-                                },
-                                {
-                                    // 根据名字对应到相应的系列
-                                    //画出今天的图
-                                    name : data.data.item.today[0],
-                                    data : data.data.item.today[2]
+                                    name : date_name,
+                                    data : date_data
                                 }
                 			]
                 		});
@@ -458,14 +450,6 @@
 							type:'line',
 							areaStyle: {normal: {}},
 							data:[]
-						},
-						{
-							name:com.compare,
-							type:'line',
-							areaStyle: {normal: {}},
-					       	// data:[220, 182, 191, 234, 290, 330, 310,120, 132, 101, 134, 90, 230, 210, 150, 120, 80, 50, 20,120, 132, 101, 134, 90]
-							data:[]
-							// data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
 						}
                 	]
                 });
