@@ -12,18 +12,36 @@
         </div>
         <div id="grid3"></div>
         <div style="text-align:center;">
-        	<table style="margin:0px auto;">
+        	<table class="msg-table">
         		<tr>
+        			<th>网站</th>
         			<th>时间</th>
-        			<th>错误量</th>
-        			<th>异常量</th>
+        			<th>错误信息</th>
         		</tr>
-        		<tr v-for="cont in content">
-        			<td>{{cont[0]}}</td>
-        			<td>{{cont[1]}}</td>
-        			<td>{{cont[2]}}</td>
+        		<tr v-for="err in errors">
+        			<td>{{err[0]}}</td>
+        			<td>{{err[1]}}</td>
+        			<td>
+                        <span>{{err[2][0]}}</span><br>
+                        <span>{{err[2][1]}}</span>
+                    </td>
         		</tr>
         	</table>
+            <table class="msg-table">
+                <tr>
+                    <th>网站</th>
+                    <th>时间</th>
+                    <th>警告信息</th>
+                </tr>
+                <tr v-for="war in warns">
+                    <td>{{war[0]}}</td>
+                    <td>{{war[1]}}</td>
+                    <td>
+                        <span>{{war[2][0]}}</span><br>
+                        <span>{{war[2][1]}}</span>
+                    </td>
+                </tr>
+            </table>
     	</div>
     </div>
 </template>
@@ -32,6 +50,10 @@
     import $ from '../jquery-1.12.1'
     import moment from 'moment'
 	var echarts = require('echarts');
+    var dayData = {
+        appkey:'201612191',
+        type:'week'
+    };
 	//今天初始化函数
 	var to_s = {
     	appkey : '201612274',
@@ -45,7 +67,9 @@
 	export default {
         data() {
             return{
-                content:[]
+                appkey:'201612191',
+                errors:'',
+                warns:'',
             }
         },
 		methods:{
@@ -56,10 +80,12 @@
                 this.exceptionHoursOneDay(yes_s);
 			},
             week(){
-
+                dayData.type = 'week';
+                this.exceptionDay(dayData);
             },
             month(){
-
+                dayData.type = 'month';
+                this.exceptionDay(dayData);
             },
 			exceptionHoursOneDay(param){
 			    var  myChart = echarts.init(document.getElementById('grid3'));
@@ -176,6 +202,175 @@
                 	]
                 });
 			},
+            exceptionHour(param){
+                var  myChart = echarts.init(document.getElementById('grid3'));
+                var com = this;
+                $.ajax({
+                    url:'http://192.168.1.109/mmonitor/exceptions/exception-days',
+                    method:'post',
+                    dateType:'json',
+                    data:{
+                        appkey:param.appkey,
+                        type:param.type,
+                    },
+                    success:function(data){
+                        if(data.code == 200){
+                            com.compareIp = data.data.item[0][0] + '-' + data.data.item[0][data.data.item[0].length -1] + ' 错误';
+                            com.comparePv = data.data.item[0][0] + '-' + data.data.item[0][data.data.item[0].length -1] + ' 异常';
+                            for (var i = 0; i < data.data.item[3].length; i++) {
+                                data.data.item[3][i][2] = JSON.parse(data.data.item[3][i][2]);
+                            };
+                            for (var i = 0; i < data.data.item[4].length; i++) {
+                                data.data.item[4][i][2] = JSON.parse(data.data.item[4][i][2]);
+                            };
+                            com.errors = data.data.item[3];
+                            com.warns = data.data.item[4];
+                            myChart.setOption({
+                                xAxis:{
+                                    data:data.data.item[0]
+                                },
+                                legend:{
+                                    data:[com.compareIp,com.comparePv]
+                                },
+                                series : [{
+                                    name:com.comparePv,
+                                    data:data.data.item[1],
+                                },
+                                {
+                                    name:com.compareIp,
+                                    data:data.data.item[2],
+                                }
+                                ],
+                            });
+                        }
+                        
+                    }
+                });
+                console.log(com.compareIp);
+                myChart.setOption({
+                        tooltip : {
+                        trigger: 'axis'
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '4%',
+                            bottom: '3%',
+                            containLabel: true
+                        },
+                        calculable: true,
+                        xAxis : [
+                            {
+                                type : 'category',
+                                boundaryGap : false,
+                                data : []
+                            }
+                        ],
+                        yAxis : [
+                            {
+                                type : 'value'
+                            }
+                        ],
+                        series : [
+                            {
+                                name:com.comparePv,
+                                type:'line',
+                                areaStyle: {normal: {}},
+                                data:[]
+                            },
+                            {
+                                name:com.compareIp,
+                                type:'line',
+                                areaStyle: {normal: {}},
+                                data:[]
+                            }
+                        ]
+                });
+            
+            },
+            exceptionDay(param){
+                var  myChart = echarts.init(document.getElementById('grid3'));
+                var com = this;
+                $.ajax({
+                    url:'http://192.168.1.109/mmonitor/exceptions/exception-days',
+                    method:'post',
+                    dateType:'json',
+                    data:{
+                        appkey:param.appkey,
+                        type:param.type,
+                    },
+                    success:function(data){
+                        if(data.code == 200){
+                            com.compareIp = data.data.item[0][0] + '-' + data.data.item[0][data.data.item[0].length -1] + ' 错误';
+                            com.comparePv = data.data.item[0][0] + '-' + data.data.item[0][data.data.item[0].length -1] + ' 异常';
+                            for (var i = 0; i < data.data.item[3].length; i++) {
+                                data.data.item[3][i][2] = JSON.parse(data.data.item[3][i][2]);
+                            };
+                            for (var i = 0; i < data.data.item[4].length; i++) {
+                                data.data.item[4][i][2] = JSON.parse(data.data.item[4][i][2]);
+                            };
+                            com.errors = data.data.item[3];
+                            com.warns = data.data.item[4];
+                            myChart.setOption({
+                                xAxis:{
+                                    data:data.data.item[0]
+                                },
+                                legend:{
+                                    data:[com.compareIp,com.comparePv]
+                                },
+                                series : [{
+                                    name:com.comparePv,
+                                    data:data.data.item[1],
+                                },
+                                {
+                                    name:com.compareIp,
+                                    data:data.data.item[2],
+                                }
+                                ],
+                            });
+                        }
+                        
+                    }
+                });
+                console.log(com.compareIp);
+                myChart.setOption({
+                        tooltip : {
+                        trigger: 'axis'
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '4%',
+                            bottom: '3%',
+                            containLabel: true
+                        },
+                        calculable: true,
+                        xAxis : [
+                            {
+                                type : 'category',
+                                boundaryGap : false,
+                                data : []
+                            }
+                        ],
+                        yAxis : [
+                            {
+                                type : 'value'
+                            }
+                        ],
+                        series : [
+                            {
+                                name:com.comparePv,
+                                type:'line',
+                                areaStyle: {normal: {}},
+                                data:[]
+                            },
+                            {
+                                name:com.compareIp,
+                                type:'line',
+                                areaStyle: {normal: {}},
+                                data:[]
+                            }
+                        ]
+                });
+            }
 		},
 		mounted() {
 			this.today();
@@ -206,5 +401,15 @@
     }
     .analysis-time{
     	float: right;
+    }
+    .msg-table{
+        height: 100%;
+        margin: 0px auto;
+    }
+    .msg-table td{
+        text-align: center;
+        padding:5px;
+        margin: 3px;
+        background: #dfe0e0;
     }
 </style>

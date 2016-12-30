@@ -10,6 +10,7 @@ namespace statistics\controllers;
 use common\utils\HttpResponseUtil;
 use statistics\component\AuthFilter;
 use statistics\models\Daycount;
+use statistics\models\Page;
 use statistics\models\Scount;
 use Yii;
 use yii\rest\Controller;
@@ -172,9 +173,75 @@ class ExceptionsController extends Controller
         HttpResponseUtil::setJsonResponse($result);
     }
 
+    //昨天或今天按照小时分析
+    public function actionExceptionHour()
+    {
+        $appkey = Yii::$app->request->post('appkey');
+        //需要分析的天数
+        $type = Yii::$app->request->post('type');
+        if($type == 'today')
+        {
+            $date = 0;
+        }
+        else if($type == 'yesterday')
+        {
+            $date = 1;
+        }
+        else
+        {
+            $result['code'] = 201;
+            $result['data']['item'][] = '不正确的type值';
+            HttpResponseUtil::setJsonResponse($result);
+            return;
+        }
+        $day = date('Y-m-d',time()-86400*$date);
+        $startDay = $day;
+        $endDay = date('Y-m-d',strtotime($startDay)+86400);
+        for($i = 0; $i < 24; $i++)
+        {
+            if ($i < 10)
+            {
+                $hours[] = '0' . $i . ':00 - 0' . $i . ':59';
+            }
+            else
+            {
+                $hours[] = $i . ':00 - ' . $i . ':59';
+            }
+            //各个小时的错误量
+            $resErr[] = Scount::find()->where(['appkey' => $appkey,'type'=> 0,'hour'=>$i])->andWhere(['>=','time',$startDay])->andWhere(['<','time',$endDay])->count();
+            //各个小时的警告量
+            $resWar[] = Scount::find()->where(['appkey' => $appkey,'type'=> -1,'hour'=>$i])->andWhere(['>=','time',$startDay])->andWhere(['<','time',$endDay])->count();
+        }
+        $errInfos = Scount::find()->where(['appkey' => $appkey,'type'=> 0])->andWhere(['>=','time',$startDay])->andWhere(['<','time',$endDay])->all();
+        $warnInfos = Scount::find()->where(['appkey' => $appkey,'type'=> -1])->andWhere(['>=','time',$startDay])->andWhere(['<','time',$endDay])->all();
+        foreach($errInfos as $k=>$err)
+        {
+            $url = Page::findOne($err['page']);
+            $errInfo[$k][] = $url->page_url;
+            $errInfo[$k][] = $err->time;
+            $errInfo[$k][] = $err->message;
+            Yii::error($k);
+        }
+        foreach($warnInfos as $j=>$warn)
+        {
+            $url = Page::findOne($warn['page']);
+            $warnInfo[$j][] = $url['page_url'];
+            $warnInfo[$j][] = $warn->time;
+            $warnInfo[$j][] = $warn->message;
+        }
+        $result['code'] = 200;
+        $result['data']['item'][] = $hours;
+        $result['data']['item'][] = $resErr;
+        $result['data']['item'][] = $resWar;
+        $result['data']['item'][] = $errInfo;
+        $result['data']['item'][] = $warnInfo;
+        HttpResponseUtil::setJsonResponse($result);
+    }
+
     //按照天数分析最近7或者30天的异常和错误
     public function actionExceptionDays()
     {
+        $appkey = Yii::$app->request->post('appkey');
         //需要分析的天数
         $type = Yii::$app->request->post('type');
         if($type == 'week')
@@ -190,21 +257,51 @@ class ExceptionsController extends Controller
             $result['code'] = 201;
             $result['data']['item'][] = '不正确的type值';
         }
-        $appkey = Yii::$app->request->post('appkey');
         for($i = 1; $i <= $date; $i++)
         {
+            $days[] = date('Y-m-d', time() - 86400 * ($date-$i));
             //当前时间
-            $startTime = date('Y-m-d', time() - 86400 * $i);
+            $startTime = date('Y-m-d', time() - 86400 * ($date-$i));
             $endTime = date('Y-m-d', strtotime($startTime) + 86400);
             //每天的错误量
+            //错误数量和信息
             $resErr[] = Scount::find()->where(['appkey' => $appkey,'type'=> 0])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-            //每天的异常
-            $resWar[] = Scount::find()->where(['appkey' => $appkey,'type'=> -1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
 
+            //警告数量和信息
+            $resWarn[] = Scount::find()->where(['appkey' => $appkey,'type'=> -1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
+        }
+        $startDay = date('Y-m-d', time() - 86400 * ($date-1));
+        $endDay = date('Y-m-d H:i:s', time());
+        $errInfos = Scount::find()->where(['appkey' => $appkey,'type'=> 0])->andWhere(['>=','time',$startDay])->andWhere(['<','time',$endDay])->all();
+        $warnInfos = Scount::find()->where(['appkey' => $appkey,'type'=> -1])->andWhere(['>=','time',$startDay])->andWhere(['<','time',$endDay])->all();
+        foreach($errInfos as $k=>$err)
+        {
+            $url = Page::findOne($err['page']);
+            $errInfo[$k][] = $url->page_url;
+            $errInfo[$k][] = $err->time;
+            $errInfo[$k][] = $err->message;
+            Yii::error($k);
+        }
+        foreach($warnInfos as $j=>$warn)
+        {
+            $url = Page::findOne($warn['page']);
+            $warnInfo[$j][] = $url['page_url'];
+            $warnInfo[$j][] = $warn->time;
+            $warnInfo[$j][] = $warn->message;
         }
         $result['code'] = 200;
+        $result['data']['item'][] = $days;
         $result['data']['item'][] = $resErr;
-        $result['data']['item'][] = $resErr;
+        $result['data']['item'][] = $resWarn;
+        $result['data']['item'][] = $errInfo;
+        $result['data']['item'][] = $warnInfo;
         HttpResponseUtil::setJsonResponse($result);
+    }
+
+    public function actionTest()
+    {
+        //得出当天的总秒数
+//        echo time()%86400+8*3600;
+        echo strtotime(date('Y-m-d',time()));
     }
 }
