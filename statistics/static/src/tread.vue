@@ -327,8 +327,6 @@
 				}
 			},
 
-
-
 			// 按照小时分析pv/ip
 			trendHours(data){
 			    var  myChart = echarts.init(document.getElementById('grid1'));
@@ -352,12 +350,13 @@
 								arr[0]= data.data.item[1][i];
 								arr[1]= data.data.item[2][i];
 								arr[2]= data.data.item[3][i];
-								arrs[i] = arr[i];
+								arrs[i] = arr;
 								// console.log(arr);
 							}
 							com.content = arrs;
 							com.sum = data.data.sum[0];
-							// console.log(com.content);
+							console.log(com.content);
+							console.log(com.sum);
 							myChart.setOption({
 								xAxis:{
 									data:data.data.item[1]
@@ -1084,17 +1083,18 @@
 				if(val) {
 					this.startDate = moment(val).format('YYYY-MM-DD').toString();
 					if(this.compareDate == false){
-						if(this.endDate && this.rangeShow == true){
+						if(this.endDate && this.endDate != ''){
 							if(moment(val).unix() >  moment(this.endDate).unix()){
 								alert('开始时间必须小于结束时间');
 								return;
 							}
 						this.ran();
-						}else if(this.rangeShow == false){
+						}else{
 							this.endDate = this.startDate;
 							this.endDate = this.startDate;
 							//console.log(this.endDate);
 							this.ran();
+							this.endDate = '';
 						} 
 					}else{
 						if(this.endDate && this.rangeShow == true && this.dateCompare){
@@ -1143,7 +1143,7 @@
 			}
 		},
 		mounted() {
-			this.today();
+			this.common();
 		}
 	}
 </script>

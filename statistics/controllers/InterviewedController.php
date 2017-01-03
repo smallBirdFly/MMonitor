@@ -51,7 +51,7 @@ class InterviewedController extends Controller
                 $res[$i][] = $name;
                 $res[$i][] = $pv;
                 $sumPv += $pv;
-                $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+                $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page->id,'visit'=>1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
                 $res[$i][] = $ip;
                 $sumIp += $ip;
             }
@@ -74,7 +74,7 @@ class InterviewedController extends Controller
                 $res[$i][] = $name;
                 $res[$i][] = $pv;
                 $sumPv += $pv;
-                $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+                $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page->id,'visit'=>1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
                 $res[$i][] = $ip;
                 $sumIp += $ip;
             }
@@ -112,7 +112,7 @@ class InterviewedController extends Controller
             {
                 $name = $page->page_url;
                 $pv = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-                $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page->id])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->groupBy('ip')->count();
+                $ip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page->id,'visit'=>1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
                 //url
                 $res[$i][] = $name;
                 //时间1
@@ -121,7 +121,7 @@ class InterviewedController extends Controller
                 $res[$i][] = $ip;
                 //时间2
                 $cpv = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page->id])->andWhere(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->count();
-                $cip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page->id])->andWhere(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->groupBy('ip')->count();
+                $cip = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'page'=>$page->id,'visit'=>1])->andWhere(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->count();
                 $res[$i][] = $request->post('comparedStartDay');
                 $res[$i][] = $cpv;
                 $res[$i][] = $cip;
@@ -146,7 +146,7 @@ class InterviewedController extends Controller
             {
                 $name = $page->page_url;
                 $pv = Scount::find()->where(['appkey' => $appkey, 'type' => 1, 'page' => $page->id])->andWhere(['>=', 'time', $startTime])->andWhere(['<', 'time', $endTime])->count();
-                $ip = Scount::find()->where(['appkey' => $appkey, 'type' => 1, 'page' => $page->id])->andWhere(['>=', 'time', $startTime])->andWhere(['<', 'time', $endTime])->groupBy('ip')->count();
+                $ip = Scount::find()->where(['appkey' => $appkey, 'type' => 1, 'page' => $page->id,'visit'=>1])->andWhere(['>=', 'time', $startTime])->andWhere(['<', 'time', $endTime])->count();
                 //url
                 $res[$i][] = $name;
                 //时间1
@@ -154,7 +154,7 @@ class InterviewedController extends Controller
                 $res[$i][] = $pv;
                 $res[$i][] = $ip;
                 $cpv = Scount::find()->where(['appkey' => $appkey, 'type' => 1, 'page' => $page->id])->andWhere(['>=', 'time', $cstartTime])->andWhere(['<', 'time', $cendTime])->count();
-                $cip = Scount::find()->where(['appkey' => $appkey, 'type' => 1, 'page' => $page->id])->andWhere(['>=', 'time', $cstartTime])->andWhere(['<', 'time', $cendTime])->groupBy('ip')->count();
+                $cip = Scount::find()->where(['appkey' => $appkey, 'type' => 1, 'page' => $page->id,'visit'=>1])->andWhere(['>=', 'time', $cstartTime])->andWhere(['<', 'time', $cendTime])->count();
                 $res[$i][] = $request->post('comparedStartDay').'-'.date("Y-m-d",$comparedStartDay + $compareEndDay - $compareStartDay);
                 $res[$i][] = $cpv;
                 $res[$i][] = $cip;

@@ -13,7 +13,6 @@ use statistics\models\AccessLog;
 use statistics\models\Daycount;
 use statistics\models\Ipaddress;
 use statistics\models\Scount;
-use statistics\models\Messages;
 
 use Yii;
 use yii\base\ErrorException;
@@ -23,9 +22,6 @@ use yii\filters\VerbFilter;
 use yii\swiftmailer\Message;
 use yii\web\Controller;
 
-use yii\helpers\Url;
-use yii\redis\Connection;
-use yii\web\NotFoundHttpException;
 
 class SiteController extends Controller
 {
@@ -59,14 +55,9 @@ class SiteController extends Controller
     }
 
 //    验证ip
-    private function check()
+    private function check($remoteIp)
     {
         $redis = Yii::$app->redis;
-        $remoteIp = Yii::$app->request->headers->get('X-Real-IP');
-        if(empty($remoteIp))
-        {
-            $remoteIp = Yii::$app->request->getUserIP();
-        }
         $redis->lpush($remoteIp,$remoteIp);
         $redis->expire($remoteIp,60);
 
@@ -82,6 +73,24 @@ class SiteController extends Controller
         }
     }
 
+    //验证是否今天第一次访问
+    private function visit($remoteIp)
+    {
+        $redis = Yii::$app->redis;
+        var_dump($redis->llen($remoteIp.'visit'));
+        if($redis->llen($remoteIp.'visit') > 0)
+        {
+            return 0;
+        }
+        else
+        {
+            $redis->lpush($remoteIp.'visit',$remoteIp);
+            $redis->expireat($remoteIp.'visit',strtotime(date("Y-m-d"))+86400);
+//        $redis->expireat($remoteIp.'visit',time()+10);
+            return 1;
+        }
+    }
+
     public function actionIndex()
     {
         return $this->render('index');
@@ -91,7 +100,6 @@ class SiteController extends Controller
     public function actionSaveredis()
     {
         $request = Yii::$app->request;
-        Yii::error($request->get());
         $logger = MMLogger::getLogger(__FUNCTION__);
 
         $remoteIp = $request->headers->get('X-Real-IP');
@@ -103,7 +111,7 @@ class SiteController extends Controller
         $message['time'] = date('Y-m-d H:i:s');
         $message['referrer'] = $request->getReferrer();
         //是否为脚本
-        if(!$this->check())
+        if(!$this->check($remoteIp))
         {
             $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['url'].'        message:'.'访问过于频繁');
             $result['code'] = 400;
@@ -151,6 +159,12 @@ class SiteController extends Controller
             HttpResponseUtil::setJsonResponse($result);
             return;
         }
+
+        //当前的小时
+        $con['hour'] = date('H',time());
+        //是否是今天第一次访问
+        $con['visit'] = $this->visit($remoteIp);
+        $con['type'] = $type;
         $con['appkey'] = $code[0];
         $con['page'] = $code[1];
         $con['content'] = $message;
@@ -225,6 +239,9 @@ class SiteController extends Controller
                 $attr = json_decode($v);
                 $res['appkey'] = $attr->appkey;
                 $res['page'] = $attr->page;
+                $res['type'] = $attr->type;
+                $res['visit'] = $attr->visit;
+                $res['hour'] = $attr->hour;
                 $res['ip'] = $attr->content->ip;
                 $res['time'] = $attr->content->time;
                 $res['referrer'] = $attr->content->referrer;
@@ -243,7 +260,7 @@ class SiteController extends Controller
                 $res['created_at'] = date('Y-m-d H:i:s',time());
                 $rows[] = $res;
             }
-            $db = Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['appkey','page','ip','time','referrer','message','created_at'],$rows)->execute();
+            $db = Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['appkey','page','type','visit','hour','ip','time','referrer','message','created_at'],$rows)->execute();
 
             if(!$db)
             {
@@ -285,7 +302,6 @@ class SiteController extends Controller
             HttpResponseUtil::setJsonResponse($result);
             return;
         }
-        Yii::error('222222');
         //对用户的添加
         $users = Scount::find()->groupBy(['ip'])->all();
         foreach($users as $user)
@@ -301,31 +317,36 @@ class SiteController extends Controller
 
         }
 
-
         $content = Scount::find()->all();
         $string = null;
         foreach($content as $v)
         {
             $string .= '(\''.$v->appkey.'\',';
-            $string .= '(\''.$v->page.'\',';
+            $string .= '\''.$v->page.'\',';
+            $string .= '\''.$v->type.'\',';
             $string .= '\''.$v->ip.'\',';
             $string .= '\''.$v->time.'\',';
             $string .= '\''.$v->referrer.'\',';
             $string .= '\''.$v->message.'\',';
+            $string .= '\''.$v->hour.'\',';
+            $string .= '\''.$v->visit.'\',';
             $string .= '\''.$v->created_at.'\'),';
         }
         $tname = 'scount'.time();
         $ctable = 'CREATE TABLE `'.$tname.'` (
-                `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+                  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
                   `appkey` char(9) NOT NULL,
                   `page` int(11) NOT NULL,
+                  `type` char(3) NOT NULL,
                   `ip` char(15) NOT NULL COMMENT \'返回的内容\',
                   `time` char(20) NOT NULL,
                   `referrer` varchar(100) NOT NULL,
                   `message` varchar(100) NOT NULL,
-                  `created_at` char(20) NOT NULL,
+                  `hour` char(2) NOT NULL,
+                  `visit` char(1) NOT NULL,
+                  `created_at` datetime NOT NULL,
                   PRIMARY KEY (`id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `appkey`,`page`, `ip`,`time`,`referrer`,  `message`,`created_at`) VALUES';
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `appkey`,`page`,`type`, `ip`,`time`,`referrer`,`message`,`hour`,`visit`,`created_at`) VALUES';
         $sql =  $ctable.trim($string,',');
         $sqlfile = fopen(Yii::$app->basePath."/web/sql/".$tname.'.sql', "w") or die("Unable to open file!");
         fwrite($sqlfile,$sql);
@@ -337,10 +358,7 @@ class SiteController extends Controller
 
     public function actionTest()
     {
-        $string = '123.12.1';
-//        echo  strripos($string,'.');
-        $s = substr($string,0,strripos($string,'.'));
-        echo $s;
+        var_dump($this->visit('192.168.1.109'));
     }
 
 
@@ -348,5 +366,6 @@ class SiteController extends Controller
     //统一错误页面
     public function actionError()
     {
+
     }
 }

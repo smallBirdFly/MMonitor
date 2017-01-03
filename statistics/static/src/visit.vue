@@ -116,6 +116,8 @@
 		    	rangeShow:false, 
 		    	// 标记是比较的类型
 		        tag:'today',
+		        startDate:'',
+		        endDate:'',
 		    }
 		},
 		computed:{
@@ -266,19 +268,21 @@
 		watch:{
 			dateStart:function(val) {
 				if(val) {
-					this.ran();
+					this.tag = 'range';
 					this.startDate = moment(val).format('YYYY-MM-DD').toString();
-					//console.log(this.compareDate);
 					if(this.compareDate == false){
-						if(this.rangeShow == true){
+						console.log(this.endDate);
+						if(this.rangeShow == true && this.endDate != ''){
 							if(moment(val).unix() >  moment(this.endDate).unix()){
 								alert('开始时间必须小于结束时间');
 								return;
 							}
 						this.range(trend);
-						}else if(this.rangeShow == false){
+						}else{
 							this.endDate = this.startDate;
 							this.range(trend);
+							console.log(this.endDate);
+							this.endDate = '';
 						} 
 					}else{
 						if(this.rangeShow == true){
@@ -299,7 +303,7 @@
 			},
 			dateEnd:function(val){
 				if(val){
-					this.ran();
+					this.tag = 'range';
 					this.endDate = moment(val).format('YYYY-MM-DD').toString();
 					if(this.compareDate == false){
 						this.range(trend);
