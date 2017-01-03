@@ -279,18 +279,20 @@
 		type:'pv'
 	};
 
-	//异常初始化参数
+	//错误初始化参数
     var err_s = {
+    	appkey : '201612274',
+    	type : -1,	//type= -1 为错误
+    	day : 0		//day=0 为今天 ， day=1为昨天
+    };
+
+	//警告初始化参数
+    var war_s = {
     	appkey : '201612274',
     	type : 0,	//type=0 为异常
     	day : 0		//day=0 为今天 ， day=1为昨天
     };
-    //错误初始化参数
-    var exc_s = {
-    	appkey : '201612274',
-    	type : -1,	//type= -1 为错误
-    	day : 0
-    };
+
 
 	//访问的类型，浏览量或独立访问量
 	export default {
@@ -322,11 +324,19 @@
 				$(".check-group").show();
 				s.startTime = 0;
 				this.compareHours(s);
+
+				//异常统计，默认显示错误
+				err_s.day = 0;
+				this.exceptionHoursShow(err_s);
 			},
 			yesterday(){
 				$(".check-group").show();
 				s.startTime = 1;
 				this.compareHours(s);
+
+				//异常统计，默认显示错误
+				err_s.day = 1;
+				this.exceptionHoursShow(err_s);
 			},
 			daybefore(){
 				s.endTime = s.startTime + 1;
@@ -365,24 +375,49 @@
 				$(".check-group").hide();
 				d.date = 6;
 				this.compareDays(d);
+
+				//异常统计，默认显示错误
+				err_s.day = 6;
+				this.exceptionDaysShow(err_s);
 			},
 			month(){
 				$(".check-group").hide();
 				d.date = 29;
 				this.compareDays(d);
+
+				//异常统计，默认显示错误
+				err_s.day = 29;
+				this.exceptionDaysShow(err_s);
 			},
 			err(){
-				this.exceptionHoursOneDayShow(err_s);
+				if(this.tag == 0){
+					//按照天计算
+					this.type = 'ip量'	;
+					d.type = 'ip';
+					this.exceptionDaysShow(err_s);
+				}else{
+					s.type = 'ip';
+					this.exceptionHoursShow(err_s);
+				}
 			},
 			warning(){
-                this.exceptionHoursOneDayShow(exc_s);
+				if(this.tag == 0){
+					//按照天计算
+					this.type = 'ip量'	;
+					d.type = 'ip';
+					this.exceptionDaysShow(war_s);
+				}else{
+					s.type = 'ip';
+					this.exceptionHoursShow(war_s);
+				}				
 			},
-			exceptionHoursOneDayShow(param){
+			//在展示页面按小时显示
+			exceptionHoursShow(param){
 			    var  myChart = echarts.init(document.getElementById('grid3'));
                 var  com = this;
                 // this.tag = 1;
                 $.ajax({
-                	url:'http://192.168.1.126/mmonitor/exceptions/exception-hours-one-day-show',
+                	url:'http://192.168.1.126/mmonitor/exceptions/exception-hours-show',
                 	method:'post',
                 	dataType:'json',
                 	data:{
@@ -401,12 +436,12 @@
                 		console.log('当天的数据' + date_data);
                 		// 填入数据
                 		myChart.setOption({
-                			xAxis: {
+           	     			xAxis: {
                 			    data: hours
                 			    // data: ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
                 			},
                 			legend:{
-                				data: date_name
+                				data: [date_name]
                 				//data:['2016-12-26']
                 			},
                 			series: [
@@ -414,6 +449,90 @@
                                     //根据名字对应到相应的系列
                                     //画出昨天的图
                                     name : date_name,
+                                    data : date_data
+                                }
+                			]
+                		});
+                	}
+                });
+                myChart.setOption({
+                	tooltip : {
+                		trigger: 'axis'
+                	},
+                	grid: {
+                		left: '3%',
+                		right: '4%',
+                		bottom: '3%',
+                		containLabel: true
+                	},
+                	calculable: true,
+                	xAxis : [
+						{
+							type : 'category',
+							boundaryGap : false,
+							data : []
+						  	// data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
+						}
+					],
+                	yAxis : [
+                		{
+                			type : 'value'
+                		}
+                	],
+                	series : [
+                		{
+							name:com.compared,
+							type:'line',
+							areaStyle: {normal: {}},
+							data:[]
+						}
+                	]
+                });
+			},
+			//在展示页面按天显示
+			exceptionDaysShow(param){
+			    var  myChart = echarts.init(document.getElementById('grid3'));
+                var  com = this;
+                // this.tag = 1;
+                $.ajax({
+                	url:'http://192.168.1.126/mmonitor/exceptions/exception-days-show',
+                	method:'post',
+                	dataType:'json',
+                	data:{
+                		appkey : param.appkey,
+                		type : param.type,
+                		day : param.day
+                	},
+                	success:function(data){
+                		var now_type = param.type;
+                		if(now_type == 0){
+                			var now_title = '异常量';
+                		}else{
+                			var now_title = '错误量';
+                		}
+                		var code = data.code;
+                		var date_number = data.data.item[0];
+                		var date_name = data.data.item[1];
+                		var date_data = data.data.item[2];
+                		console.log('状态码：'+ code);
+                		console.log('数据的天数'+ date_number);
+                		console.log('数据的日期' + date_name);
+                		console.log('数据' + date_data);
+                		// 填入数据
+                		myChart.setOption({
+           	     			xAxis: {
+                			    data: date_name
+                			    // data: ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
+                			},
+                			legend:{
+                				data: [now_title]
+                				//data:['2016-12-26']
+                			},
+                			series: [
+                                {
+                                    //根据名字对应到相应的系列
+                                    //画出昨天的图
+                                    name : now_title,
                                     data : date_data
                                 }
                 			]
@@ -669,7 +788,6 @@
 			this.today();
 			this.todayYesterday();
 			this.appkeyAll();
-			this.err();
 			this.urlAll();
 		}
 	}
