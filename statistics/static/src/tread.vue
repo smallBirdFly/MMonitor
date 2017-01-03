@@ -1139,6 +1139,7 @@
 				if(val){
 					this.dateCompare = moment(val).format('YYYY-MM-DD').toString();
 					this.common();
+					this.compareDate = '';
 				}
 			}
 		},
