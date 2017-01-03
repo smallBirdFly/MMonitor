@@ -244,14 +244,14 @@ class ExceptionsController extends Controller
     //按照小时分析 得到一天的信息，显示在详细页面
     public function actionExceptionHoursCompare()
     {
-        /*
-        参数说明：
-            appkey  id
-            type = 0 警告
-            type = -1 错误
-            day = 0 今天
-            day = 1 昨天
-        */
+
+        //参数说明：
+        //    appkey  id
+        //    type = 0 警告
+        //    type = -1 错误
+        //    day = 0 今天
+        //    day = 1 昨天
+
         //接收到传递过来的参数
         $request = Yii::$app->request;
         $appkey = $request->post('appkey');
@@ -291,9 +291,9 @@ class ExceptionsController extends Controller
             $endTime2 = date('Y-m-d H:i:s',$startTime + ($i+1) * $h);
             //得到 00：00-00:59 的时间区间
             $time_interval = date('H:i',$startTime + $i * $h).'-'.date('H:i',($startTime + ($i+1) * $h)-1);
-            /*$logger->error($startTime2);    //打印出第二种格式看下是否出错
-            $logger->error($endTime2);
-            $logger->error($time_interval);*/
+            //$logger->error($startTime2);    //打印出第二种格式看下是否出错
+            //$logger->error($endTime2);
+            //$logger->error($time_interval);
             //得到时间区间
             $interval[] = $time_interval;
             //查找当天的异常
@@ -310,12 +310,12 @@ class ExceptionsController extends Controller
         HttpResponseUtil::setJsonResponse($result);
     }
 
+
     //按照天数分析 得到所传递day的天数的信息，显示在详细页面
     public function actionExceptionDaysCompare(){
-        /*
-           day = 6 ( 0为今天，一周七天，0 - 6 依次 )
-           day = 29( 0为今天， 一月30天 0 - 29 依次)
-         */
+         //day = 6 ( 0为今天，一周七天，0 - 6 依次 )
+         //day = 29( 0为今天， 一月30天 0 - 29 依次)
+
         $request = Yii::$app->request;
         $appkey = $request->post('appkey');
         $day = $request->post('day');
@@ -344,37 +344,41 @@ class ExceptionsController extends Controller
         $tb_endTime = $to_startTime - $d * 28;
         $tb_date = date('Y-m-d',$tb_startTime + 1);
         //echo '三十天前的时间'.$tb_date.'--三十天前的开始时间：'.date('Y-m-d H:i:s',$tb_startTime).'--三十天前的结束时间：'.date('Y-m-d H:i:s',$tb_endTime).'<br/>';
+
         if($day == 6){
+            $day_name = $sb_date.'-'.$to_date;
+            //echo $day_name;
             for($i = 0; $i < 7; $i++){
-                $day_number[] = $i; //得到天数
-                //那天的时间 $that_day_startTime
-                $td_startTime = date('Y-m-d H:i:s',$sb_startTime + $i * $d);
-                $td_endTime = date('Y-m-d H:i:s',$sb_endTime + ( $i ) * $d);
-                //echo '那天的开始时间'.$td_startTime.'那天的结束时间'.$td_endTime.'<br/>';
-                $day_date[] = date('Y-m-d',$sb_startTime + $i * $d);
-                //var_dump($day_date);
-                $thatDay_data[$i][] = date('Y-m-d',$sb_startTime + $i * $d);
-                $thatDay_data[$i][] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' =>'0' ])->andWhere([ '>=', 'time', $td_startTime ])->andWhere([ '<', 'time', $td_endTime ])->count();
-                $thatDay_data[$i][] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' =>'-1' ])->andWhere([ '>=', 'time', $td_startTime ])->andWhere([ '<', 'time', $td_endTime ])->count();
+                    //那天的时间 $that_day_startTime
+                    $td_startTime = date('Y-m-d H:i:s', $sb_startTime + $i * $d);
+                    $td_endTime = date('Y-m-d H:i:s', $sb_endTime + ($i) * $d);
+                    //echo '那天的开始时间'.$td_startTime.'那天的结束时间'.$td_endTime.'<br/>';
+                $day_dates[] = date('Y-m-d', $sb_startTime + $i * $d);  //得到时间数组
+                    $thatDay_err_data[] = (int)Scount::find()->Where(['appkey' => $appkey, 'type' => '-1'])->andWhere(['>=', 'time', $td_startTime])->andWhere(['<', 'time', $td_endTime])->count();
+                    $thatDay_war_data[] = (int)Scount::find()->Where(['appkey' => $appkey, 'type' => '0'])->andWhere(['>=', 'time', $td_startTime])->andWhere(['<', 'time', $td_endTime])->count();
+
             }
         }else if($day == 29){
+            $day_name = $tb_date.'-'.$to_date;
+            //echo $day_name;
             for($i = 0; $i < 30; $i++){
                 $day_number[] = $i; //得到天数
                 //那天的时间 $that_day_startTime
                 $td_startTime = date('Y-m-d H:i:s',$tb_startTime + $i * $d);
                 $td_endTime = date('Y-m-d H:i:s',$tb_endTime + ( $i ) * $d);
                 //echo '那天的开始时间'.$td_startTime.'那天的结束时间'.$td_endTime.'<br/>';
-                $day_date[] = date('Y-m-d',$tb_startTime + $i * $d);
+                $day_dates[] = date('Y-m-d',$tb_startTime + $i * $d);
                 //var_dump($day_date);
                 $thatDay_data[$i][] = date('Y-m-d',$sb_startTime + $i * $d);
-                $thatDay_data[$i][] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' =>'0' ])->andWhere([ '>=', 'time', $td_startTime ])->andWhere([ '<', 'time', $td_endTime ])->count();
-                $thatDay_data[$i][] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' =>'-1' ])->andWhere([ '>=', 'time', $td_startTime ])->andWhere([ '<', 'time', $td_endTime ])->count();
+                $thatDay_err_data[] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' =>'-1' ])->andWhere([ '>=', 'time', $td_startTime ])->andWhere([ '<', 'time', $td_endTime ])->count();
+                $thatDay_war_data[] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' =>'0' ])->andWhere([ '>=', 'time', $td_startTime ])->andWhere([ '<', 'time', $td_endTime ])->count();
             }
         }
         $result['code'] = 200;
-        $result['data']['item'][] = $day_number;
-        $result['data']['item'][] = $day_date;
-        $result['data']['item'][] = $thatDay_data;
+        $result['data']['item'][] = $day_name;
+        $result['data']['item'][] = $day_dates;
+        $result['data']['item'][] = $thatDay_err_data;
+        $result['data']['item'][] = $thatDay_war_data;
         HttpResponseUtil::setJsonResponse($result);
     }
 
@@ -476,16 +480,22 @@ class ExceptionsController extends Controller
             //当前时间
             $startTime = date('Y-m-d', time() - 86400 * ($date-$i));
             $endTime = date('Y-m-d', strtotime($startTime) + 86400);
+            //echo '当前时间的开始时间'.$startTime.'---当前时间的结束时间'.$endTime.'<br/>';
             //每天的错误量
             //错误数量和信息
             $resErr[] = Scount::find()->where(['appkey' => $appkey,'type'=> 0])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
-
+            //print_r($resErr);
             //警告数量和信息
             $resWarn[] = Scount::find()->where(['appkey' => $appkey,'type'=> -1])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime])->count();
         }
+//        var_dump($days);
+//        var_dump($resErr);
+//        var_dump($resWarn);
         $startDay = date('Y-m-d', time() - 86400 * ($date-1));
         $endDay = date('Y-m-d H:i:s', time());
+        //echo 'sadadas当前时间的开始时间'.$startDay.'---当前时间的结束时间'.$endDay.'<br/>';
         $errInfos = Scount::find()->where(['appkey' => $appkey,'type'=> 0])->andWhere(['>=','time',$startDay])->andWhere(['<','time',$endDay])->all();
+        //var_dump($errInfos);
         $warnInfos = Scount::find()->where(['appkey' => $appkey,'type'=> -1])->andWhere(['>=','time',$startDay])->andWhere(['<','time',$endDay])->all();
         foreach($errInfos as $k=>$err)
         {

@@ -293,7 +293,6 @@
     	day : 0		//day=0 为今天 ， day=1为昨天
     };
 
-
 	//访问的类型，浏览量或独立访问量
 	export default {
 		data(){
@@ -327,6 +326,7 @@
 
 				//异常统计，默认显示错误
 				err_s.day = 0;
+				war_s.day = 0;
 				this.exceptionHoursShow(err_s);
 			},
 			yesterday(){
@@ -336,6 +336,7 @@
 
 				//异常统计，默认显示错误
 				err_s.day = 1;
+				war_s.day = 1;
 				this.exceptionHoursShow(err_s);
 			},
 			daybefore(){
@@ -347,7 +348,7 @@
 				this.compareHours(s);
 			},
 			pv(){
-				if(this.tag == 1){
+				if(this.ecx_tag == 1){
 					s.type = 'pv';
 					this.compareHours(s);
 				}
@@ -378,6 +379,7 @@
 
 				//异常统计，默认显示错误
 				err_s.day = 6;
+				war_s.day = 6;
 				this.exceptionDaysShow(err_s);
 			},
 			month(){
@@ -387,27 +389,22 @@
 
 				//异常统计，默认显示错误
 				err_s.day = 29;
+				war_s.day = 29;
 				this.exceptionDaysShow(err_s);
 			},
 			err(){
 				if(this.tag == 0){
 					//按照天计算
-					this.type = 'ip量'	;
-					d.type = 'ip';
 					this.exceptionDaysShow(err_s);
 				}else{
-					s.type = 'ip';
 					this.exceptionHoursShow(err_s);
 				}
 			},
 			warning(){
 				if(this.tag == 0){
 					//按照天计算
-					this.type = 'ip量'	;
-					d.type = 'ip';
 					this.exceptionDaysShow(war_s);
 				}else{
-					s.type = 'ip';
 					this.exceptionHoursShow(war_s);
 				}				
 			},
@@ -430,10 +427,10 @@
                 		var date_name = data.data.item[0];
                 		var hours = data.data.item[1];
                 		var date_data = data.data.item[2];
-                		console.log('状态码：'+ code);
+                		/*console.log('状态码：'+ code);
                 		console.log('当天的日期'+ date_name);
                 		console.log('当天的小时数' + hours);
-                		console.log('当天的数据' + date_data);
+                		console.log('当天的数据' + date_data);*/
                 		// 填入数据
                 		myChart.setOption({
            	     			xAxis: {
@@ -514,10 +511,10 @@
                 		var date_number = data.data.item[0];
                 		var date_name = data.data.item[1];
                 		var date_data = data.data.item[2];
-                		console.log('状态码：'+ code);
+                		/*console.log('状态码：'+ code);
                 		console.log('数据的天数'+ date_number);
                 		console.log('数据的日期' + date_name);
-                		console.log('数据' + date_data);
+                		console.log('数据' + date_data);*/
                 		// 填入数据
                 		myChart.setOption({
            	     			xAxis: {

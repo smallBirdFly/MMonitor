@@ -12,7 +12,7 @@
     import Tread from './tread.vue'
     import Visit from './visit.vue'
     import Exception from './exception.vue'
-
+    import Exception2 from './exception2.vue'
     export default{
         data () {
             return {
@@ -30,7 +30,8 @@
             { path: '/tread', component: Tread },
             { path: '/preview', component: Index },
             {path: '/visit',component:Visit},
-            {path: '/exception',component:Exception}
+            {path: '/exception',component:Exception},
+            {path: '/exception2',component:Exception2}
         ]
     }
 </script>

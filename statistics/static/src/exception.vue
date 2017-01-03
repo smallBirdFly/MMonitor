@@ -14,20 +14,21 @@
         <div style="text-align:center;">
         	<table class="msg-table">
         		<tr>
-        			<th>网站</th>
-        			<th>时间</th>
-        			<th>错误信息</th>
+        			<th>时间段</th>
+        			<th>错误量</th>
+        			<th>异常量</th>
         		</tr>
-        		<tr v-for="err in errors">
-        			<td>{{err[0]}}</td>
-        			<td>{{err[1]}}</td>
-        			<td>
+        		<tr v-for="com in content">
+        			<td>{{com[0]}}</td>
+        			<td>{{com[1]}}</td>
+                    <td>{{com[2]}}</td>
+<!--         			<td>
                         <span>{{err[2][0]}}</span><br>
                         <span>{{err[2][1]}}</span>
-                    </td>
+                    </td> -->
         		</tr>
         	</table>
-            <table class="msg-table">
+<!--             <table class="msg-table">
                 <tr>
                     <th>网站</th>
                     <th>时间</th>
@@ -41,7 +42,7 @@
                         <span>{{war[2][1]}}</span>
                     </td>
                 </tr>
-            </table>
+            </table> -->
     	</div>
     </div>
 </template>
@@ -50,9 +51,10 @@
     import $ from '../jquery-1.12.1'
     import moment from 'moment'
 	var echarts = require('echarts');
+
     var dayData = {
-        appkey:'201612191',
-        type:'week'
+        appkey:'201612274',
+        day:6
     };
 	//今天初始化函数
 	var to_s = {
@@ -64,6 +66,10 @@
     	appkey : '201612274',
     	day : 1
     };
+    var weeAndMon = {
+        appkey : '201612274',
+        day : 6
+    };
 	export default {
         data() {
             return{
@@ -74,24 +80,24 @@
         },
 		methods:{
 			today(){
-				this.exceptionHoursOneDay(to_s);
+				this.exceptionHoursCompare(to_s);
 			},
 			yesterday(){
-                this.exceptionHoursOneDay(yes_s);
+                this.exceptionHoursCompare(yes_s);
 			},
             week(){
-                dayData.type = 'week';
-                this.exceptionDay(dayData);
+                weeAndMon.day = 6;
+                this.exceptionDaysCompare(weeAndMon);
             },
             month(){
-                dayData.type = 'month';
-                this.exceptionDay(dayData);
+                weeAndMon.day = 29;
+                this.exceptionDaysCompare(weeAndMon);
             },
-			exceptionHoursOneDay(param){
+			exceptionHoursCompare(param){
 			    var  myChart = echarts.init(document.getElementById('grid3'));
                 var  com = this;
                 $.ajax({
-                	url:'http://192.168.1.126/mmonitor/exceptions/exception-hours-one-day',
+                	url:'http://192.168.1.126/mmonitor/exceptions/exception-hours-compare',
                 	method:'post',
                 	dataType:'json',
                 	data:{
@@ -100,7 +106,7 @@
                 	},
                 	success:function(data){
                         if(data.code == 200){
-                            //得到后端触底来的所有数据
+                            //得到后端传递来的所有数据
                             var code = data.code;   //得到状态返回值
                     		var date = data.data.item[0];     //得到当天的日期
                     		var war_name = date + '异常量';   //2016-12-30异常量
@@ -110,12 +116,12 @@
                     		var war_data = data.data.item[3];     //每个时间区间内的异常量
                     		var err_data = data.data.item[4];     //每个时间区间内的错误量
                     		//打印数据，验证数据的正确性
-                            /*console.log(code);
-                            console.log('当天的时间：'+ date);
-                    		console.log('总的小时数：'+ hours);
-                            console.log('时间区间：' + time_interval);
-                    		console.log('当天的异常量：' + war_data);
-                    		console.log('当天的错误量：'+err_data);*/
+                            // console.log(code);
+                            // console.log('当天的时间：'+ date);
+                            // console.log('总的小时数：'+ hours);
+                            // console.log('时间区间：' + time_interval);
+                            // console.log('当天的异常量：' + war_data);
+                            // console.log('当天的错误量：'+err_data);
 
                             //声明一个数据接收时间区间
                             var arrs = new Array();
@@ -202,45 +208,73 @@
                 	]
                 });
 			},
-            exceptionHour(param){
+            exceptionDaysCompare(param){
                 var  myChart = echarts.init(document.getElementById('grid3'));
                 var com = this;
                 $.ajax({
-                    url:'http://192.168.1.109/mmonitor/exceptions/exception-days',
+                    url:'http://192.168.1.126/mmonitor/exceptions/exception-days-compare',
                     method:'post',
                     dateType:'json',
                     data:{
                         appkey:param.appkey,
-                        type:param.type,
+                        day:param.day,
                     },
                     success:function(data){
                         if(data.code == 200){
-                            com.compareIp = data.data.item[0][0] + '-' + data.data.item[0][data.data.item[0].length -1] + ' 错误';
-                            com.comparePv = data.data.item[0][0] + '-' + data.data.item[0][data.data.item[0].length -1] + ' 异常';
-                            for (var i = 0; i < data.data.item[3].length; i++) {
-                                data.data.item[3][i][2] = JSON.parse(data.data.item[3][i][2]);
+                            //得到后端传递来的所有数据
+                            var code = data.code;   //得到状态返回值
+                            var date_title = data.data.item[0];     //得到数据标题
+                            var date_name = data.data.item[1];    //得到数据的日期名  
+                            var err_data = data.data.item[2];     //每个时间区间内的错误量
+                            var war_data = data.data.item[3];     //每个时间区间内的异常量
+                            var war_name = date_title + '异常';   //2016-12-30异常
+                            var err_name = date_title + '错误';  //2016-12-30错误
+                            //打印数据，验证数据的正确性
+                            // console.log(code);
+                            // console.log('当天的数据标题：'+ date_title);
+                            // console.log('数据的日期名：'+ date_name);
+                            // console.log('当天的错误量：'+ err_data);
+                            // console.log('当天的异常量：' + war_data);                            
+
+                            /*//声明一个数据接收时间区间
+                            var arrs = new Array();
+                            for(var i = 0; i < 24; i++){
+                                var arr = new Array();
+                                arr[0] = time_interval[i];
+                                arr[1] = err_data[i];
+                                arr[2] = war_data[i];
+                                arrs[i] = arr;
+                                //console.log(arr);
+                                //console.log(arrs);
                             };
-                            for (var i = 0; i < data.data.item[4].length; i++) {
-                                data.data.item[4][i][2] = JSON.parse(data.data.item[4][i][2]);
-                            };
-                            com.errors = data.data.item[3];
-                            com.warns = data.data.item[4];
+                            //console.log(arrs);
+                            com.content = arrs;
+                            //console.log(com.content);*/
+                            // 填入数据
                             myChart.setOption({
-                                xAxis:{
-                                    data:data.data.item[0]
+                                xAxis: {
+                                    //x轴对应小时数
+                                    data: date_name
+                                    // data: ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
                                 },
                                 legend:{
-                                    data:[com.compareIp,com.comparePv]
+                                    data: [err_name,war_name]
+                                    //data:['2016-12-26','2016-12-25']
                                 },
-                                series : [{
-                                    name:com.comparePv,
-                                    data:data.data.item[1],
-                                },
-                                {
-                                    name:com.compareIp,
-                                    data:data.data.item[2],
-                                }
-                                ],
+                                series: [
+                                    {
+                                        // 根据名字对应到相应的系列
+                                        //画出昨天的图
+                                        name : err_name,
+                                        data : err_data
+                                    },
+                                    {
+                                        // 根据名字对应到相应的系列
+                                        //画出今天的图
+                                        name : war_name,
+                                        data : war_data
+                                    }
+                                ]
                             });
                         }
                         
@@ -272,107 +306,22 @@
                         ],
                         series : [
                             {
-                                name:com.comparePv,
+                                name:com.compared,
                                 type:'line',
                                 areaStyle: {normal: {}},
                                 data:[]
                             },
                             {
-                                name:com.compareIp,
+                                name:com.compare,
                                 type:'line',
                                 areaStyle: {normal: {}},
                                 data:[]
                             }
                         ]
                 });
-            
             },
-            exceptionDay(param){
-                var  myChart = echarts.init(document.getElementById('grid3'));
-                var com = this;
-                $.ajax({
-                    url:'http://192.168.1.109/mmonitor/exceptions/exception-days',
-                    method:'post',
-                    dateType:'json',
-                    data:{
-                        appkey:param.appkey,
-                        type:param.type,
-                    },
-                    success:function(data){
-                        if(data.code == 200){
-                            com.compareIp = data.data.item[0][0] + '-' + data.data.item[0][data.data.item[0].length -1] + ' 错误';
-                            com.comparePv = data.data.item[0][0] + '-' + data.data.item[0][data.data.item[0].length -1] + ' 异常';
-                            for (var i = 0; i < data.data.item[3].length; i++) {
-                                data.data.item[3][i][2] = JSON.parse(data.data.item[3][i][2]);
-                            };
-                            for (var i = 0; i < data.data.item[4].length; i++) {
-                                data.data.item[4][i][2] = JSON.parse(data.data.item[4][i][2]);
-                            };
-                            com.errors = data.data.item[3];
-                            com.warns = data.data.item[4];
-                            myChart.setOption({
-                                xAxis:{
-                                    data:data.data.item[0]
-                                },
-                                legend:{
-                                    data:[com.compareIp,com.comparePv]
-                                },
-                                series : [{
-                                    name:com.comparePv,
-                                    data:data.data.item[1],
-                                },
-                                {
-                                    name:com.compareIp,
-                                    data:data.data.item[2],
-                                }
-                                ],
-                            });
-                        }
-                        
-                    }
-                });
-                console.log(com.compareIp);
-                myChart.setOption({
-                        tooltip : {
-                        trigger: 'axis'
-                        },
-                        grid: {
-                            left: '3%',
-                            right: '4%',
-                            bottom: '3%',
-                            containLabel: true
-                        },
-                        calculable: true,
-                        xAxis : [
-                            {
-                                type : 'category',
-                                boundaryGap : false,
-                                data : []
-                            }
-                        ],
-                        yAxis : [
-                            {
-                                type : 'value'
-                            }
-                        ],
-                        series : [
-                            {
-                                name:com.comparePv,
-                                type:'line',
-                                areaStyle: {normal: {}},
-                                data:[]
-                            },
-                            {
-                                name:com.compareIp,
-                                type:'line',
-                                areaStyle: {normal: {}},
-                                data:[]
-                            }
-                        ]
-                });
-            }
 		},
-		mounted() {
+		mounted(){
 			this.today();
 		}
 	}
