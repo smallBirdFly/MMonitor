@@ -251,15 +251,17 @@ class ExceptionsController extends Controller
         //    type = -1 错误
         //    day = 0 今天
         //    day = 1 昨天
+        $logger = MMLogger::getLogger(__FUNCTION__);    //为了打印，实例化一个对象
+        //$logger->error(变量名);  //用法：调用实例化的对象，调用error方法，在 /runtime/logs/  目录下查看打印的结果
 
         //接收到传递过来的参数
         $request = Yii::$app->request;
         $appkey = $request->post('appkey');
         $day = $request->post('day');
         //echo $appkey.'--'.$day.'<br/>';    //查看接收到的参数
+//      $logger->error($appkey.'--'.$day);
 
-        $logger = MMLogger::getLogger(__FUNCTION__);    //为了打印，实例化一个对象
-        //$logger->error(变量名);  //用法：调用实例化的对象，调用error方法，在 /runtime/logs/  目录下查看打印的结果
+
 
         //定义 1天 ，1小时，1分钟 的总秒数。【为了优化】
         $d = 86400;
@@ -269,7 +271,7 @@ class ExceptionsController extends Controller
         $totalSeconds = ($today['hours'])*$h + ($today['minutes'])*$m + ($today['seconds']); //得出当天的总秒数
 
         //day = 0为今天，1为昨天，得到所请求的 当天开始时间
-        if($day==1){
+        if($day == 1){
             //表示昨天
             $startTime = $today['0'] - $totalSeconds - $d; //得到昨天 0 时的时间戳
             $endTime = $today['0']-$totalSeconds;
@@ -280,8 +282,8 @@ class ExceptionsController extends Controller
             $endTime =  $today['0'] - $totalSeconds + $d;   //得到今天 24：00点的 时间戳
         }
         $date = date('Y-m-d', $startTime+1);   //得到当天的 年月日 ，以便后面使用
-        //echo '当天的时间'.$date.'当天开始时间：'.date('Y-m-d H:i:s',$startTime).'当天时间：'.date('Y-m-d H:i:s',$endTime).'<br/>';
-
+        //echo '当天的时间'.$date.'当天开始时间：'.date('Y-m-d H:i:s',$startTime).'当天的结束时间：'.date('Y-m-d H:i:s',$endTime).'<br/>';
+//        $logger->error('当天的时间：'.$date.'当天的开始时间：'.date('Y-m-d H:i:s',$startTime).'当天的结束时间：'.date('Y-m-d H:i:s',$endTime));
         for ($i = 0; $i < 24; $i++)
         {
             //得到所有的小时数
@@ -297,16 +299,44 @@ class ExceptionsController extends Controller
             //得到时间区间
             $interval[] = $time_interval;
             //查找当天的异常
-            $err_exceptions[$i] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' => '0' ])->andWhere([ '>=', 'time', $startTime2 ])->andWhere([ '<', 'time', $endTime2 ])->count();
+            $err_exceptions[$i] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' => 0 ])->andWhere([ '>=', 'time', $startTime2 ])->andWhere([ '<', 'time', $endTime2 ])->count();
             //查找当天的错误
-            $war_exceptions[$i] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' => '-1' ])->andWhere([ '>=', 'time', $startTime2 ])->andWhere([ '<', 'time', $endTime2 ])->count();
+            $war_exceptions[$i] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' => -1 ])->andWhere([ '>=', 'time', $startTime2 ])->andWhere([ '<', 'time', $endTime2 ])->count();
         }
+        $startTime3 = date('Y-m-d H:i:s',$startTime);
+        $endTime3 = date('Y-m-d H:i:s',$endTime);
+        $errInfos = Scount::find()->where(['appkey' => $appkey,'type'=> 0])->andWhere(['>=','time',$startTime3])->andWhere(['<','time',$endTime3])->all();
+        $warnInfos = Scount::find()->where(['appkey' => $appkey,'type'=> -1])->andWhere(['>=','time',$startTime3])->andWhere(['<','time',$endTime3])->all();
+
+//        $logger->error($startTime3);
+//        $logger->error($endTime3);
+//        $logger->error($errInfos);
+//        $logger->error($warnInfos);
+        foreach($errInfos as $k=>$err)
+        {
+            $url = Page::findOne($err['page']);
+            $errInfo[$k][] = $url->page_url;
+            $errInfo[$k][] = $err->time;
+            $errInfo[$k][] = $err->message;
+            Yii::error($k);
+        }
+        foreach($warnInfos as $j=>$warn)
+        {
+            $url = Page::findOne($warn['page']);
+            $warnInfo[$j][] = $url['page_url'];
+            $warnInfo[$j][] = $warn->time;
+            $warnInfo[$j][] = $warn->message;
+        }
+//        $logger->error($errInfo);
+//        $logger->error($warnInfo);
         $result['code'] = 200;
         $result['data']['item'][] = $date;
         $result['data']['item'][] = $hours;
         $result['data']['item'][] = $interval;
-        $result['data']['item'][] = $war_exceptions;
         $result['data']['item'][] = $err_exceptions;
+        $result['data']['item'][] = $war_exceptions;
+        $result['data']['item'][] = $errInfo;
+        $result['data']['item'][] = $warnInfo;
         HttpResponseUtil::setJsonResponse($result);
     }
 
@@ -358,6 +388,27 @@ class ExceptionsController extends Controller
                     $thatDay_war_data[] = (int)Scount::find()->Where(['appkey' => $appkey, 'type' => '0'])->andWhere(['>=', 'time', $td_startTime])->andWhere(['<', 'time', $td_endTime])->count();
 
             }
+            $sb_startTime2 = date('Y-m-d H:i:s',$sb_startTime);
+            $to_endTime2 = date('Y-m-d H:i:s',$to_endTime);
+            //echo $sb_startTime2.'---'.$to_endTime2;
+            $errInfos = Scount::find()->where(['appkey' => $appkey,'type'=> 0])->andWhere(['>=','time',$sb_startTime2])->andWhere(['<','time',$to_endTime2])->all();
+            //var_dump($errInfos);
+            $warnInfos = Scount::find()->where(['appkey' => $appkey,'type'=> -1])->andWhere(['>=','time',$sb_startTime2])->andWhere(['<','time',$to_endTime2])->all();
+            foreach($errInfos as $k=>$err)
+            {
+                $url = Page::findOne($err['page']);
+                $errInfo[$k][] = $url->page_url;
+                $errInfo[$k][] = $err->time;
+                $errInfo[$k][] = $err->message;
+                Yii::error($k);
+            }
+            foreach($warnInfos as $j=>$warn)
+            {
+                $url = Page::findOne($warn['page']);
+                $warnInfo[$j][] = $url['page_url'];
+                $warnInfo[$j][] = $warn->time;
+                $warnInfo[$j][] = $warn->message;
+            }
         }else if($day == 29){
             $day_name = $tb_date.'-'.$to_date;
             //echo $day_name;
@@ -373,12 +424,35 @@ class ExceptionsController extends Controller
                 $thatDay_err_data[] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' =>'-1' ])->andWhere([ '>=', 'time', $td_startTime ])->andWhere([ '<', 'time', $td_endTime ])->count();
                 $thatDay_war_data[] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' =>'0' ])->andWhere([ '>=', 'time', $td_startTime ])->andWhere([ '<', 'time', $td_endTime ])->count();
             }
+            $td_startTime2 = date('Y-m-d H:i:s',$tb_startTime);
+            $to_endTime2 = date('Y-m-d H:i:s',$to_endTime);
+            //echo $tb_startTime2.'---'.$to_endTime2;
+            $errInfos = Scount::find()->where(['appkey' => $appkey,'type'=> 0])->andWhere(['>=','time',$td_startTime2])->andWhere(['<','time',$to_endTime2])->all();
+            //var_dump($errInfos);
+            $warnInfos = Scount::find()->where(['appkey' => $appkey,'type'=> -1])->andWhere(['>=','time',$td_startTime2])->andWhere(['<','time',$to_endTime2])->all();
+            foreach($errInfos as $k=>$err)
+            {
+                $url = Page::findOne($err['page']);
+                $errInfo[$k][] = $url->page_url;
+                $errInfo[$k][] = $err->time;
+                $errInfo[$k][] = $err->message;
+                Yii::error($k);
+            }
+            foreach($warnInfos as $j=>$warn)
+            {
+                $url = Page::findOne($warn['page']);
+                $warnInfo[$j][] = $url['page_url'];
+                $warnInfo[$j][] = $warn->time;
+                $warnInfo[$j][] = $warn->message;
+            }
         }
         $result['code'] = 200;
         $result['data']['item'][] = $day_name;
         $result['data']['item'][] = $day_dates;
         $result['data']['item'][] = $thatDay_err_data;
         $result['data']['item'][] = $thatDay_war_data;
+        $result['data']['item'][] = $errInfo;
+        $result['data']['item'][] = $warnInfo;
         HttpResponseUtil::setJsonResponse($result);
     }
 
@@ -414,6 +488,7 @@ class ExceptionsController extends Controller
         $day = date('Y-m-d',time()-86400*$date);
         $startDay = $day;
         $endDay = date('Y-m-d',strtotime($startDay)+86400);
+        //echo '开始时间'.$startDay.'--结束时间'.$endDay;
         for($i = 0; $i < 24; $i++)
         {
             if ($i < 10)
@@ -431,6 +506,7 @@ class ExceptionsController extends Controller
         }
         $errInfos = Scount::find()->where(['appkey' => $appkey,'type'=> 0])->andWhere(['>=','time',$startDay])->andWhere(['<','time',$endDay])->all();
         $warnInfos = Scount::find()->where(['appkey' => $appkey,'type'=> -1])->andWhere(['>=','time',$startDay])->andWhere(['<','time',$endDay])->all();
+
         foreach($errInfos as $k=>$err)
         {
             $url = Page::findOne($err['page']);

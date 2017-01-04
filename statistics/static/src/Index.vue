@@ -235,15 +235,6 @@
 				</div>
 			</div>
 			<div class="row3 left">
-				<!-- 时间条 -->
-			    <!-- <div class="exception_date-select-bar">
-                    <div class="control-bar">
-                        <a href="javascript:;" @click="err" class="date">今天</a>
-                        <a href="javascript:;" @click="yesterday" class="date">昨天</a>
-                        <a href="javascript:;" @click="week" class="date">最近7天</a>
-                        <a href="javascript:;" @click="month" class="date">最近30天</a>
-                    </div>
-                </div> -->
 				<div class="table-grid-item">
 					<div class="title clearfix">
 						<span>异常统计</span>
@@ -257,6 +248,80 @@
 						</div>
 					</div>
 					<div id="grid3"></div>
+				</div>
+			</div>
+			<div class="row3 right">
+				<div class="table-grid-item" id="grid4">
+					<div class="title clearfix">
+						<span class="left">Top10异常页面</span>
+						<router-link to="/exception_visit">&gt;</router-link>
+					</div>
+					<div class="table-data">
+						<table>
+							<thead>
+								<tr>
+									<th>异常页面</th>
+									<th>异常量</th>
+									<th>占比</th>
+								</tr>
+								<!-- <tr v-for="url in this.urls">
+									<td>{{url[0]}}</td>
+									<td>{{url[1]}}</td>
+									<td><div style='background-color:#DCEBFE;:width="url[2]"'>{{url[2]}}</div></td>
+								</tr> -->
+								<!-- <tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:90%;">90%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:80%;">80%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:70%;">70%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:60%;">60%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:50%;">50%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:40%;">40%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:30%;">30%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:20%;">20%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:10%;">10%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:5%;">5%</div></td>
+								</tr> -->
+							</thead>
+						</table>
+					</div>
 				</div>
 			</div>
 		</div>

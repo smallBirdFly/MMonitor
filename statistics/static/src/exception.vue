@@ -18,10 +18,11 @@
         			<th>错误量</th>
         			<th>异常量</th>
         		</tr>
-        		<tr v-for="com in content">
-        			<td>{{com[0]}}</td>
-        			<td>{{com[1]}}</td>
-                    <td>{{com[2]}}</td>
+        		<tr v-for="cont in content">
+        			<td>{{cont[0]}}</td>
+        			<td>{{cont[1]}}</td>
+                    <td>{{cont[2]}}</td>
+
 <!--         			<td>
                         <span>{{err[2][0]}}</span><br>
                         <span>{{err[2][1]}}</span>
@@ -76,6 +77,7 @@
                 appkey:'201612191',
                 errors:'',
                 warns:'',
+                content:[]
             }
         },
 		methods:{
@@ -109,12 +111,12 @@
                             //得到后端传递来的所有数据
                             var code = data.code;   //得到状态返回值
                     		var date = data.data.item[0];     //得到当天的日期
-                    		var war_name = date + '异常量';   //2016-12-30异常量
-                    		var err_name = date + '错误量';  //2016-12-30错误量
                     		var hours = data.data.item[1];   //小时数
                             var time_interval = data.data.item[2];  //时间区间
-                    		var war_data = data.data.item[3];     //每个时间区间内的异常量
-                    		var err_data = data.data.item[4];     //每个时间区间内的错误量
+                    		var war_data = data.data.item[4];     //每个时间区间内的异常量
+                    		var err_data = data.data.item[3];     //每个时间区间内的错误量
+                            var war_name = date + '异常量';   //2016-12-30异常量
+                            var err_name = date + '错误量';  //2016-12-30错误量
                     		//打印数据，验证数据的正确性
                             // console.log(code);
                             // console.log('当天的时间：'+ date);
@@ -123,6 +125,22 @@
                             // console.log('当天的异常量：' + war_data);
                             // console.log('当天的错误量：'+err_data);
 
+                            //计算数组的长度                             
+                            var len = date.length;
+                            //console.log(len);
+                            //计算统计的值
+                            var sum_err = 0;
+                            var sum_war = 0;
+                            for(var i = 0; i < len; i++){
+                                sum_err = sum_err + err_data[i];
+                                sum_war = sum_war + war_data[i];
+                            }
+                            var sum_info = new Array();
+                            sum_info[0] = '总计：';
+                            sum_info[1] = sum_err;
+                            sum_info[2] = sum_war;
+                            //console.log('错误量' + sum_err);
+                            //console.log('警告量' + sum_war);
                             //声明一个数据接收时间区间
                             var arrs = new Array();
                             for(var i = 0; i < 24; i++){
@@ -134,6 +152,7 @@
                                 //console.log(arr);
                                 //console.log(arrs);
                             };
+                            arrs.push(sum_info);
                             //console.log(arrs);
                             com.content = arrs;
                             //console.log(com.content);
@@ -234,22 +253,39 @@
                             // console.log('当天的数据标题：'+ date_title);
                             // console.log('数据的日期名：'+ date_name);
                             // console.log('当天的错误量：'+ err_data);
-                            // console.log('当天的异常量：' + war_data);                            
+                            // console.log('当天的异常量：' + war_data);
 
-                            /*//声明一个数据接收时间区间
+                            //计算数组的长度                             
+                            var len = date_name.length;
+                            //console.log(len);
+                            //计算统计的值
+                            var sum_err = 0;
+                            var sum_war = 0;
+                            for(var i = 0; i < len; i++){
+                                sum_err = sum_err + err_data[i];
+                                sum_war = sum_war + war_data[i];
+                            }
+                            var sum_info = new Array();
+                            sum_info[0] = '总计：';
+                            sum_info[1] = sum_err;
+                            sum_info[2] = sum_war;
+                            //console.log('错误量' + sum_err);
+                            //console.log('警告量' + sum_war);
+                            //声明一个数据接收时间区间
                             var arrs = new Array();
-                            for(var i = 0; i < 24; i++){
+                            for(var i = 0; i < len; i++){
                                 var arr = new Array();
-                                arr[0] = time_interval[i];
+                                arr[0] = date_name[i];
                                 arr[1] = err_data[i];
                                 arr[2] = war_data[i];
                                 arrs[i] = arr;
                                 //console.log(arr);
                                 //console.log(arrs);
                             };
+                            arrs.push(sum_info);
                             //console.log(arrs);
                             com.content = arrs;
-                            //console.log(com.content);*/
+                            //console.log(com.content);
                             // 填入数据
                             myChart.setOption({
                                 xAxis: {
