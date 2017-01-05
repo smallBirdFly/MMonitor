@@ -256,12 +256,18 @@
 						<span class="left">Top10异常页面</span>
 						<router-link to="/exception_visit">&gt;</router-link>
 					</div>
+					<div class="line-row">
+						<div class="control-bar left">
+							<a href="javascript:;" @click="exc_err()">错误量</a>
+							<a href="javascript:;" @click="exc_war()">警告量</a>
+						</div>
+					</div>
 					<div class="table-data">
 						<table>
 							<thead>
 								<tr>
 									<th>异常页面</th>
-									<th>异常量</th>
+									<th>错误量</th>
 									<th>占比</th>
 								</tr>
 								<!-- <tr v-for="url in this.urls">
@@ -358,6 +364,18 @@
     	day : 0		//day=0 为今天 ， day=1为昨天
     };
 
+    //异常按小时统计模块初始化
+    var exc_h = {
+    	appkey : '201612274',
+    	day : 0,	//0 为 今天，1为昨天
+    	type : -1	// -1为错误，0为警告
+    }
+    //异常按天统计模块初始化
+    var exc_d = {
+    	appkey : '201612274',
+    	day : 6,	// 6为一周，29为30天
+    	type : -1	// -1为错误，0为警告
+    }
 	//访问的类型，浏览量或独立访问量
 	export default {
 		data(){
@@ -393,6 +411,11 @@
 				err_s.day = 0;
 				war_s.day = 0;
 				this.exceptionHoursShow(err_s);
+
+				//异常统计
+				exc_h.day = 0;
+				exc_h.type = -1;
+				this.exceptionHoursStatistics(exc_h);
 			},
 			yesterday(){
 				$(".check-group").show();
@@ -403,6 +426,11 @@
 				err_s.day = 1;
 				war_s.day = 1;
 				this.exceptionHoursShow(err_s);
+
+				//异常统计
+				exc_h.day = 1;
+				exc_h.type = -1;
+				this.exceptionHoursStatistics(exc_h);
 			},
 			daybefore(){
 				s.endTime = s.startTime + 1;
@@ -446,6 +474,11 @@
 				err_s.day = 6;
 				war_s.day = 6;
 				this.exceptionDaysShow(err_s);
+
+				//异常统计
+				exc_d.day = 6;
+				exc_d.type = -1;
+				this.exceptionDaysStatistics(exc_d);
 			},
 			month(){
 				$(".check-group").hide();
@@ -456,6 +489,11 @@
 				err_s.day = 29;
 				war_s.day = 29;
 				this.exceptionDaysShow(err_s);
+
+				//异常统计
+				exc_d.day = 29;
+				exc_d.type = -1;
+				this.exceptionDaysStatistics(exc_d);
 			},
 			err(){
 				if(this.tag == 0){
@@ -471,7 +509,23 @@
 					this.exceptionDaysShow(war_s);
 				}else{
 					this.exceptionHoursShow(war_s);
-				}				
+				}			
+			},
+			exc_err(){
+				if(this.tag == 0){
+					//按照天计算
+					this.exceptionDaysStatistics(exc_d);
+				}else{
+					this.exceptionHoursStatistics(exc_h);
+				}
+			},
+			exc_war(){
+				if(this.tag == 0){
+					//按照天计算
+					this.exceptionDaysStatistics(exc_d);
+				}else{
+					this.exceptionHoursStatistics(exc_h);
+				}
 			},
 			//在展示页面按小时显示
 			exceptionHoursShow(param){
@@ -837,7 +891,207 @@
 						vm.urls = data.data.item[0];
 					}
 				});
-			}
+			},
+			exceptionHoursStatistics(param){
+                var  com = this;
+                $.ajax({
+                	url:'http://192.168.1.126/mmonitor/exceptions/exception-hours-statistics',
+                	method:'post',
+                	dataType:'json',
+                	data:{
+                		appkey : param.appkey,
+                		day : param.day,
+                		type: param.type
+                	},
+                	success:function(data){
+                        if(data.code == 200) {
+                            //得到后端传递来的所有数据
+                            var code = data.code;   //得到状态返回值
+                    		var date = data.data.item[0];     //得到当天的日期
+                            var time_interval = data.data.item[1];  //时间区间
+                            var exc_data = data.data.item[2];     //每个时间区间内的错误量
+                            var exc_detail = data.data.item[3];
+                    		//打印数据，验证数据的正确性
+                             console.log(code);
+                            console.log('当天的时间：'+ date);
+                            console.log('时间区间：' + time_interval);
+                            console.log('当天的异常量：' + exc_data);
+                            console.log('异常的详细信息'+ exc_detail);
+                            //从二维数组中取出：页面的URLwww.test2.com/example2，得到一个唯一URL的数组
+                            function unique(arr){
+                                var temp = new Array();
+                                var len = arr.length;
+                                for(var i =0; i < len; i++){
+                                    if(temp.indexOf(arr[i][0]) == -1){
+                                        temp.push(arr[i][0]);
+                                    }
+                                }
+                                return temp;
+                            }
+
+                            //从一维数组中取出：页面的URLwww.test2.com/example2，得到一个 唯一的URL的数组
+                            function unique2(arr){
+                                var temp = new Array();
+                                var len = arr.length;
+                                for(var i =0; i < len; i++){
+                                    if(temp.indexOf(arr[i]) == -1){
+                                        temp.push(arr[i]);
+                                    }
+                                }
+                                return temp;
+                            }
+                            var new_err = unique(err_detail);
+                            //console.log( new_err);
+                            var new_war = unique(war_detail);
+                            //console.log(new_war);
+                            var totals_arr =new_err.concat(new_war);
+                            //console.log(totals_arr);
+                            var total_arr =unique2(totals_arr);
+                            //console.log(total_arr);
+
+                            //输入上面处理后的三个数组，得到统计信息
+                            function count(arr1,arr2,arr3){
+                                var err_len = arr1.length;
+                                var war_len = arr2.length;
+                                var total_arr_len = arr3.length;
+                                var res = new Array();
+                                var re = new Array();
+                                if(err_len == 0 && war_len == 0 ) {
+                                    re[0] = '未发生错误或警告';
+                                    re[1] = 0;
+                                    re[2] = 0;
+                                    re[3] = date;
+                                    res[0] = re;
+                                }else {
+                                    for(var i = 0; i < total_arr_len; i++){
+                                        var re = new Array();
+                                        var err_count = 0;
+                                        var war_count = 0;
+                                        for(var j = 0; j < err_len; j++){
+                                            if(arr3[i] == arr1[j][0] ){
+                                                err_count = err_count + 1;
+                                            }
+                                        }
+                                        for(var k = 0; k < war_len; k++){
+                                            if(arr3[i] == arr2[k][0] ){
+                                                war_count = war_count + 1;
+                                            }
+                                        }
+                                        re[0] = arr3[i];
+                                        re[1] = err_count;
+                                        re[2] = war_count;
+                                        re[3] = date;
+                                        res[i] = re;
+                                    }
+                                }
+                                return res;
+
+                            }
+                            com.content = count(err_detail,war_detail,total_arr);
+                        }
+                	}
+                });
+			},
+            exceptionDaysStatistics(param) {
+                var com = this;
+                $.ajax({
+                    url:'http://192.168.1.126/mmonitor/exceptions/exception-days-statistics',
+                    method:'post',
+                    dateType:'json',
+                    data:{
+                        appkey:param.appkey,
+                        day:param.day,
+                    },
+                    success:function(data){
+                        if(data.code == 200){
+                            //得到后端传递来的所有数据
+                            var code = data.code;   //得到状态返回值
+                            var date = data.data.item[0];     //得到当天的日期
+                            var date_name = data.data.item[1];   //小时数
+                            var err_data = data.data.item[2];     //每个时间区间内的错误量
+                            var war_data = data.data.item[3];     //每个时间区间内的异常量
+                            var err_detail = data.data.item[4];
+                            var war_detail = data.data.item[5];
+                            //打印数据，验证数据的正确性
+                            // console.log(code);
+                            // console.log('当天的日期：'+ date);
+                            // console.log('当天的小时数：'+ date_name);
+                            // console.log('当天的错误量：' + err_data);
+                            // console.log('当天的异常量：'+ war_data);
+                            // console.log('错误详细信息'+ err_detail);
+                            // console.log('警告详细信息'+ war_detail);
+                            function unique(arr){
+                                var temp = new Array();
+                                var len = arr.length;
+                                for(var i =0; i < len; i++){
+                                    if(temp.indexOf(arr[i][0]) == -1){
+                                        temp.push(arr[i][0]);
+                                    }
+                                }
+                                return temp;
+                            }
+
+                            function unique2(arr){
+                                var temp = new Array();
+                                var len = arr.length;
+                                for(var i =0; i < len; i++){
+                                    if(temp.indexOf(arr[i]) == -1){
+                                        temp.push(arr[i]);
+                                    }
+                                }
+                                return temp;
+                            }
+                            var new_err = unique(err_detail);
+                            //console.log( new_err);
+                            var new_war = unique(war_detail);
+                            //console.log(new_war);
+                            var totals_arr =new_err.concat(new_war);
+                            //console.log(totals_arr);
+                            var total_arr =unique2(totals_arr);
+                            //console.log(total_arr);
+
+                            function count(arr1,arr2,arr3){
+                                var err_len = arr1.length;
+                                var war_len = arr2.length;
+                                var total_arr_len = arr3.length;
+                                var res = new Array();
+                                var re = new Array();
+                                if(err_len == 0 && war_len == 0 ) {
+                                    re[0] = '未发生错误或警告';
+                                    re[1] = 0;
+                                    re[2] = 0;
+                                    re[3] = date;
+                                    res[0] = re;
+                                }else{
+                                    for(var i = 0; i < total_arr_len; i++){
+                                        var re = new Array();
+                                        var err_count = 0;
+                                        var war_count = 0;
+                                        for(var j = 0; j < err_len; j++){
+                                            if(arr3[i] == arr1[j][0] ){
+                                                err_count = err_count + 1;
+                                            }
+                                        }
+                                        for(var k = 0; k < war_len; k++){
+                                            if(arr3[i] == arr2[k][0] ){
+                                                war_count = war_count + 1;
+                                            }
+                                        }
+                                        re[0] = arr3[i];
+                                        re[1] = err_count;
+                                        re[2] = war_count;
+                                        re[3] = date;
+                                        res[i] = re;
+                                    }
+                                }
+                                return res;
+                            }
+                            com.content = count(err_detail,war_detail,total_arr);
+                        }
+                        
+                    }
+                });
+            }
 			
 		},
 		watch:{
