@@ -567,11 +567,13 @@
                 	},
                 	success:function(data){
                 		var now_type = param.type;
+
                 		if(now_type == 0){
                 			var now_title = '异常量';
                 		}else{
-                			var now_title = '错误量';
+                			var now_title = '警告量';
                 		}
+                		
                 		var code = data.code;
                 		var date_number = data.data.item[0];
                 		var date_name = data.data.item[1];

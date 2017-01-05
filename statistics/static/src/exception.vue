@@ -113,10 +113,10 @@
                     		var date = data.data.item[0];     //得到当天的日期
                     		var hours = data.data.item[1];   //小时数
                             var time_interval = data.data.item[2];  //时间区间
+                            var err_data = data.data.item[3];     //每个时间区间内的错误量
                     		var war_data = data.data.item[4];     //每个时间区间内的异常量
-                    		var err_data = data.data.item[3];     //每个时间区间内的错误量
-                            var war_name = date + '异常量';   //2016-12-30异常量
-                            var err_name = date + '错误量';  //2016-12-30错误量
+                            var war_name = date + '警告';   //2016-12-30异常量
+                            var err_name = date + '错误';  //2016-12-30错误量
                     		//打印数据，验证数据的正确性
                             // console.log(code);
                             // console.log('当天的时间：'+ date);
@@ -164,7 +164,7 @@
                     			    // data: ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
                     			},
                     			legend:{
-                    				data: [war_name,err_name]
+                    				data: [err_name,war_name]
                     				//data:['2016-12-26','2016-12-25']
                     			},
                     			series: [
@@ -246,7 +246,7 @@
                             var date_name = data.data.item[1];    //得到数据的日期名  
                             var err_data = data.data.item[2];     //每个时间区间内的错误量
                             var war_data = data.data.item[3];     //每个时间区间内的异常量
-                            var war_name = date_title + '异常';   //2016-12-30异常
+                            var war_name = date_title + '警告';   //2016-12-30异常
                             var err_name = date_title + '错误';  //2016-12-30错误
                             //打印数据，验证数据的正确性
                             // console.log(code);
