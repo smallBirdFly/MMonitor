@@ -353,29 +353,29 @@
 	//错误初始化参数
     var err_s = {
     	appkey : '201612274',
-    	type : -1,	//type= -1 为错误
-    	day : 0		//day=0 为今天 ， day=1为昨天
+    	type : 'error',	//type= error 为错误
+    	day : 'today'		//day= today为今天 ， day=yesterday为昨天
     };
 
 	//警告初始化参数
     var war_s = {
     	appkey : '201612274',
-    	type : 0,	//type=0 为异常
-    	day : 0		//day=0 为今天 ， day=1为昨天
+    	type : 'warning',	//type= warning 为警告
+    	day : 'today'	//day= today为今天 ， day=yesterday为昨天
     };
 
     //异常按小时统计模块初始化
     var exc_h = {
     	appkey : '201612274',
-    	day : 0,	//0 为 今天，1为昨天
-    	type : -1	// -1为错误，0为警告
-    }
+    	day : 'today',	//day= today为今天 ， day=yesterday为昨天
+    	type : 'error'	// error为错误，warning为警告
+    };
     //异常按天统计模块初始化
     var exc_d = {
     	appkey : '201612274',
-    	day : 6,	// 6为一周，29为30天
-    	type : -1	// -1为错误，0为警告
-    }
+    	day : 'week',	// week为1周，month为1月
+    	type : 'error'	// error为错误，warning为警告
+    };
 	//访问的类型，浏览量或独立访问量
 	export default {
 		data(){
@@ -408,13 +408,13 @@
 				this.compareHours(s);
 
 				//异常统计，默认显示错误
-				err_s.day = 0;
-				war_s.day = 0;
+				err_s.day = 'today';
+				war_s.day = 'today';
 				this.exceptionHoursShow(err_s);
 
 				//异常统计
-				exc_h.day = 0;
-				exc_h.type = -1;
+				exc_h.day = 'today';
+				exc_h.type = 'error';
 				this.exceptionHoursStatistics(exc_h);
 			},
 			yesterday(){
@@ -423,13 +423,13 @@
 				this.compareHours(s);
 
 				//异常统计，默认显示错误
-				err_s.day = 1;
-				war_s.day = 1;
+				err_s.day = 'yesterday';
+				war_s.day = 'yesterday';
 				this.exceptionHoursShow(err_s);
 
 				//异常统计
-				exc_h.day = 1;
-				exc_h.type = -1;
+				exc_h.day = 'yesterday';
+				exc_h.type = 'error';
 				this.exceptionHoursStatistics(exc_h);
 			},
 			daybefore(){
@@ -471,13 +471,13 @@
 				this.compareDays(d);
 
 				//异常统计，默认显示错误
-				err_s.day = 6;
-				war_s.day = 6;
+				err_s.day = 'week';
+				war_s.day = 'week';
 				this.exceptionDaysShow(err_s);
 
 				//异常统计
-				exc_d.day = 6;
-				exc_d.type = -1;
+				exc_d.day = 'week';
+				exc_d.type = 'error';
 				this.exceptionDaysStatistics(exc_d);
 			},
 			month(){
@@ -486,13 +486,13 @@
 				this.compareDays(d);
 
 				//异常统计，默认显示错误
-				err_s.day = 29;
-				war_s.day = 29;
+				err_s.day = 'month';
+				war_s.day = 'month';
 				this.exceptionDaysShow(err_s);
 
 				//异常统计
-				exc_d.day = 29;
-				exc_d.type = -1;
+				exc_d.day = 'month';
+				exc_d.type = 'error';
 				this.exceptionDaysStatistics(exc_d);
 			},
 			err(){

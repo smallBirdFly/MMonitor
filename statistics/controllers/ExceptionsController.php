@@ -34,17 +34,27 @@ class ExceptionsController extends Controller
         /*
         参数说明：
             appkey  id
-            type = 0 警告
-            type = -1 错误
-            day = 0 今天
-            day = 1 昨天
+            type = warning 警告
+            type = error 错误
+            day = today 今天
+            day = yesterday 昨天
         */
         //接收到传递过来的参数
         $request = Yii::$app->request;
         $appkey = $request->post('appkey');
-        $day = $request->post('day');
-        $type = $request->post('type');
+        $da = $request->post('day');
+        $ty = $request->post('type');
         //echo $appkey.'--'.$type.'--'.$day.'<br/>';    //查看接收到的参数
+        if($da == 'today') {
+            $day = 0;
+        }else if($da == 'yesterday'){
+            $day = 1;
+        }
+        if($ty == 'error') {
+            $type = -1 ;
+        }else if($ty == 'warning'){
+            $type = 0;
+        }
 
         $logger = MMLogger::getLogger(__FUNCTION__);    //为了打印，实例化一个对象
         //$logger->error(变量名);  //用法：调用实例化的对象，调用error方法，在 /runtime/logs/  目录下查看打印的结果
@@ -102,11 +112,22 @@ class ExceptionsController extends Controller
          */
         $request = Yii::$app->request;
         $appkey = $request->post('appkey');
-        $day = $request->post('day');
-        $type = $request->post('type');
+        $da = $request->post('day');
+        $ty = $request->post('type');
         //echo 'appkey为：'.$appkey.'--day为：'.$day.'--type为：'.$type.'<br/>';
         $logger = MMLogger::getLogger(__FUNCTION__);    //为了打印，实例化一个对象
         //$logger->error(变量名);  //用法：调用实例化的对象，调用error方法，在 /runtime/logs/  目录下查看打印的结果
+
+        if($da == 'week') {
+            $day = 6;
+        }else if($da == 'month'){
+            $day = 29;
+        }
+        if($ty == 'error') {
+            $type = -1 ;
+        }else if($ty == 'warning'){
+            $type = 0;
+        }
 
         //定义 1天 ，1小时，1分钟 的总秒数。【为了优化】
         $d = 86400;
@@ -182,9 +203,15 @@ class ExceptionsController extends Controller
         //接收到传递过来的参数
         $request = Yii::$app->request;
         $appkey = $request->post('appkey');
-        $day = $request->post('day');
+        $da = $request->post('day');
         //echo $appkey.'--'.$day.'<br/>';    //查看接收到的参数
         //$logger->error($appkey.'--'.$day);
+
+        if($da == 'today') {
+            $day = 0;
+        }else if($da == 'yesterday'){
+            $day = 1;
+        }
 
         //定义 1天 ，1小时，1分钟 的总秒数。【为了优化】
         $d = 86400;
@@ -192,7 +219,7 @@ class ExceptionsController extends Controller
         $m = 60;
         $today = getdate(); //得到一个数组
         $totalSeconds = ($today['hours'])*$h + ($today['minutes'])*$m + ($today['seconds']); //得出当天的总秒数
-
+        $logger->error($day);
         //day = 0为今天，1为昨天，得到所请求的 当天开始时间
         if($day == 1){
             //表示昨天
@@ -307,10 +334,17 @@ class ExceptionsController extends Controller
 
         $request = Yii::$app->request;
         $appkey = $request->post('appkey');
-        $day = $request->post('day');
+        $da = $request->post('day');
         //echo 'appkey为：'.$appkey.'--day为：'.$day.'<br/>';
         $logger = MMLogger::getLogger(__FUNCTION__);    //为了打印，实例化一个对象
         //$logger->error(变量名);  //用法：调用实例化的对象，调用error方法，在 /runtime/logs/  目录下查看打印的结果
+
+        if($da == 'week') {
+            $day = 6;
+        }else if($da == 'month'){
+            $day = 29     ;
+        }
+
 
         //定义 1天 ，1小时，1分钟 的总秒数。【为了优化】
         $d = 86400;
@@ -464,12 +498,25 @@ class ExceptionsController extends Controller
         HttpResponseUtil::setJsonResponse($result);
     }
 
+    //异常按小时统计
     public function actionExceptionHoursStatistics( ) {
         $request = Yii::$app->request;
         $appkey = $request->post('appkey');
-        $day = $request->post('day');
-        $type = $request->post('type');
+        $da = $request->post('day');
+        $ty = $request->post('type');
         $logger = MMLogger::getLogger(__FUNCTION__);
+        if($da == 'today'){
+            $day = 0;
+        }else if($da == 'yesterday'){
+            $day = 1;
+        }
+        if($ty == 'error'){
+            $type = -1;
+        }else if($ty == 'warning'){
+            $type = 0;
+        }
+
+
         $day_date = date('Y-m-d',time() - 86400 * $day);
         echo '当天的时间'.$day_date;
         if(($day == 1 || $day == 0) && ($type == -1 || $type == 0)){
@@ -513,6 +560,7 @@ class ExceptionsController extends Controller
         HttpResponseUtil::setJsonResponse($result);
     }
 
+    //异常按天统计
     public function actionExceptionDaysStatistics() {
         $logger = MMLogger::getLogger(__FUNCTION__);
         $request = Yii::$app->request;

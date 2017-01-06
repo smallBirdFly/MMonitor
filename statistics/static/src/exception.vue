@@ -55,21 +55,21 @@
 
     var dayData = {
         appkey:'201612274',
-        day:6
+        day: 'week'   //day 为week 为1周 month为1月
     };
 	//今天初始化函数
 	var to_s = {
     	appkey : '201612274',
-    	day : 0		//day=0 为今天 ， day=1为昨天
+    	day : 'today'		//day为yesterday是昨天，为today是今天
     };
     //昨天初始化参数
     var yes_s = {
     	appkey : '201612274',
-    	day : 1
+    	day : 'yesterday'    //day为yesterday是昨天，为today是今天
     };
     var weeAndMon = {
         appkey : '201612274',
-        day : 6
+        day : 'week' //week 为1周 month为1月
     };
 	export default {
         data() {
@@ -88,11 +88,11 @@
                 this.exceptionHoursCompare(yes_s);
 			},
             week(){
-                weeAndMon.day = 6;
+                weeAndMon.day = 'week';
                 this.exceptionDaysCompare(weeAndMon);
             },
             month(){
-                weeAndMon.day = 29;
+                weeAndMon.day = 'month';
                 this.exceptionDaysCompare(weeAndMon);
             },
 			exceptionHoursCompare(param){
