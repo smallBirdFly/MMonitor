@@ -267,7 +267,7 @@
 							<thead>
 								<tr>
 									<th>异常页面</th>
-									<th>错误量</th>
+									<th>数量</th>
 									<th>占比</th>
 								</tr>
 								<tr v-for="exc in exc_content">
