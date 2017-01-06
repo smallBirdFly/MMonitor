@@ -165,8 +165,8 @@
                                 var war_len = arr2.length;
                                 var total_arr_len = arr3.length;
                                 var res = new Array();
-                                var re = new Array();
                                 if(err_len == 0 && war_len == 0 ) {
+                                    var re = new Array();
                                     re[0] = '未发生错误或警告';
                                     re[1] = 0;
                                     re[2] = 0;

@@ -518,7 +518,7 @@ class ExceptionsController extends Controller
 
 
         $day_date = date('Y-m-d',time() - 86400 * $day);
-        echo '当天的时间'.$day_date;
+        //echo '当天的时间'.$day_date;
         if(($day == 1 || $day == 0) && ($type == -1 || $type == 0)){
             //表示昨天
             $startTime = $day_date;
@@ -537,9 +537,9 @@ class ExceptionsController extends Controller
             }
             //各个小时的错误量
             $resExc[$i] = Scount::find()->where(['appkey' => $appkey, 'type' => $type, 'hour' => $i])->andWhere(['>=', 'time', $startTime])->andWhere(['<', 'time', $endTime])->count();
-            $logger->error($resExc);
+            //$logger->error($resExc);
         }
-        $logger->error($resExc);
+        //$logger->error($resExc);
         $resExcInfos = Scount::find()->where(['appkey' => $appkey, 'type' => $type])->andWhere(['>=', 'time', $startTime])->andWhere(['<', 'time', $endTime])->all();
         if(empty($resExcInfos)) {
             $resExcInfo = array();

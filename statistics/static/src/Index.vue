@@ -270,6 +270,11 @@
 									<th>错误量</th>
 									<th>占比</th>
 								</tr>
+								<tr v-for="exc in exc_content">
+									<th>{{exc[0]}}</th>
+									<th>{{exc[1]}}</th>
+									<th>{{exc[2]}}</th>
+								</tr>
 								<!-- <tr v-for="url in this.urls">
 									<td>{{url[0]}}</td>
 									<td>{{url[1]}}</td>
@@ -364,6 +369,7 @@
     	day : 'today'	//day= today为今天 ， day=yesterday为昨天
     };
 
+
     //异常按小时统计模块初始化
     var exc_h = {
     	appkey : '201612274',
@@ -412,7 +418,7 @@
 				war_s.day = 'today';
 				this.exceptionHoursShow(err_s);
 
-				//异常统计
+				//异常统计模块
 				exc_h.day = 'today';
 				exc_h.type = 'error';
 				this.exceptionHoursStatistics(exc_h);
@@ -427,7 +433,7 @@
 				war_s.day = 'yesterday';
 				this.exceptionHoursShow(err_s);
 
-				//异常统计
+				//异常统计模块
 				exc_h.day = 'yesterday';
 				exc_h.type = 'error';
 				this.exceptionHoursStatistics(exc_h);
@@ -475,7 +481,7 @@
 				war_s.day = 'week';
 				this.exceptionDaysShow(err_s);
 
-				//异常统计
+				//异常统计模块
 				exc_d.day = 'week';
 				exc_d.type = 'error';
 				this.exceptionDaysStatistics(exc_d);
@@ -490,7 +496,7 @@
 				war_s.day = 'month';
 				this.exceptionDaysShow(err_s);
 
-				//异常统计
+				//异常统计模块
 				exc_d.day = 'month';
 				exc_d.type = 'error';
 				this.exceptionDaysStatistics(exc_d);
@@ -912,11 +918,11 @@
                             var exc_data = data.data.item[2];     //每个时间区间内的错误量
                             var exc_detail = data.data.item[3];
                     		//打印数据，验证数据的正确性
-                             console.log(code);
-                            console.log('当天的时间：'+ date);
-                            console.log('时间区间：' + time_interval);
-                            console.log('当天的异常量：' + exc_data);
-                            console.log('异常的详细信息'+ exc_detail);
+                            // console.log(code);
+                            // console.log('当天的时间：'+ date);
+                            // console.log('时间区间：' + time_interval);
+                            // console.log('当天的异常量：' + exc_data);
+                            // console.log('异常的详细信息'+ exc_detail);
                             //从二维数组中取出：页面的URLwww.test2.com/example2，得到一个唯一URL的数组
                             function unique(arr){
                                 var temp = new Array();
@@ -927,67 +933,60 @@
                                     }
                                 }
                                 return temp;
+                            }                          
+                            //计算和 然后是比重
+                            function sum(arr){
+                            	var re_sum = 0;
+                            	var len = arr.length;
+                            	for(var i = 0; i < len; i++){
+                            		re_sum = Number(arr[i]) + re_sum;
+                            	}
+                            	return re_sum;
                             }
 
-                            //从一维数组中取出：页面的URLwww.test2.com/example2，得到一个 唯一的URL的数组
-                            function unique2(arr){
-                                var temp = new Array();
-                                var len = arr.length;
-                                for(var i =0; i < len; i++){
-                                    if(temp.indexOf(arr[i]) == -1){
-                                        temp.push(arr[i]);
-                                    }
-                                }
-                                return temp;
-                            }
-                            var new_err = unique(err_detail);
-                            //console.log( new_err);
-                            var new_war = unique(war_detail);
-                            //console.log(new_war);
-                            var totals_arr =new_err.concat(new_war);
-                            //console.log(totals_arr);
-                            var total_arr =unique2(totals_arr);
-                            //console.log(total_arr);
-
-                            //输入上面处理后的三个数组，得到统计信息
-                            function count(arr1,arr2,arr3){
-                                var err_len = arr1.length;
-                                var war_len = arr2.length;
-                                var total_arr_len = arr3.length;
+                            //输入上面处理后的两个数组，得到统计信息
+                            function count(arr,arr2){
+                            	var total = unique(arr2);
+                            	//console.log(total);
+                            	//console.log(arr2);
+                                var exc_len = arr2.length;
+                                //console.log(exc_len);
+                                var total_len = total.length;
+                                //console.log(total_len);
+                                var back_type = param.type;
                                 var res = new Array();
-                                var re = new Array();
-                                if(err_len == 0 && war_len == 0 ) {
-                                    re[0] = '未发生错误或警告';
+                                if(exc_len == 0) {
+                                	var re = new Array();
+                                	if( back_type == 'error'){
+                                		re[0] = '无发生错误页面';
+                                	}else{
+                                		re[0] = '无发生警告页面';
+                                	}
                                     re[1] = 0;
-                                    re[2] = 0;
-                                    re[3] = date;
+                                    re[2] = 0 +'%';
                                     res[0] = re;
                                 }else {
-                                    for(var i = 0; i < total_arr_len; i++){
-                                        var re = new Array();
-                                        var err_count = 0;
-                                        var war_count = 0;
-                                        for(var j = 0; j < err_len; j++){
-                                            if(arr3[i] == arr1[j][0] ){
-                                                err_count = err_count + 1;
+                                    for(var i = 0; i < total_len; i++){
+                                    	var re = new Array();
+                                        var exc_count = 0;
+                                        for(var j = 0; j < exc_len; j++){
+                                            if(total[i] == arr2[j][0] ){
+                                                exc_count = exc_count + 1;
                                             }
                                         }
-                                        for(var k = 0; k < war_len; k++){
-                                            if(arr3[i] == arr2[k][0] ){
-                                                war_count = war_count + 1;
-                                            }
-                                        }
-                                        re[0] = arr3[i];
-                                        re[1] = err_count;
-                                        re[2] = war_count;
-                                        re[3] = date;
-                                        res[i] = re;
-                                    }
+                                        var total_sum = sum(arr);
+	                                    re[0] = total[i];
+	                                    re[1] = exc_count;
+	                                    re[2] = Math.round((exc_count / total_sum)*100) + '%';
+	                                    res[i] = re;
+                                	}
                                 }
                                 return res;
 
                             }
-                            com.content = count(err_detail,war_detail,total_arr);
+                            com.exc_content = count(exc_data,exc_detail);
+                            console.log(com.exc_content);
+                            
                         }
                 	}
                 });

@@ -122,12 +122,13 @@
                             // console.log('当天的时间：'+ date);
                             // console.log('总的小时数：'+ hours);
                             // console.log('时间区间：' + time_interval);
-                            // console.log('当天的异常量：' + war_data);
                             // console.log('当天的错误量：'+err_data);
+                            // console.log('当天的异常量：' + war_data);
+                            
 
                             //计算数组的长度                             
-                            var len = date.length;
-                            //console.log(len);
+                            var len = hours.length;
+                            // console.log(len);
                             //计算统计的值
                             var sum_err = 0;
                             var sum_war = 0;
