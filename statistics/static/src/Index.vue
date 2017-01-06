@@ -1,5 +1,75 @@
 <template>
 	<div id="app">
+		<!-- <div class="table-list">
+			<div class="card-title"><span>业务系统列表</span></div>
+			<table class="list">
+				<tbody>
+					<tr class="title">
+						<th class="al">appkey</th>
+						<th>系统名</th>
+						<th>域名</th>
+						<th>操作</th>
+						<th>浏览量(PV)</th>
+						<th>IP数</th>
+						<th>统计信息</th>
+					</tr>
+					<tr>
+						<td class="normal">appkey12312344565</td>
+						<td>系统名</td>
+						<td>域名</td>
+						<td>操作</td>
+						<td>999</td>
+						<td>741</td>
+						<td>统计信息</td>
+					</tr>
+					<tr>
+						<td class="normal">appkey12312344565</td>
+						<td>系统名</td>
+						<td>域名</td>
+						<td>操作</td>
+						<td>999</td>
+						<td>741</td>
+						<td>统计信息</td>
+					</tr>
+					<tr>
+						<td class="normal">appkey12312344565</td>
+						<td>系统名</td>
+						<td>域名</td>
+						<td>操作</td>
+						<td>999</td>
+						<td>741</td>
+						<td>统计信息</td>
+					</tr>
+					<tr>
+						<td class="normal">appkey12312344565</td>
+						<td>系统名</td>
+						<td>域名</td>
+						<td>操作</td>
+						<td>999</td>
+						<td>741</td>
+						<td>统计信息</td>
+					</tr>
+					<tr>
+						<td class="normal">appkey12312344565</td>
+						<td>系统名</td>
+						<td>域名</td>
+						<td>操作</td>
+						<td>999</td>
+						<td>741</td>
+						<td>统计信息</td>
+					</tr><tr>
+						<td class="normal">appkey12312344565</td>
+						<td>系统名</td>
+						<td>域名</td>
+						<td>操作</td>
+						<td>999</td>
+						<td>741</td>
+						<td>统计信息</td>
+					</tr>
+					<tr class="empty-tr fade"></tr>
+				</tbody>
+			</table>
+		</div> -->
 		<div class="title-top">
 			<h3>统计分析</h3>
 			<div>
@@ -28,6 +98,28 @@
 						<td>{{yesterdaypv}}</td>
 						<td>{{yesterdayip}}</td>
 					</tr>
+					<!-- <tr>
+						<td class="normal">预计今日</td>
+						<td>1604</td>
+						<td>1179</td>
+					</tr>
+					<tr class="empty-tr"></tr>
+					<tr class="empty-tr fade"><td colspan="3"></td></tr>
+					<tr class="fade">
+						<td class="normal">昨日此时</td>
+						<td>203</td>
+						<td>159</td>
+					</tr>
+					<tr class="fade">
+						<td class="normal">每日平均</td>
+						<td>1760</td>
+						<td>1226</td>
+					</tr>
+					<tr class="fade">
+						<td class="normal">历史峰值</td>
+						<td>4475</td>
+						<td>2211</td>
+					</tr> -->
 					<tr class="empty-tr-2 fade"><td colspan="3"></td></tr>
 				</tbody>
 			</table>
@@ -35,7 +127,7 @@
 		<div class="fold"></div>
 		<div class="date-select-bar">
 			<div class="control-bar">
-				<a href="javascript:;" @click="today" class="date" style="background-color:green">今天</a>
+				<a href="javascript:;" @click="today" class="date">今天</a>
 				<a href="javascript:;" @click="yesterday" class="date">昨天</a>
 				<a href="javascript:;" @click="week" class="date">最近7天</a>
 				<a href="javascript:;" @click="month" class="date">最近30天</a>
@@ -87,6 +179,56 @@
 									<td>{{url[1]}}</td>
 									<td><div :style="styleObject(url[2])">{{url[2]}}</div></td>
 								</tr>
+								<!-- <tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:90%;">90%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:80%;">80%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:70%;">70%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:60%;">60%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:50%;">50%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:40%;">40%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:30%;">30%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:20%;">20%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:10%;">10%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:5%;">5%</div></td>
+								</tr> -->
 							</thead>
 						</table>
 					</div>
@@ -96,6 +238,7 @@
 				<div class="table-grid-item">
 					<div class="title clearfix">
 						<span>异常统计</span>
+						<!-- <a href="javascript:;">&gt;</a> -->
 						<router-link to="/exception">&gt;</router-link>
 					</div>
 					<div class="line-row">
@@ -124,17 +267,69 @@
 							<thead>
 								<tr>
 									<th>异常页面</th>
-									<th>错误量</th>
+									<th>数量</th>
 									<th>占比</th>
 								</tr>
-
-								</thead>
-
 								<tr v-for="exc in exc_content">
 									<th>{{exc[0]}}</th>
 									<th>{{exc[1]}}</th>
 									<th>{{exc[2]}}</th>
-								</tr>							
+								</tr>
+								<!-- <tr v-for="url in this.urls">
+									<td>{{url[0]}}</td>
+									<td>{{url[1]}}</td>
+									<td><div style='background-color:#DCEBFE;:width="url[2]"'>{{url[2]}}</div></td>
+								</tr> -->
+								<!-- <tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:90%;">90%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:80%;">80%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:70%;">70%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:60%;">60%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:50%;">50%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:40%;">40%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:30%;">30%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:20%;">20%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:10%;">10%</div></td>
+								</tr>
+								<tr>
+									<td>http://www.mamaxinjia.com</td>
+									<td>999</td>
+									<td><div style="background-color:#DCEBFE; width:5%;">5%</div></td>
+								</tr> -->
 							</thead>
 						</table>
 					</div>
@@ -146,48 +341,53 @@
 
 <script>
 	import $ from '../jquery-1.12.1'
-	import moment from 'moment'
 	var echarts = require('echarts');
-	var appkey = '201612191';
-	//定义按照小时比较的初始值
-	var hour = {
-		startTime : moment().format('YYYY-MM-DD'),
-		endTime: moment().add(-1,'days').format('YYYY-MM-DD'),
+
+	var s = {
+		appkey : '201612191',
+		startTime : 0,
+		endTime: 1,
 		type:'pv'
 	};
+<<<<<<< HEAD
 	//定义按照天比较的初始值
 	var day = {
 		startTime: moment().add(-6,'days').format('YYYY-MM-DD'),
+=======
+	var appkey = '201612191';
+	var d = {
+		date:6,
+>>>>>>> 804751cc7d05a3d47866add7a41171abfb2378fc
 		type:'pv'
 	};
 
 	//错误初始化参数
     var err_s = {
     	appkey : '201612274',
-    	type : -1,	//type= -1 为错误
-    	day : 0		//day=0 为今天 ， day=1为昨天
+    	type : 'error',	//type= error 为错误
+    	day : 'today'		//day= today为今天 ， day=yesterday为昨天
     };
 
 	//警告初始化参数
     var war_s = {
     	appkey : '201612274',
-    	type : 0,	//type=0 为异常
-    	day : 0		//day=0 为今天 ， day=1为昨天
+    	type : 'warning',	//type= warning 为警告
+    	day : 'today'	//day= today为今天 ， day=yesterday为昨天
     };
 
 
     //异常按小时统计模块初始化
     var exc_h = {
     	appkey : '201612274',
-    	day : 0,	//0 为 今天，1为昨天
-    	type : -1	// -1为错误，0为警告
-    }
+    	day : 'today',	//day= today为今天 ， day=yesterday为昨天
+    	type : 'error'	// error为错误，warning为警告
+    };
     //异常按天统计模块初始化
     var exc_d = {
     	appkey : '201612274',
-    	day : 6,	// 6为一周，29为30天
-    	type : -1	// -1为错误，0为警告
-    }
+    	day : 'week',	// week为1周，month为1月
+    	type : 'error'	// error为错误，warning为警告
+    };
 	//访问的类型，浏览量或独立访问量
 	export default {
 		data(){
@@ -205,6 +405,7 @@
 				appkeys:'',
 				selected:'',
 				urls:'',
+				exc_content:[]
 			}
 		},
 		methods:{
@@ -222,14 +423,15 @@
 					$(this).css('background','green').siblings().css("background-color","white");
 				});
 				$(".check-group").show();
-				hour.startTime = moment().format('YYYY-MM-DD');
-				this.compareHours(hour);
+				s.startTime = 0;
+				this.compareHours(s);
 
 				//异常统计，默认显示错误
-				err_s.day = 0;
-				war_s.day = 0;
+				err_s.day = 'today';
+				war_s.day = 'today';
 				this.exceptionHoursShow(err_s);
 
+<<<<<<< HEAD
 
 				//异常统计
 				exc_h.day = 0;
@@ -239,18 +441,24 @@
 				exc_h.day = 'today';
 				exc_h.type = 'error';
 
+=======
+				//异常统计模块
+				exc_h.day = 'today';
+				exc_h.type = 'error';
+>>>>>>> 804751cc7d05a3d47866add7a41171abfb2378fc
 				this.exceptionHoursStatistics(exc_h);
 			},
 			yesterday(){
 				$(".check-group").show();
-				hour.startTime = moment().add(-1,'days').format('YYYY-MM-DD');
-				this.compareHours(hour);
+				s.startTime = 1;
+				this.compareHours(s);
 
 				//异常统计，默认显示错误
-				err_s.day = 1;
-				war_s.day = 1;
+				err_s.day = 'yesterday';
+				war_s.day = 'yesterday';
 				this.exceptionHoursShow(err_s);
 
+<<<<<<< HEAD
 
 				//异常统计
 				exc_h.day = 1;
@@ -277,42 +485,62 @@
 					hour.endTime = moment().add(-7,'days').format('YYYY-MM-DD');
 				}
 				this.compareHours(hour);
+=======
+				//异常统计模块
+				exc_h.day = 'yesterday';
+				exc_h.type = 'error';
+				this.exceptionHoursStatistics(exc_h);
+			},
+			daybefore(){
+				s.endTime = s.startTime + 1;
+				this.compareHours(s);
+			},
+			weekbefore(){
+				s.endTime = s.startTime + 6;
+				this.compareHours(s);
+>>>>>>> 804751cc7d05a3d47866add7a41171abfb2378fc
 			},
 			pv(){
 				if(this.ecx_tag == 1){
-					hour.type = 'pv';
-					this.compareHours(hour);
+					s.type = 'pv';
+					this.compareHours(s);
 				}
 				else
 				{
 					this.type = 'pv量'	;
-					day.type = 'pv';
-					this.compareDays(day);
+					d.type = 'pv';
+					this.compareDays(d);
 				}
 			},
 			ip(){
 				if(this.tag == 0)
 				{
 					this.type = 'ip量'	;
-					day.type = 'ip';
-					this.compareDays(day);
+					d.type = 'ip';
+					this.compareDays(d);
 				}
 				else
 				{
-					hour.type = 'ip';
-					this.compareHours(hour);
+					s.type = 'ip';
+					this.compareHours(s);
 				}
 			},
 			week(){
 				$(".check-group").hide();
+<<<<<<< HEAD
 				day.startTime = moment().add(-6,'days').format('YYYY-MM-DD');
 				this.compareDays(day);
+=======
+				d.date = 6;
+				this.compareDays(d);
+>>>>>>> 804751cc7d05a3d47866add7a41171abfb2378fc
 
 				//异常统计，默认显示错误
-				err_s.day = 6;
-				war_s.day = 6;
+				err_s.day = 'week';
+				war_s.day = 'week';
 				this.exceptionDaysShow(err_s);
 
+<<<<<<< HEAD
 
 				//异常统计
 				exc_d.day = 6;
@@ -322,18 +550,29 @@
 				exc_d.day = 'week';
 				exc_d.type = 'error';
 
+=======
+				//异常统计模块
+				exc_d.day = 'week';
+				exc_d.type = 'error';
+>>>>>>> 804751cc7d05a3d47866add7a41171abfb2378fc
 				this.exceptionDaysStatistics(exc_d);
 			},
 			month(){
 				$(".check-group").hide();
+<<<<<<< HEAD
 				day.startTime = moment().add(-29,'days').format('YYYY-MM-DD');
 				this.compareDays(day);
+=======
+				d.date = 29;
+				this.compareDays(d);
+>>>>>>> 804751cc7d05a3d47866add7a41171abfb2378fc
 
 				//异常统计，默认显示错误
-				err_s.day = 29;
-				war_s.day = 29;
+				err_s.day = 'month';
+				war_s.day = 'month';
 				this.exceptionDaysShow(err_s);
 
+<<<<<<< HEAD
 
 				//异常统计
 				exc_d.day = 29;
@@ -343,6 +582,11 @@
 				exc_d.day = 'month';
 				exc_d.type = 'error';
 
+=======
+				//异常统计模块
+				exc_d.day = 'month';
+				exc_d.type = 'error';
+>>>>>>> 804751cc7d05a3d47866add7a41171abfb2378fc
 				this.exceptionDaysStatistics(exc_d);
 			},
 			err(){
@@ -364,16 +608,20 @@
 			exc_err(){
 				if(this.tag == 0){
 					//按照天计算
+					exc_d.type = 'error';
 					this.exceptionDaysStatistics(exc_d);
 				}else{
+					exc_h.type = 'error';
 					this.exceptionHoursStatistics(exc_h);
 				}
 			},
 			exc_war(){
 				if(this.tag == 0){
 					//按照天计算
+					exc_d.type = 'warning';
 					this.exceptionDaysStatistics(exc_d);
 				}else{
+					exc_h.type = 'warning';
 					this.exceptionHoursStatistics(exc_h);
 				}
 			},
@@ -646,6 +894,7 @@
 								},
 								legend:{
 									data:[com.type]
+									//data:['2016-12-26','2016-12-25']
 								},
 								series: [{
 									// 根据名字对应到相应的系列
@@ -673,6 +922,7 @@
 							type : 'category',
 							boundaryGap : false,
 							data : []
+						  //  data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
 						}
 					],
 					yAxis : [
@@ -827,7 +1077,7 @@
 
                             }
                             com.exc_content = count(exc_data,exc_detail);
-                            console.log(com.exc_content);
+                            //console.log(com.exc_content);
                             
                         }
                 	}
@@ -842,25 +1092,21 @@
                     data:{
                         appkey:param.appkey,
                         day:param.day,
+                        type:param.type
                     },
                     success:function(data){
-                        if(data.code == 200){
+                        if(data.code == 200) {
                             //得到后端传递来的所有数据
                             var code = data.code;   //得到状态返回值
-                            var date = data.data.item[0];     //得到当天的日期
-                            var date_name = data.data.item[1];   //小时数
-                            var err_data = data.data.item[2];     //每个时间区间内的错误量
-                            var war_data = data.data.item[3];     //每个时间区间内的异常量
-                            var err_detail = data.data.item[4];
-                            var war_detail = data.data.item[5];
-                            //打印数据，验证数据的正确性
-                            // console.log(code);
-                            // console.log('当天的日期：'+ date);
-                            // console.log('当天的小时数：'+ date_name);
-                            // console.log('当天的错误量：' + err_data);
-                            // console.log('当天的异常量：'+ war_data);
-                            // console.log('错误详细信息'+ err_detail);
-                            // console.log('警告详细信息'+ war_detail);
+                    		var date_interval = data.data.item[0];     //得到区间内的日期
+                            var exc_data = data.data.item[1];     //每个时间区间内的错误量
+                            var exc_detail = data.data.item[2];
+                    		//打印数据，验证数据的正确性
+                            console.log(code);
+                            console.log('区间内的日期：'+ date_interval);
+                            console.log('当天的异常量：' + exc_data);
+                            console.log('异常的详细信息'+ exc_detail);
+                            //从二维数组中取出：页面的URLwww.test2.com/example2，得到一个唯一URL的数组
                             function unique(arr){
                                 var temp = new Array();
                                 var len = arr.length;
@@ -870,64 +1116,60 @@
                                     }
                                 }
                                 return temp;
+                            }                          
+                            //计算和 然后是比重
+                            function sum(arr){
+                            	var re_sum = 0;
+                            	var len = arr.length;
+                            	for(var i = 0; i < len; i++){
+                            		re_sum = Number(arr[i]) + re_sum;
+                            	}
+                            	return re_sum;
                             }
 
-                            function unique2(arr){
-                                var temp = new Array();
-                                var len = arr.length;
-                                for(var i =0; i < len; i++){
-                                    if(temp.indexOf(arr[i]) == -1){
-                                        temp.push(arr[i]);
-                                    }
-                                }
-                                return temp;
-                            }
-                            var new_err = unique(err_detail);
-                            //console.log( new_err);
-                            var new_war = unique(war_detail);
-                            //console.log(new_war);
-                            var totals_arr =new_err.concat(new_war);
-                            //console.log(totals_arr);
-                            var total_arr =unique2(totals_arr);
-                            //console.log(total_arr);
-
-                            function count(arr1,arr2,arr3){
-                                var err_len = arr1.length;
-                                var war_len = arr2.length;
-                                var total_arr_len = arr3.length;
+                            //输入上面处理后的两个数组，得到统计信息
+                            function count(arr,arr2){
+                            	var total = unique(arr2);
+                            	//console.log(total);
+                            	//console.log(arr2);
+                                var exc_len = arr2.length;
+                                //console.log(exc_len);
+                                var total_len = total.length;
+                                //console.log(total_len);
+                                var back_type = param.type;
                                 var res = new Array();
-                                var re = new Array();
-                                if(err_len == 0 && war_len == 0 ) {
-                                    re[0] = '未发生错误或警告';
+                                if(exc_len == 0) {
+                                	var re = new Array();
+                                	if( back_type == 'error'){
+                                		re[0] = '无发生错误页面';
+                                	}else{
+                                		re[0] = '无发生警告页面';
+                                	}
                                     re[1] = 0;
-                                    re[2] = 0;
-                                    re[3] = date;
+                                    re[2] = 0 +'%';
                                     res[0] = re;
-                                }else{
-                                    for(var i = 0; i < total_arr_len; i++){
-                                        var re = new Array();
-                                        var err_count = 0;
-                                        var war_count = 0;
-                                        for(var j = 0; j < err_len; j++){
-                                            if(arr3[i] == arr1[j][0] ){
-                                                err_count = err_count + 1;
+                                }else {
+                                    for(var i = 0; i < total_len; i++){
+                                    	var re = new Array();
+                                        var exc_count = 0;
+                                        for(var j = 0; j < exc_len; j++){
+                                            if(total[i] == arr2[j][0] ){
+                                                exc_count = exc_count + 1;
                                             }
                                         }
-                                        for(var k = 0; k < war_len; k++){
-                                            if(arr3[i] == arr2[k][0] ){
-                                                war_count = war_count + 1;
-                                            }
-                                        }
-                                        re[0] = arr3[i];
-                                        re[1] = err_count;
-                                        re[2] = war_count;
-                                        re[3] = date;
-                                        res[i] = re;
-                                    }
+                                        var total_sum = sum(arr);
+	                                    re[0] = total[i];
+	                                    re[1] = exc_count;
+	                                    re[2] = Math.round((exc_count / total_sum)*100) + '%';
+	                                    res[i] = re;
+                                	}
                                 }
                                 return res;
+
                             }
-                            com.content = count(err_detail,war_detail,total_arr);
+                            com.exc_content = count(exc_data,exc_detail);
+                            console.log(com.exc_content);
+                            
                         }
                         
                     }

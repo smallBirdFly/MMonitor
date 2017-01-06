@@ -565,10 +565,22 @@ class ExceptionsController extends Controller
         $logger = MMLogger::getLogger(__FUNCTION__);
         $request = Yii::$app->request;
         $appkey = $request->post('appkey');
-        $day = $request->post('day');
-        $type = $request->post('type');
+        $da = $request->post('day');
+        $ty = $request->post('type');
         $today =  date('Y-m-d', time());
         //echo $day_date;
+        if($da == 'week'){
+            $day = 6;
+        }else if($da == 'month') {
+            $day = 29;
+        }
+
+        if($ty == 'error') {
+            $type = -1;
+        }else if($ty == 'warning') {
+            $type = 0;
+        }
+
         if(($day == 6 || $day == 29) && ($type == -1 || $type == 0)) {
 
         }else{
