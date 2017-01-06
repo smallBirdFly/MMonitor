@@ -1,75 +1,5 @@
 <template>
 	<div id="app">
-		<!-- <div class="table-list">
-			<div class="card-title"><span>业务系统列表</span></div>
-			<table class="list">
-				<tbody>
-					<tr class="title">
-						<th class="al">appkey</th>
-						<th>系统名</th>
-						<th>域名</th>
-						<th>操作</th>
-						<th>浏览量(PV)</th>
-						<th>IP数</th>
-						<th>统计信息</th>
-					</tr>
-					<tr>
-						<td class="normal">appkey12312344565</td>
-						<td>系统名</td>
-						<td>域名</td>
-						<td>操作</td>
-						<td>999</td>
-						<td>741</td>
-						<td>统计信息</td>
-					</tr>
-					<tr>
-						<td class="normal">appkey12312344565</td>
-						<td>系统名</td>
-						<td>域名</td>
-						<td>操作</td>
-						<td>999</td>
-						<td>741</td>
-						<td>统计信息</td>
-					</tr>
-					<tr>
-						<td class="normal">appkey12312344565</td>
-						<td>系统名</td>
-						<td>域名</td>
-						<td>操作</td>
-						<td>999</td>
-						<td>741</td>
-						<td>统计信息</td>
-					</tr>
-					<tr>
-						<td class="normal">appkey12312344565</td>
-						<td>系统名</td>
-						<td>域名</td>
-						<td>操作</td>
-						<td>999</td>
-						<td>741</td>
-						<td>统计信息</td>
-					</tr>
-					<tr>
-						<td class="normal">appkey12312344565</td>
-						<td>系统名</td>
-						<td>域名</td>
-						<td>操作</td>
-						<td>999</td>
-						<td>741</td>
-						<td>统计信息</td>
-					</tr><tr>
-						<td class="normal">appkey12312344565</td>
-						<td>系统名</td>
-						<td>域名</td>
-						<td>操作</td>
-						<td>999</td>
-						<td>741</td>
-						<td>统计信息</td>
-					</tr>
-					<tr class="empty-tr fade"></tr>
-				</tbody>
-			</table>
-		</div> -->
 		<div class="title-top">
 			<h3>统计分析</h3>
 			<div>
@@ -98,28 +28,6 @@
 						<td>{{yesterdaypv}}</td>
 						<td>{{yesterdayip}}</td>
 					</tr>
-					<!-- <tr>
-						<td class="normal">预计今日</td>
-						<td>1604</td>
-						<td>1179</td>
-					</tr>
-					<tr class="empty-tr"></tr>
-					<tr class="empty-tr fade"><td colspan="3"></td></tr>
-					<tr class="fade">
-						<td class="normal">昨日此时</td>
-						<td>203</td>
-						<td>159</td>
-					</tr>
-					<tr class="fade">
-						<td class="normal">每日平均</td>
-						<td>1760</td>
-						<td>1226</td>
-					</tr>
-					<tr class="fade">
-						<td class="normal">历史峰值</td>
-						<td>4475</td>
-						<td>2211</td>
-					</tr> -->
 					<tr class="empty-tr-2 fade"><td colspan="3"></td></tr>
 				</tbody>
 			</table>
@@ -127,7 +35,7 @@
 		<div class="fold"></div>
 		<div class="date-select-bar">
 			<div class="control-bar">
-				<a href="javascript:;" @click="today" class="date">今天</a>
+				<a href="javascript:;" @click="today" class="date" style="background-color:green">今天</a>
 				<a href="javascript:;" @click="yesterday" class="date">昨天</a>
 				<a href="javascript:;" @click="week" class="date">最近7天</a>
 				<a href="javascript:;" @click="month" class="date">最近30天</a>
@@ -179,56 +87,6 @@
 									<td>{{url[1]}}</td>
 									<td><div style='background-color:#DCEBFE;:width="url[2]"'>{{url[2]}}</div></td>
 								</tr>
-								<!-- <tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:90%;">90%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:80%;">80%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:70%;">70%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:60%;">60%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:50%;">50%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:40%;">40%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:30%;">30%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:20%;">20%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:10%;">10%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:5%;">5%</div></td>
-								</tr> -->
 							</thead>
 						</table>
 					</div>
@@ -238,7 +96,6 @@
 				<div class="table-grid-item">
 					<div class="title clearfix">
 						<span>异常统计</span>
-						<!-- <a href="javascript:;">&gt;</a> -->
 						<router-link to="/exception">&gt;</router-link>
 					</div>
 					<div class="line-row">
@@ -270,66 +127,14 @@
 									<th>错误量</th>
 									<th>占比</th>
 								</tr>
+
+								</thead>
+
 								<tr v-for="exc in exc_content">
 									<th>{{exc[0]}}</th>
 									<th>{{exc[1]}}</th>
 									<th>{{exc[2]}}</th>
-								</tr>
-								<!-- <tr v-for="url in this.urls">
-									<td>{{url[0]}}</td>
-									<td>{{url[1]}}</td>
-									<td><div style='background-color:#DCEBFE;:width="url[2]"'>{{url[2]}}</div></td>
-								</tr> -->
-								<!-- <tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:90%;">90%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:80%;">80%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:70%;">70%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:60%;">60%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:50%;">50%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:40%;">40%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:30%;">30%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:20%;">20%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:10%;">10%</div></td>
-								</tr>
-								<tr>
-									<td>http://www.mamaxinjia.com</td>
-									<td>999</td>
-									<td><div style="background-color:#DCEBFE; width:5%;">5%</div></td>
-								</tr> -->
+								</tr>							
 							</thead>
 						</table>
 					</div>
@@ -341,47 +146,48 @@
 
 <script>
 	import $ from '../jquery-1.12.1'
+	import moment from 'moment'
 	var echarts = require('echarts');
-
-	var s = {
-		appkey : '201612191',
-		startTime : 0,
-		endTime: 1,
+	var appkey = '201612191';
+	//定义按照小时比较的初始值
+	var hour = {
+		startTime : moment().format('YYYY-MM-DD'),
+		endTime: moment().add(-1,'days').format('YYYY-MM-DD'),
 		type:'pv'
 	};
-	var appkey = '201612191';
-	var d = {
-		date:6,
+	//定义按照天比较的初始值
+	var day = {
+		endTime: moment().add(-6,'days').format('YYYY-MM-DD'),
 		type:'pv'
 	};
 
 	//错误初始化参数
     var err_s = {
     	appkey : '201612274',
-    	type : 'error',	//type= error 为错误
-    	day : 'today'		//day= today为今天 ， day=yesterday为昨天
+    	type : -1,	//type= -1 为错误
+    	day : 0		//day=0 为今天 ， day=1为昨天
     };
 
 	//警告初始化参数
     var war_s = {
     	appkey : '201612274',
-    	type : 'warning',	//type= warning 为警告
-    	day : 'today'	//day= today为今天 ， day=yesterday为昨天
+    	type : 0,	//type=0 为异常
+    	day : 0		//day=0 为今天 ， day=1为昨天
     };
 
 
     //异常按小时统计模块初始化
     var exc_h = {
     	appkey : '201612274',
-    	day : 'today',	//day= today为今天 ， day=yesterday为昨天
-    	type : 'error'	// error为错误，warning为警告
-    };
+    	day : 0,	//0 为 今天，1为昨天
+    	type : -1	// -1为错误，0为警告
+    }
     //异常按天统计模块初始化
     var exc_d = {
     	appkey : '201612274',
-    	day : 'week',	// week为1周，month为1月
-    	type : 'error'	// error为错误，warning为警告
-    };
+    	day : 6,	// 6为一周，29为30天
+    	type : -1	// -1为错误，0为警告
+    }
 	//访问的类型，浏览量或独立访问量
 	export default {
 		data(){
@@ -411,95 +217,119 @@
 					$(this).css('background','green').siblings().css("background-color","white");
 				});
 				$(".check-group").show();
-				s.startTime = 0;
-				this.compareHours(s);
+				hour.startTime = moment().format('YYYY-MM-DD');
+				this.compareHours(hour);
 
 				//异常统计，默认显示错误
-				err_s.day = 'today';
-				war_s.day = 'today';
+				err_s.day = 0;
+				war_s.day = 0;
 				this.exceptionHoursShow(err_s);
 
+<<<<<<< HEAD
+				//异常统计
+				exc_h.day = 0;
+				exc_h.type = -1;
+=======
 				//异常统计模块
 				exc_h.day = 'today';
 				exc_h.type = 'error';
+>>>>>>> 42435e3a4fb2ef9e97c3a579a9c45d04ea2c34ed
 				this.exceptionHoursStatistics(exc_h);
 			},
 			yesterday(){
 				$(".check-group").show();
-				s.startTime = 1;
-				this.compareHours(s);
+				hour.startTime = moment().add(-1,'days').format('YYYY-MM-DD');
+				this.compareHours(hour);
 
 				//异常统计，默认显示错误
-				err_s.day = 'yesterday';
-				war_s.day = 'yesterday';
+				err_s.day = 1;
+				war_s.day = 1;
 				this.exceptionHoursShow(err_s);
 
+<<<<<<< HEAD
+				//异常统计
+				exc_h.day = 1;
+				exc_h.type = -1;
+=======
 				//异常统计模块
 				exc_h.day = 'yesterday';
 				exc_h.type = 'error';
+>>>>>>> 42435e3a4fb2ef9e97c3a579a9c45d04ea2c34ed
 				this.exceptionHoursStatistics(exc_h);
 			},
 			daybefore(){
-				s.endTime = s.startTime + 1;
-				this.compareHours(s);
+				hour.endTime = s.startTime + 1;
+				this.compareHours(hour);
 			},
 			weekbefore(){
-				s.endTime = s.startTime + 6;
-				this.compareHours(s);
+				hour.endTime = s.startTime + 6;
+				this.compareHours(hour);
 			},
 			pv(){
 				if(this.ecx_tag == 1){
-					s.type = 'pv';
-					this.compareHours(s);
+					hour.type = 'pv';
+					this.compareHours(hour);
 				}
 				else
 				{
 					this.type = 'pv量'	;
-					d.type = 'pv';
-					this.compareDays(d);
+					day.type = 'pv';
+					this.compareDays(day);
 				}
 			},
 			ip(){
 				if(this.tag == 0)
 				{
 					this.type = 'ip量'	;
-					d.type = 'ip';
-					this.compareDays(d);
+					day.type = 'ip';
+					this.compareDays(day);
 				}
 				else
 				{
-					s.type = 'ip';
-					this.compareHours(s);
+					hour.type = 'ip';
+					this.compareHours(hour);
 				}
 			},
 			week(){
 				$(".check-group").hide();
-				d.date = 6;
-				this.compareDays(d);
+				day.date = 6;
+				this.compareDays(day);
 
 				//异常统计，默认显示错误
-				err_s.day = 'week';
-				war_s.day = 'week';
+				err_s.day = 6;
+				war_s.day = 6;
 				this.exceptionDaysShow(err_s);
 
+<<<<<<< HEAD
+				//异常统计
+				exc_d.day = 6;
+				exc_d.type = -1;
+=======
 				//异常统计模块
 				exc_d.day = 'week';
 				exc_d.type = 'error';
+>>>>>>> 42435e3a4fb2ef9e97c3a579a9c45d04ea2c34ed
 				this.exceptionDaysStatistics(exc_d);
 			},
 			month(){
 				$(".check-group").hide();
-				d.date = 29;
-				this.compareDays(d);
+				day.date = 29;
+				this.compareDays(day);
 
 				//异常统计，默认显示错误
-				err_s.day = 'month';
-				war_s.day = 'month';
+				err_s.day = 29;
+				war_s.day = 29;
 				this.exceptionDaysShow(err_s);
 
+<<<<<<< HEAD
+				//异常统计
+				exc_d.day = 29;
+				exc_d.type = -1;
+=======
 				//异常统计模块
 				exc_d.day = 'month';
 				exc_d.type = 'error';
+>>>>>>> 42435e3a4fb2ef9e97c3a579a9c45d04ea2c34ed
 				this.exceptionDaysStatistics(exc_d);
 			},
 			err(){
@@ -807,7 +637,6 @@
 								},
 								legend:{
 									data:[com.type]
-									//data:['2016-12-26','2016-12-25']
 								},
 								series: [{
 									// 根据名字对应到相应的系列
@@ -835,7 +664,6 @@
 							type : 'category',
 							boundaryGap : false,
 							data : []
-						  //  data : ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
 						}
 					],
 					yAxis : [
@@ -916,6 +744,7 @@
                 	},
                 	success:function(data){
                         if(data.code == 200) {
+                        	
                             //得到后端传递来的所有数据
                             var code = data.code;   //得到状态返回值
                     		var date = data.data.item[0];     //得到当天的日期
