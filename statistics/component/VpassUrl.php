@@ -6,7 +6,7 @@
  * Time: 下午1:50
  */
 
-namespace mmbackend\components;
+namespace statistics\component;
 
 
 use Yii;

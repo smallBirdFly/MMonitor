@@ -93,34 +93,41 @@ class AnalyseController extends \yii\web\Controller
     public function actionCompareHours()
     {
         $request = Yii::$app->request;
-        Yii::error($request->post());
+//        Yii::error($request->post());
         $start = $request->post('startTime');
-        $past = $request->post('endTime');
+        $end = $request->post('endTime');
         $type = $request->post('type');
         $appkey = $request->post('appkey');
         for ($i = 0; $i < 24; $i++)
         {
-            $hours[] = $i;
+            if ($i < 10)
+            {
+                $hours[] = '0' . $i . ':00 - 0' . $i . ':59';
+            }
+            else
+            {
+                $hours[] = $i . ':00 - ' . $i . ':59';
+            }
             //比较时间
-            $startTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60- $start * 86400);
-            $endTime = date('Y-m-d H:i:s', strtotime(date("Y-m-d")) + $i * 60 * 60 + 3600 - $start * 86400);
+            $startTime = date('Y-m-d H:i:s', strtotime($start) + 3600 * $i);
+            $endTime = date('Y-m-d H:i:s', strtotime($startTime) + 3600);
 //            被比较的时间
-            $cstartTime = date('Y-m-d H:i:s',strtotime($startTime)-86400 * $past);
-            $cendTime = date('Y-m-d H:i:s',strtotime($endTime)-86400 * $past);
+            $cstartTime = date('Y-m-d H:i:s',strtotime($end) + 3600 * $i);
+            $cendTime = date('Y-m-d H:i:s',strtotime($cstartTime) + 3600);
 //            判断是否为求独立访问量
             if($type == 'pv')
             {
                 //要比较日期各个小时的访问量
-                $ress[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->count();
+                $ress[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey,'type' => 1])->count();
                 //统计昨天各个小时的pv量
                 $resp[$i] = Scount::find()->where(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->andWhere(['appkey'=>$appkey,'type'=>1])->count();
             }
             else if($type == 'ip')
             {
                 //要比较日期各个小时的独立访问量
-                $ress[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey])->andWhere(['type' => 1])->groupBy('ip')->count();
+                $ress[$i] = Scount::find()->where(['>=', 'time',$startTime])->andWhere(['<', 'time',$endTime])->andWhere(['appkey'=>$appkey,'type' => 1,'visit'=>1])->count();
                 //统计昨天各个小时的ip量
-                $resp[$i] = Scount::find()->where(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->andWhere(['appkey'=>$appkey,'type'=>1])->groupBy('ip')->count();
+                $resp[$i] = Scount::find()->where(['>=','time',$cstartTime])->andWhere(['<','time',$cendTime])->andWhere(['appkey'=>$appkey,'type'=>1,'visit'=>1])->count();
             }
             else
             {
@@ -143,7 +150,8 @@ class AnalyseController extends \yii\web\Controller
     public function actionCompareDays()
     {
         $request = Yii::$app->request;
-        $date = $request->post('date');
+        $day = $request->post('startTime');
+        $date = round((time() - strtotime($day)) / 86400);
         $type = $request->post('type');
         $appkey = $request->post('appkey');
         for ($i = 0; $i <= $date; $i++)
@@ -955,6 +963,6 @@ class AnalyseController extends \yii\web\Controller
 
     public function actionTest()
     {
-
+       echo round((time() - strtotime(Yii::$app->request->post('startTime'))) / 86400);
     }
 }

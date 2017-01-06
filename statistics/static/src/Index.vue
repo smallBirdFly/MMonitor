@@ -85,7 +85,7 @@
 								<tr v-for="url in this.urls">
 									<td>{{url[0]}}</td>
 									<td>{{url[1]}}</td>
-									<td><div style='background-color:#DCEBFE;:width="url[2]"'>{{url[2]}}</div></td>
+									<td><div :style="styleObject(url[2])">{{url[2]}}</div></td>
 								</tr>
 							</thead>
 						</table>
@@ -157,7 +157,7 @@
 	};
 	//定义按照天比较的初始值
 	var day = {
-		endTime: moment().add(-6,'days').format('YYYY-MM-DD'),
+		startTime: moment().add(-6,'days').format('YYYY-MM-DD'),
 		type:'pv'
 	};
 
@@ -208,6 +208,12 @@
 			}
 		},
 		methods:{
+			styleObject(w) {
+				return {
+					    background: '#3385e3',
+					    width: w+'%'
+					  };
+			},
 			today(){
 				$(".date").click(function(){
 					$(this).css('background','green').siblings().css("background-color","white");
@@ -224,15 +230,15 @@
 				war_s.day = 0;
 				this.exceptionHoursShow(err_s);
 
-<<<<<<< HEAD
+
 				//异常统计
 				exc_h.day = 0;
 				exc_h.type = -1;
-=======
+
 				//异常统计模块
 				exc_h.day = 'today';
 				exc_h.type = 'error';
->>>>>>> 42435e3a4fb2ef9e97c3a579a9c45d04ea2c34ed
+
 				this.exceptionHoursStatistics(exc_h);
 			},
 			yesterday(){
@@ -245,23 +251,31 @@
 				war_s.day = 1;
 				this.exceptionHoursShow(err_s);
 
-<<<<<<< HEAD
+
 				//异常统计
 				exc_h.day = 1;
 				exc_h.type = -1;
-=======
+
 				//异常统计模块
 				exc_h.day = 'yesterday';
 				exc_h.type = 'error';
->>>>>>> 42435e3a4fb2ef9e97c3a579a9c45d04ea2c34ed
+
 				this.exceptionHoursStatistics(exc_h);
 			},
 			daybefore(){
-				hour.endTime = s.startTime + 1;
+				if(hour.startTime == moment().format('YYYY-MM-DD')){
+					hour.endTime = moment().add(-1,'days').format('YYYY-MM-DD');
+				}else if(hour.startTime == moment().add(-1,'days').format('YYYY-MM-DD')){
+					hour.endTime = moment().add(-2,'days').format('YYYY-MM-DD');
+				}
 				this.compareHours(hour);
 			},
 			weekbefore(){
-				hour.endTime = s.startTime + 6;
+				if(hour.startTime == moment().format('YYYY-MM-DD')){
+					hour.endTime = moment().add(-6,'days').format('YYYY-MM-DD');
+				}else if(hour.startTime == moment().add(-1,'days').format('YYYY-MM-DD')){
+					hour.endTime = moment().add(-7,'days').format('YYYY-MM-DD');
+				}
 				this.compareHours(hour);
 			},
 			pv(){
@@ -291,7 +305,7 @@
 			},
 			week(){
 				$(".check-group").hide();
-				day.date = 6;
+				day.startTime = moment().add(-6,'days').format('YYYY-MM-DD');
 				this.compareDays(day);
 
 				//异常统计，默认显示错误
@@ -299,20 +313,20 @@
 				war_s.day = 6;
 				this.exceptionDaysShow(err_s);
 
-<<<<<<< HEAD
+
 				//异常统计
 				exc_d.day = 6;
 				exc_d.type = -1;
-=======
+
 				//异常统计模块
 				exc_d.day = 'week';
 				exc_d.type = 'error';
->>>>>>> 42435e3a4fb2ef9e97c3a579a9c45d04ea2c34ed
+
 				this.exceptionDaysStatistics(exc_d);
 			},
 			month(){
 				$(".check-group").hide();
-				day.date = 29;
+				day.startTime = moment().add(-29,'days').format('YYYY-MM-DD');
 				this.compareDays(day);
 
 				//异常统计，默认显示错误
@@ -320,15 +334,15 @@
 				war_s.day = 29;
 				this.exceptionDaysShow(err_s);
 
-<<<<<<< HEAD
+
 				//异常统计
 				exc_d.day = 29;
 				exc_d.type = -1;
-=======
+
 				//异常统计模块
 				exc_d.day = 'month';
 				exc_d.type = 'error';
->>>>>>> 42435e3a4fb2ef9e97c3a579a9c45d04ea2c34ed
+
 				this.exceptionDaysStatistics(exc_d);
 			},
 			err(){
@@ -620,7 +634,7 @@
 					dataType:'json',
 					data:{
 						appkey:appkey,
-						date:data.date,
+						startTime:data.startTime,
 						type:data.type
 					},
 					success:function(data){

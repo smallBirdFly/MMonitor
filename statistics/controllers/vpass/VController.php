@@ -1,10 +1,9 @@
 <?php
 
-namespace mmbackend\controllers\vpass;
+namespace statistics\controllers\vpass;
 
-use backend\models\Loginuser;
-use mmbackend\components\VpassUrl;
-use mmbackend\components\VPassUtil;
+use statistics\component\VpassUrl;
+use statistics\component\VPassUtil;
 use common\utils\UrlUtil;
 use Yii;
 use yii\web\Controller;
@@ -53,16 +52,6 @@ class VController extends Controller
                     $session['u_id'] = $userInfo['id'];
                     $session['loginType'] = '1';
                     $session['expires_in'] = $userInfo['expireTime'];
-                    $user = Loginuser::findOne(['u_id' => $session['u_id']]);
-                    if(is_null($user))
-                    {
-                        $login = new Loginuser();
-                        $login->u_id = $session['u_id'];
-                        $login->u_name = $session['u_name'];
-                        $login->loginType = $session['loginType'];
-                        $login->expires_in = $session['expires_in'];
-                        $login->save();
-                    }
                     echo "<script>window.parent.postMessage(" . Yii::$app->params['vpass']['appkey']." , '*');</script>";
                 }
                 else

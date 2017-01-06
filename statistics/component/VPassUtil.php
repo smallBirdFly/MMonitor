@@ -5,7 +5,7 @@
  * Date: 16/9/8
  * Time: 下午5:00
  */
-namespace mmbackend\components;
+namespace statistics\component;
 
 use sdk\MMThrift;
 

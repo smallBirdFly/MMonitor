@@ -7,6 +7,7 @@ use common\components\Constant;
 
 use common\components\MMLogger;
 use common\utils\HttpResponseUtil;
+use statistics\component\AuthFilter;
 use statistics\component\DaemonCommand;
 
 use statistics\models\AccessLog;
@@ -32,11 +33,9 @@ class SiteController extends Controller
     public function behaviors()
     {
         return [
-            'verbs' => [
-                'class' => VerbFilter::className(),
-                'actions' => [
-                    'logout' => ['post'],
-                ],
+            'auth' => [
+                'class' => AuthFilter::className(),
+                'except' => ['login'],
             ],
         ];
     }
@@ -93,7 +92,8 @@ class SiteController extends Controller
 
     public function actionIndex()
     {
-        return $this->render('index');
+        $session = \Yii::$app->session;
+        echo $session['u_id'];
     }
 
     //存到redis缓存中
@@ -358,7 +358,11 @@ class SiteController extends Controller
 
     public function actionTest()
     {
-        var_dump($this->visit('192.168.1.109'));
+        echo json_decode();
+        /*echo json_encode(array(
+            'id'=>'123',
+            'age'=>123,
+        ));*/
     }
 
 

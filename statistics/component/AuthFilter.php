@@ -9,23 +9,23 @@ namespace statistics\component;
 
 use common\utils\HttpResponseUtil;
 use common\utils\SessionUtil;
+use statistics\component\VpassUrl;
 use Yii;
 
 class AuthFilter extends \yii\base\ActionFilter
 {
     public function beforeAction($action)
     {
-
-            Yii::$app->response->headers->add("Access-Control-Allow-Origin", "*");
-            Yii::$app->response->headers->add("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-            Yii::$app->response->headers->add("Access-Control-Allow-Headers", "x-requested-with,content-type");
-            if(Yii::$app->request->isOptions){
-                Yii::error('isOptions');
-                $ret = array(
-                    'code'=>200
-                );
-                return HttpResponseUtil::setJsonResponse($ret);
-            }
+        Yii::$app->response->headers->add("Access-Control-Allow-Origin", "*");
+        Yii::$app->response->headers->add("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+        Yii::$app->response->headers->add("Access-Control-Allow-Headers", "x-requested-with,content-type");
+        if(Yii::$app->request->isOptions){
+            Yii::error('isOptions');
+            $ret = array(
+                'code'=>200
+            );
+            return HttpResponseUtil::setJsonResponse($ret);
+        }
         return parent::beforeAction($action);
         if(SessionUtil::isLogin())
         {
@@ -33,6 +33,7 @@ class AuthFilter extends \yii\base\ActionFilter
         }
         else
         {
+//            Yii::error(22);
             return $action->controller->redirect(VpassUrl::getLoginUrl());
         }
     }

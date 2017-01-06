@@ -7,7 +7,7 @@
  */
 namespace common\utils;
 
-use mmbackend\components\VpassUrl;
+use statistics\component\VpassUrl;
 
 class SessionUtil
 {
@@ -15,6 +15,7 @@ class SessionUtil
     public static function isLogin()
     {
         $session = \Yii::$app->session;
+        \Yii::error($session['u_id']);
         if(isset($session['u_id']))
         {
             return true;
