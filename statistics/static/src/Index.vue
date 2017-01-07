@@ -814,7 +814,22 @@
 	                                    re[2] = Math.round((exc_count / total_sum)*100) + '%';
 	                                    res[i] = re;
                                 	}
+                                	//冒泡排序
+                                	var res_len = res.length
+                                	for(var k = 0 ; k < res_len; k++){
+                                		for(var z = 1; z < res_len - 1 ; z++ ){
+                                			if(res[k] < res[z]){
+                                				var temp = new Array();
+                                				temp = res[k];
+                                				res[k] = res[z];
+                                				res[z] = temp;
+                                			}
+                                		}
+                                	}
+                                	//取出前十个
+                                	res = res.slice(0,10);
                                 }
+
                                 return res;
 
                             }
@@ -844,10 +859,10 @@
                             var exc_data = data.data.item[1];     //每个时间区间内的错误量
                             var exc_detail = data.data.item[2];
                     		//打印数据，验证数据的正确性
-                            console.log(code);
-                            console.log('区间内的日期：'+ date_interval);
-                            console.log('当天的异常量：' + exc_data);
-                            console.log('异常的详细信息'+ exc_detail);
+                            // console.log(code);
+                            // console.log('区间内的日期：'+ date_interval);
+                            // console.log('当天的异常量：' + exc_data);
+                            // console.log('异常的详细信息'+ exc_detail);
                             //从二维数组中取出：页面的URLwww.test2.com/example2，得到一个唯一URL的数组
                             function unique(arr){
                                 var temp = new Array();
@@ -905,12 +920,28 @@
 	                                    re[2] = Math.round((exc_count / total_sum)*100) + '%';
 	                                    res[i] = re;
                                 	}
+                                	//冒泡排序
+                                	var res_len = res.length;
+                                	for(var k = 0; k < res_len; k++){
+                                		for(var z = 1; z < res_len - 1 ; z++ ){
+                                			if(res[k] < res[z]){
+                                				var temp = new Array();
+                                				temp = res[k];
+                                				res[k] = res[z];
+                                				res[z] = temp;
+                                			}
+                                		}
+                                		
+                                		
+                                	}
+                                	//取出前十
+                                	res = res.slice(0,10);
                                 }
                                 return res;
 
                             }
                             com.exc_content = count(exc_data,exc_detail);
-                            console.log(com.exc_content);
+                            //console.log(com.exc_content);
                             
                         }
                         
