@@ -9,11 +9,21 @@
 namespace statistics\component;
 
 
+use common\utils\HttpResponseUtil;
 use Yii;
 use yii\helpers\Url;
 
 class VpassUrl
 {
+    public function behaviors()
+    {
+        return [
+            'auth' => [
+                'class' => AuthFilter::className(),
+                'except' => ['login'],
+            ]
+        ];
+    }
     public static function getLoginUrl()
     {
         $host = Yii::$app->getRequest()->headers->get("host");

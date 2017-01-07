@@ -10,6 +10,7 @@ use common\utils\HttpResponseUtil;
 use statistics\component\AuthFilter;
 use statistics\component\DaemonCommand;
 
+use statistics\component\VpassUrl;
 use statistics\models\AccessLog;
 use statistics\models\Daycount;
 use statistics\models\Ipaddress;
@@ -92,8 +93,7 @@ class SiteController extends Controller
 
     public function actionIndex()
     {
-        $session = \Yii::$app->session;
-        echo $session['u_id'];
+       return $this->render('index');
     }
 
     //存到redis缓存中
@@ -358,11 +358,7 @@ class SiteController extends Controller
 
     public function actionTest()
     {
-        echo json_decode();
-        /*echo json_encode(array(
-            'id'=>'123',
-            'age'=>123,
-        ));*/
+        return $this->redirect(VpassUrl::getLoginUrl());
     }
 
 

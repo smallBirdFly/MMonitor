@@ -26,7 +26,7 @@ class AuthFilter extends \yii\base\ActionFilter
             );
             return HttpResponseUtil::setJsonResponse($ret);
         }
-        return parent::beforeAction($action);
+//        return parent::beforeAction($action);
         if(SessionUtil::isLogin())
         {
             return parent::beforeAction($action);

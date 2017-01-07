@@ -229,7 +229,7 @@ class AnalyseController extends \yii\web\Controller
             {
                 $hours[] = $i . ':00 - ' . $i . ':59';
             }
-            $sql =  Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime]);
+            $sql =  Scount::find()->where(['appkey' => $appkey,'type'=> 1,'HOUR(time)'=>$i])->andWhere(['>=','time',$startTime])->andWhere(['<','time',$endTime]);
             //每天各个小时的访问量
             $pv[] =  $sql->count();
             //每天各个小时的独立访问量
@@ -467,9 +467,9 @@ class AnalyseController extends \yii\web\Controller
                 $hours[] = $i . ':00 - ' . $i . ':59';
             }
             //时间1各个小时的访问量
-            $res1[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$compareStartDay])->andWhere(['<','time',$compareEndDay])->count();
+            $res1[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'HOUR(time)'=>$i])->andWhere(['>=','time',$compareStartDay])->andWhere(['<','time',$compareEndDay])->count();
             //时间2各个小时的访问量
-            $res2[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i])->andWhere(['>=','time',$comparedStartDay])->andWhere(['<','time',$comparedEndDay])->count();
+            $res2[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'HOUR(time)'=>$i])->andWhere(['>=','time',$comparedStartDay])->andWhere(['<','time',$comparedEndDay])->count();
         }
         $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$compareStartDay])->andWhere(['<','time',$compareEndDay])->count();
         $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1])->andWhere(['>=','time',$comparedStartDay])->andWhere(['<','time',$comparedEndDay])->count();
@@ -514,9 +514,9 @@ class AnalyseController extends \yii\web\Controller
                 $hours[] = $i . ':00 - ' . $i . ':59';
             }
             //时间1各个小时的访问量
-            $res1[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i,'visit'=>1])->andWhere(['>=','time',$compareStartDay])->andWhere(['<','time',$compareEndDay])->count();
+            $res1[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'HOUR(time)'=>$i,'visit'=>1])->andWhere(['>=','time',$compareStartDay])->andWhere(['<','time',$compareEndDay])->count();
             //时间2各个小时的访问量
-            $res2[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'hour'=>$i,'visit'=>1])->andWhere(['>=','time',$comparedStartDay])->andWhere(['<','time',$comparedEndDay])->count();
+            $res2[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'HOUR(time)'=>$i,'visit'=>1])->andWhere(['>=','time',$comparedStartDay])->andWhere(['<','time',$comparedEndDay])->count();
         }
         $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'visit'=>1])->andWhere(['>=','time',$compareStartDay])->andWhere(['<','time',$compareEndDay])->count();
         $sum[] = Scount::find()->where(['appkey' => $appkey,'type'=> 1,'visit'=>1])->andWhere(['>=','time',$comparedStartDay])->andWhere(['<','time',$comparedEndDay])->count();
@@ -963,6 +963,8 @@ class AnalyseController extends \yii\web\Controller
 
     public function actionTest()
     {
-       echo round((time() - strtotime(Yii::$app->request->post('startTime'))) / 86400);
+        $i = 1;
+        $res = Scount::find()->where(['HOUR(time)'=>$i])->all();
+        var_dump($res);
     }
 }
