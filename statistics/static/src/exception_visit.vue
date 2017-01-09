@@ -21,16 +21,29 @@
         		</tr>
         		<tr v-for="cont in content">
         			<td>{{cont[0]}}</td>
-        			<td>{{cont[1]}}</td>
-                    <td>{{cont[2]}}</td>
+        			<td><a @click = "">{{cont[1]}}</a></td>
+                    <td><a @click = "">{{cont[2]}}</a></td>
                     <td>{{cont[3]}}</td>
 
-<!--         			<td>
+<!--         		<td>
                         <span>{{err[2][0]}}</span><br>
                         <span>{{err[2][1]}}</span>
                     </td> -->
         		</tr>
         	</table>
+            <table class="msg-table">
+                <tr>
+                    <th>id</th>
+                    <th>appkey</th>
+                    <th>page</th>
+                    <th>type</th>
+                    <th>referrer</th>
+                    <th>message</th>
+                    <th>hour</th>
+                    <th>week</th>
+                    <th>created_id</th>
+                </tr>
+            </table>
 <!--             <table class="msg-table">
                 <tr>
                     <th>网站</th>

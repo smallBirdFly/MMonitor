@@ -17,7 +17,7 @@ use yii\rest\Controller;
 use common\components\MMLogger;
 class ExceptionsController extends Controller
 {
-    public $enableCsrfValidation = false;
+    public $enableCsrfValidation = true;
     public function behaviors()
     {
         return [
@@ -45,14 +45,20 @@ class ExceptionsController extends Controller
         $da = $request->post('day');
         $ty = $request->post('type');
         //echo $appkey.'--'.$type.'--'.$day.'<br/>';    //查看接收到的参数
-        if($da == 'today') {
+        if($da == 'today')
+        {
             $day = 0;
-        }else if($da == 'yesterday'){
+        }
+        else if($da == 'yesterday')
+        {
             $day = 1;
         }
-        if($ty == 'error') {
+        if($ty == 'error')
+        {
             $type = -1 ;
-        }else if($ty == 'warning'){
+        }
+        else if($ty == 'warning')
+        {
             $type = 0;
         }
 
@@ -68,16 +74,21 @@ class ExceptionsController extends Controller
         $totalSeconds = ($today['hours'])*$h + ($today['minutes'])*$m + ($today['seconds']); //得出当天的总秒数
 
         //day = 0为今天，1为昨天，得到所请求的 当天开始时间
-        if($day==1){
+        if($day==1)
+        {
             //表示昨天
             $startTime = $today['0'] - $totalSeconds - $d; //得到昨天 0 时的时间戳
             $endTime = $today['0']-$totalSeconds;
 
-        }else if($day == 0){
+        }
+        else if($day == 0)
+        {
             //表示今天
             $startTime = $today['0'] - $totalSeconds; //得到今天 0 时的时间戳
             $endTime =  $today['0'] - $totalSeconds + $d;   //得到今天 24：00点的 时间戳
-        }else{
+        }
+        else
+        {
             $result['code'] = 201;
             $result['data']['item'][] = '不正确的type值';
             HttpResponseUtil::setJsonResponse($result);
@@ -118,14 +129,20 @@ class ExceptionsController extends Controller
         $logger = MMLogger::getLogger(__FUNCTION__);    //为了打印，实例化一个对象
         //$logger->error(变量名);  //用法：调用实例化的对象，调用error方法，在 /runtime/logs/  目录下查看打印的结果
 
-        if($da == 'week') {
+        if($da == 'week')
+        {
             $day = 6;
-        }else if($da == 'month'){
+        }
+        else if($da == 'month')
+        {
             $day = 29;
         }
-        if($ty == 'error') {
+        if($ty == 'error')
+        {
             $type = -1 ;
-        }else if($ty == 'warning'){
+        }
+        else if($ty == 'warning')
+        {
             $type = 0;
         }
 
@@ -150,8 +167,10 @@ class ExceptionsController extends Controller
         $tb_endTime = $to_startTime - $d * 28;
         $tb_date = date('Y-m-d',$tb_startTime + 1);
         //echo '三十天前的时间'.$tb_date.'--三十天前的开始时间：'.date('Y-m-d H:i:s',$tb_startTime).'--三十天前的结束时间：'.date('Y-m-d H:i:s',$tb_endTime).'<br/>';
-        if($day == 6){
-            for($i = 0; $i < 7; $i++){
+        if($day == 6)
+        {
+            for($i = 0; $i < 7; $i++)
+            {
                 $day_number[] = $i; //得到天数
                 //那天的时间 $that_day_startTime
                 $td_startTime = date('Y-m-d H:i:s',$sb_startTime + $i * $d);
@@ -161,8 +180,11 @@ class ExceptionsController extends Controller
                 //var_dump($day_date);
                 $exceptions[$i] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' => $type ])->andWhere([ '>=', 'time', $td_startTime ])->andWhere([ '<', 'time', $td_endTime ])->count();
             }
-        }else if($day == 29){
-            for($i = 0; $i < 30; $i++){
+        }
+        else if($day == 29)
+        {
+            for($i = 0; $i < 30; $i++)
+            {
                 $day_number[] = $i; //得到天数
                 //那天的时间 $that_day_startTime
                 $td_startTime = date('Y-m-d H:i:s',$tb_startTime + $i * $d);
@@ -172,7 +194,9 @@ class ExceptionsController extends Controller
                 //var_dump($day_date);
                 $exceptions[$i] = (int)Scount::find()->Where([ 'appkey'=>$appkey ,'type' => $type ])->andWhere([ '>=', 'time', $td_startTime ])->andWhere([ '<', 'time', $td_endTime ])->count();
             }
-        }else{
+        }
+        else
+        {
             $result['code'] = 201;
             $result['data']['item'][] = '不正确的type值';
             HttpResponseUtil::setJsonResponse($result);
@@ -207,9 +231,12 @@ class ExceptionsController extends Controller
         //echo $appkey.'--'.$day.'<br/>';    //查看接收到的参数
         //$logger->error($appkey.'--'.$day);
 
-        if($da == 'today') {
+        if($da == 'today')
+        {
             $day = 0;
-        }else if($da == 'yesterday'){
+        }
+        else if($da == 'yesterday')
+        {
             $day = 1;
         }
 
@@ -221,21 +248,25 @@ class ExceptionsController extends Controller
         $totalSeconds = ($today['hours'])*$h + ($today['minutes'])*$m + ($today['seconds']); //得出当天的总秒数
         $logger->error($day);
         //day = 0为今天，1为昨天，得到所请求的 当天开始时间
-        if($day == 1){
+        if($day == 1)
+        {
             //表示昨天
             $startTime = $today['0'] - $totalSeconds - $d; //得到昨天 0 时的时间戳
             $endTime = $today['0']-$totalSeconds;
-
-        }else if($day == 0){
+        }
+        else if($day == 0)
+        {
             //表示今天
             $startTime = $today['0'] - $totalSeconds; //得到今天 0 时的时间戳
             $endTime =  $today['0'] - $totalSeconds + $d;   //得到今天 24：00点的 时间戳
-        }else{
+        }
+        else
+        {
             $result['code'] = 201;
             $result['data']['item'][] = '不正确的type值';
             HttpResponseUtil::setJsonResponse($result);
             return;
-    }
+        }
         $date = date('Y-m-d', $startTime+1);   //得到当天的 年月日 ，以便后面使用
         //echo '当天的时间'.$date.'当天开始时间：'.date('Y-m-d H:i:s',$startTime).'当天的结束时间：'.date('Y-m-d H:i:s',$endTime).'<br/>';
         //$logger->error('当天的时间：'.$date.'当天的开始时间：'.date('Y-m-d H:i:s',$startTime).'当天的结束时间：'.date('Y-m-d H:i:s',$endTime));
@@ -276,10 +307,13 @@ class ExceptionsController extends Controller
         }else{
             $logger->error( '不全是数组');
         }*/
-        if(empty($errInfos) && empty($warnInfos)){
+        if(empty($errInfos) && empty($warnInfos))
+        {
             $errInfo = array();
             $warnInfo = array();
-        }else if(!empty($errInfos) && empty($warnInfos)){
+        }
+        else if(!empty($errInfos) && empty($warnInfos))
+        {
             foreach($errInfos as $k=>$err)
             {
                 $url = Page::findOne($err['page']);
@@ -289,7 +323,9 @@ class ExceptionsController extends Controller
                 Yii::error($k);
             }
             $warnInfo = array();
-        }else if(empty($errInfos) && !empty($warnInfos)){
+        }
+        else if(empty($errInfos) && !empty($warnInfos))
+        {
             $errInfo = array();
             foreach($warnInfos as $j=>$warn)
             {
@@ -298,7 +334,9 @@ class ExceptionsController extends Controller
                 $warnInfo[$j][] = $warn['time'];
                 $warnInfo[$j][] = $warn['message'];
             }
-        }else if(!empty($errInfos) && !empty($warnInfos)) {
+        }
+        else if(!empty($errInfos) && !empty($warnInfos))
+        {
             foreach($errInfos as $k=>$err)
             {
                 $url = Page::findOne($err['page']);
@@ -328,7 +366,8 @@ class ExceptionsController extends Controller
 
 
     //按照天数分析 得到所传递day的天数的信息，显示在详细页面
-    public function actionExceptionDaysCompare(){
+    public function actionExceptionDaysCompare()
+    {
          //day = 6 ( 0为今天，一周七天，0 - 6 依次 )
          //day = 29( 0为今天， 一月30天 0 - 29 依次)
 
@@ -339,9 +378,12 @@ class ExceptionsController extends Controller
         $logger = MMLogger::getLogger(__FUNCTION__);    //为了打印，实例化一个对象
         //$logger->error(变量名);  //用法：调用实例化的对象，调用error方法，在 /runtime/logs/  目录下查看打印的结果
 
-        if($da == 'week') {
+        if($da == 'week')
+        {
             $day = 6;
-        }else if($da == 'month'){
+        }
+        else if($da == 'month')
+        {
             $day = 29     ;
         }
 
@@ -368,10 +410,12 @@ class ExceptionsController extends Controller
         $tb_date = date('Y-m-d',$tb_startTime + 1);
         //echo '三十天前的时间'.$tb_date.'--三十天前的开始时间：'.date('Y-m-d H:i:s',$tb_startTime).'--三十天前的结束时间：'.date('Y-m-d H:i:s',$tb_endTime).'<br/>';
 
-        if($day == 6) {
+        if($day == 6)
+        {
             $day_name = $sb_date.'-'.$to_date;
             //echo $day_name;
-            for($i = 0; $i < 7; $i++){
+            for($i = 0; $i < 7; $i++)
+            {
                     //那天的时间 $that_day_startTime
                     $td_startTime = date('Y-m-d H:i:s', $sb_startTime + $i * $d);
                     $td_endTime = date('Y-m-d H:i:s', $sb_endTime + ($i) * $d);
@@ -387,11 +431,15 @@ class ExceptionsController extends Controller
             $errInfos = Scount::find()->where(['appkey' => $appkey,'type'=> 0])->andWhere(['>=','time',$sb_startTime2])->andWhere(['<','time',$to_endTime2])->all();
             //var_dump($errInfos);
             $warnInfos = Scount::find()->where(['appkey' => $appkey,'type'=> -1])->andWhere(['>=','time',$sb_startTime2])->andWhere(['<','time',$to_endTime2])->all();
-            if(empty($errInfos) && empty($warnInfos)) {
+            if(empty($errInfos) && empty($warnInfos))
+            {
                 $errInfo = array();
                 $warnInfo = array();
-            }else if(!empty($errInfos) && empty($warnInfos)){
-                foreach($errInfos as $k=>$err) {
+            }
+            else if(!empty($errInfos) && empty($warnInfos))
+            {
+                foreach($errInfos as $k=>$err)
+                {
                     $url = Page::findOne($err['page']);
                     $errInfo[$k][] = $url['page_url'];
                     $errInfo[$k][] = $err['time'];
@@ -399,33 +447,43 @@ class ExceptionsController extends Controller
                     Yii::error($k);
                 }
                 $warnInfo = array();
-            }else if(empty($errInfos) && !empty($warnInfos)){
+            }
+            else if(empty($errInfos) && !empty($warnInfos))
+            {
                 $errInfo = array();
-                foreach($warnInfos as $j=>$warn) {
-                    $url = Page::findOne($warn['page']);
-                    $warnInfo[$j][] = $url['page_url'];
-                    $warnInfo[$j][] = $warn['time'];
-                    $warnInfo[$j][] = $warn['message'];
-                }
-            }else if(!empty($errInfos) && !empty($warnInfos)) {
-                foreach($errInfos as $k=>$err) {
-                    $url = Page::findOne($err['page']);
-                    $errInfo[$k][] = $url['page_url'];
-                    $errInfo[$k][] = $err['time'];
-                    $errInfo[$k][] = $err['message'];
-                    Yii::error($k);
-                }
-                foreach($warnInfos as $j=>$warn) {
+                foreach($warnInfos as $j=>$warn)
+                {
                     $url = Page::findOne($warn['page']);
                     $warnInfo[$j][] = $url['page_url'];
                     $warnInfo[$j][] = $warn['time'];
                     $warnInfo[$j][] = $warn['message'];
                 }
             }
-        }else if($day == 29){
+            else if(!empty($errInfos) && !empty($warnInfos))
+            {
+                foreach($errInfos as $k=>$err)
+                {
+                    $url = Page::findOne($err['page']);
+                    $errInfo[$k][] = $url['page_url'];
+                    $errInfo[$k][] = $err['time'];
+                    $errInfo[$k][] = $err['message'];
+                    Yii::error($k);
+                }
+                foreach($warnInfos as $j=>$warn)
+                {
+                    $url = Page::findOne($warn['page']);
+                    $warnInfo[$j][] = $url['page_url'];
+                    $warnInfo[$j][] = $warn['time'];
+                    $warnInfo[$j][] = $warn['message'];
+                }
+            }
+        }
+        else if($day == 29)
+        {
             $day_name = $tb_date.'-'.$to_date;
             //echo $day_name;
-            for($i = 0; $i < 30; $i++){
+            for($i = 0; $i < 30; $i++)
+            {
                 $day_number[] = $i; //得到天数
                 //那天的时间 $that_day_startTime
                 $td_startTime = date('Y-m-d H:i:s',$tb_startTime + $i * $d);
@@ -443,10 +501,13 @@ class ExceptionsController extends Controller
             $errInfos = Scount::find()->where(['appkey' => $appkey,'type'=> 0])->andWhere(['>=','time',$td_startTime2])->andWhere(['<','time',$to_endTime2])->all();
             //var_dump($errInfos);
             $warnInfos = Scount::find()->where(['appkey' => $appkey,'type'=> -1])->andWhere(['>=','time',$td_startTime2])->andWhere(['<','time',$to_endTime2])->all();
-            if(empty($errInfos) && empty($warnInfos)){
+            if(empty($errInfos) && empty($warnInfos))
+            {
                 $errInfo = array();
                 $warnInfo = array();
-            }else if(!empty($errInfos) && empty($warnInfos)){
+            }
+            else if(!empty($errInfos) && empty($warnInfos))
+            {
                 foreach($errInfos as $k=>$err)
                 {
                     $url = Page::findOne($err['page']);
@@ -456,7 +517,9 @@ class ExceptionsController extends Controller
                     Yii::error($k);
                 }
                 $warnInfo = array();
-            }else if(empty($errInfos) && !empty($warnInfos)){
+            }
+            else if(empty($errInfos) && !empty($warnInfos))
+            {
                 $errInfo = array();
                 foreach($warnInfos as $j=>$warn)
                 {
@@ -465,7 +528,9 @@ class ExceptionsController extends Controller
                     $warnInfo[$j][] = $warn['time'];
                     $warnInfo[$j][] = $warn['message'];
                 }
-            }else if(!empty($errInfos) && !empty($warnInfos)) {
+            }
+            else if(!empty($errInfos) && !empty($warnInfos))
+            {
                 foreach($errInfos as $k=>$err)
                 {
                     $url = Page::findOne($err['page']);
@@ -482,7 +547,9 @@ class ExceptionsController extends Controller
                     $warnInfo[$j][] = $warn['message'];
                 }
             }
-        }else{
+        }
+        else
+        {
                 $result['code'] = 201;
                 $result['data']['item'][] = '不正确的type值';
                 HttpResponseUtil::setJsonResponse($result);
@@ -499,40 +566,54 @@ class ExceptionsController extends Controller
     }
 
     //异常按小时统计
-    public function actionExceptionHoursStatistics( ) {
+    public function actionExceptionHoursStatistics()
+    {
         $request = Yii::$app->request;
         $appkey = $request->post('appkey');
         $da = $request->post('day');
         $ty = $request->post('type');
         $logger = MMLogger::getLogger(__FUNCTION__);
-        if($da == 'today'){
+        if($da == 'today')
+        {
             $day = 0;
-        }else if($da == 'yesterday'){
+        }
+        else if($da == 'yesterday')
+        {
             $day = 1;
         }
-        if($ty == 'error'){
+        if($ty == 'error')
+        {
             $type = -1;
-        }else if($ty == 'warning'){
+        }
+        else if($ty == 'warning')
+        {
             $type = 0;
         }
 
 
         $day_date = date('Y-m-d',time() - 86400 * $day);
         //echo '当天的时间'.$day_date;
-        if(($day == 1 || $day == 0) && ($type == -1 || $type == 0)){
+        if(($day == 1 || $day == 0) && ($type == -1 || $type == 0))
+        {
             //表示昨天
             $startTime = $day_date;
             $endTime = date('Y-m-d',strtotime($startTime) + 86400);
-        }else{
+        }
+        else
+        {
             $result['code'] = 201;
             $result['data']['item'][] = '不正确的type值';
             HttpResponseUtil::setJsonResponse($result);
             return;
         }
-        for($i = 0; $i < 24; $i++) {
-            if ($i < 10) {
+        for($i = 0; $i < 24; $i++)
+        {
+            if ($i < 10)
+            {
                 $hours[] = '0' . $i . ':00 - 0' . $i . ':59';
-            } else {
+            }
+            else
+            {
                 $hours[] = $i . ':00 - ' . $i . ':59';
             }
             //各个小时的错误量
@@ -541,9 +622,12 @@ class ExceptionsController extends Controller
         }
         //$logger->error($resExc);
         $resExcInfos = Scount::find()->where(['appkey' => $appkey, 'type' => $type])->andWhere(['>=', 'time', $startTime])->andWhere(['<', 'time', $endTime])->all();
-        if(empty($resExcInfos)) {
+        if(empty($resExcInfos))
+        {
             $resExcInfo = array();
-        }else{
+        }
+        else
+        {
             foreach($resExcInfos as $k=>$v)
             {
                 $url = Page::findOne($v['page']);
@@ -561,7 +645,8 @@ class ExceptionsController extends Controller
     }
 
     //异常按天统计
-    public function actionExceptionDaysStatistics() {
+    public function actionExceptionDaysStatistics()
+    {
         $logger = MMLogger::getLogger(__FUNCTION__);
         $request = Yii::$app->request;
         $appkey = $request->post('appkey');
@@ -569,28 +654,39 @@ class ExceptionsController extends Controller
         $ty = $request->post('type');
         $today =  date('Y-m-d', time());
         //echo $day_date;
-        if($da == 'week'){
+        if($da == 'week')
+        {
             $day = 6;
-        }else if($da == 'month') {
+        }
+        else if($da == 'month')
+        {
             $day = 29;
         }
 
-        if($ty == 'error') {
+        if($ty == 'error')
+        {
             $type = -1;
-        }else if($ty == 'warning') {
+        }
+        else if($ty == 'warning')
+        {
             $type = 0;
         }
 
-        if(($day == 6 || $day == 29) && ($type == -1 || $type == 0)) {
+        if(($day == 6 || $day == 29) && ($type == -1 || $type == 0))
+        {
 
-        }else{
+        }
+        else
+        {
             $result['code'] = 201;
             $result['data']['item'][] = '不正确的type值';
             HttpResponseUtil::setJsonResponse($result);
             return;
         }
-        if($day == 6) {
-            for($i = 7; $i > 0; $i--) {
+        if($day == 6)
+        {
+            for($i = 7; $i > 0; $i--)
+            {
                 $td_startTime = date('Y-m-d H:i:s',(strtotime($today) - ($i-1) * 86400));
                 $td_endTime = date('Y-m-d H:i:s',(strtotime($today) - ($i-2) * 86400));
                 //$logger->error($td_startTime.'--'.$td_endTime);
@@ -602,9 +698,12 @@ class ExceptionsController extends Controller
             $to_endTime = date('Y-m-d H:i:s',(strtotime($today)+ 86400));
             //$logger->error($sb_startTime.'--'.$to_endTime);
             $resExcInfos = Scount::find()->where(['appkey'=>$appkey, 'type'=>$type])->andWhere(['>=', 'time', $sb_startTime])->andWhere(['<', 'time', $to_endTime])->all();
-            if(empty($resExc)) {
+            if(empty($resExc))
+            {
                 $resExcInfo = array();
-            }else{
+            }
+            else
+            {
                 foreach($resExcInfos as $k=>$v)
                 {
                     $url = Page::findOne($v['page']);
@@ -618,8 +717,11 @@ class ExceptionsController extends Controller
             $result['data']['item'][] = $resExc;
             $result['data']['item'][] = $resExcInfo;
             HttpResponseUtil::setJsonResponse($result);
-        }else{
-            for($i = 30; $i > 0; $i--) {
+        }
+        else
+        {
+            for($i = 30; $i > 0; $i--)
+            {
                 $td_startTime = date('Y-m-d H:i:s',(strtotime($today) - ($i-1) * 86400));
                 $td_endTime = date('Y-m-d H:i:s',(strtotime($today) - ($i-2) * 86400));
                 //$logger->error($td_startTime.'--'.$td_endTime);
@@ -631,9 +733,12 @@ class ExceptionsController extends Controller
             $to_endTime = date('Y-m-d H:i:s',(strtotime($today)+ 86400));
             $logger->error($th_startTime.'--'.$to_endTime);
             $resExcInfos = Scount::find()->where(['appkey'=>$appkey, 'type'=>$type])->andWhere(['>=', 'time', $th_startTime])->andWhere(['<', 'time', $to_endTime])->all();
-            if(empty($resExc)) {
+            if(empty($resExc))
+            {
                 $resExcInfo = array();
-            }else{
+            }
+            else
+            {
                 foreach($resExcInfos as $k=>$v)
                 {
                     $url = Page::findOne($v['page']);
@@ -649,13 +754,6 @@ class ExceptionsController extends Controller
             HttpResponseUtil::setJsonResponse($result);
         }
     }
-
-
-
-
-
-
-
 
     //昨天或今天按照小时分析
     public function actionExceptionHour()
