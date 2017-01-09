@@ -2,26 +2,23 @@
 
 namespace statistics\controllers;
 
-use common\components\HttpUtils;
-use common\components\Constant;
 
 use common\components\MMLogger;
 use common\utils\HttpResponseUtil;
 use statistics\component\AuthFilter;
-use statistics\component\DaemonCommand;
 
-use statistics\component\VpassUrl;
-use statistics\models\AccessLog;
-use statistics\models\Daycount;
-use statistics\models\Ipaddress;
+use statistics\models\Count;
+use statistics\models\Month;
+use statistics\models\Page;
 use statistics\models\Scount;
 
+use statistics\models\Today;
+use statistics\models\Type;
+use statistics\models\Week;
+use statistics\models\Yesterday;
+
 use Yii;
-use yii\base\ErrorException;
-use yii\db\Exception;
-use yii\filters\AccessControl;
-use yii\filters\VerbFilter;
-use yii\swiftmailer\Message;
+use yii\db\ActiveRecord;
 use yii\web\Controller;
 
 
@@ -29,7 +26,7 @@ class SiteController extends Controller
 {
     public $layout = 'blank';
 
-    public $enableCsrfValidation = false;
+//    public $enableCsrfValidation = false;
 
     public function behaviors()
     {
@@ -160,8 +157,6 @@ class SiteController extends Controller
             return;
         }
 
-        //当前的小时
-        $con['hour'] = date('H',time());
         //是否是今天第一次访问
         $con['visit'] = $this->visit($remoteIp);
         $con['type'] = $type;
@@ -177,38 +172,6 @@ class SiteController extends Controller
         HttpResponseUtil::setJsonResponse($result1);
     }
 
-        //循环内容
-       /* foreach($request->get('content') as $content)
-        {
-            try
-            {
-                $con = json_decode($content);
-            }
-            catch(ErrorException $e)
-            {
-                $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['referrer'].'        message:'.'传递内容不符合要求');
-                $result['code'] = 401;
-                HttpResponseUtil::setJsonResponse($result);
-                return;
-            }
-            //如果传过来不是一个数组
-            if(!is_array($request->get('content')))
-            {
-                $logger->info('IP:'.$message['ip'].'    time:'.$message['time'].'   url:'.$message['referrer'].'        message:'.'content数据不符合要求');
-                $result['code'] = 401;
-                HttpResponseUtil::setJsonResponse($result);
-                return;
-            }
-            if(empty($remoteIp))
-            {
-                $remoteIp = $request->getUserIP();
-            }
-            $message['ip'] = $remoteIp;
-            $message['time'] = date('Y-m-d H:i:s');
-            $message['referrer'] = $request->getReferrer();
-
-
-        }*/
 
 //    把redis数据存入数据库
     public function actionSavedisk()
@@ -218,7 +181,6 @@ class SiteController extends Controller
         $num = Yii::$app->params['num'];
         $redis = Yii::$app->redis;
         //获取当前redis中的数据条数
-//        Yii::error('调用的savedisk接口');
         $len  = $redis->llen("msg");
         if($len == 0)
         {
@@ -237,12 +199,12 @@ class SiteController extends Controller
             foreach($arr as $v)
             {
                 $attr = json_decode($v);
-                $res['appkey'] = $attr->appkey;
-                $res['page'] = $attr->page;
-                $res['type'] = $attr->type;
-                $res['visit'] = $attr->visit;
-                $res['hour'] = $attr->hour;
+                $code = explode('.',$attr->code);
+                $res['appkey'] = $code[0];
+                $res['page'] = $code[1];
+                $res['type'] = $code[count($code)-1];
                 $res['ip'] = $attr->content->ip;
+                $res['visit'] = $this->visit( $res['ip']);
                 $res['time'] = $attr->content->time;
                 $res['referrer'] = $attr->content->referrer;
                 if(is_null($attr->content->referrer))
@@ -260,25 +222,23 @@ class SiteController extends Controller
                 $res['created_at'] = date('Y-m-d H:i:s',time());
                 $rows[] = $res;
             }
-            $db = Yii::$app->db->createCommand()->batchInsert(Scount::tableName(),['appkey','page','type','visit','hour','ip','time','referrer','message','created_at'],$rows)->execute();
-
+            $db = Yii::$app->db->createCommand()->batchInsert(Today::tableName(),['appkey','page','type','visit','ip','time','referrer','message','created_at'],$rows)->execute();
+            $db = Yii::$app->db->createCommand()->batchInsert(Week::tableName(),['appkey','page','type','visit','ip','time','referrer','message','created_at'],$rows)->execute();
+            $db = Yii::$app->db->createCommand()->batchInsert(Month::tableName(),['appkey','page','type','visit','ip','time','referrer','message','created_at'],$rows)->execute();
             if(!$db)
             {
-               /* $result1['code'] = 402;
-                $result1['data']['content'] = "数据插入数据库失败";
-                HttpResponseUtil::setJsonResponse($result1);*/
                 $logger->info('     time:'.date('Y-m-d H:i:s').'     数据插入数据库失败，');
                 $result1['code'] = 402;
                 HttpResponseUtil::setJsonResponse($result1);
                 return;
             }
+
             //将存储了的数据清空，否则下次循环会重复添加
             $rows = array();
             //如果当前长度大于要出栈的数量
             if($len > $num)
             {
                 $redis->ltrim('msg',0,$len-$num-1);
-//                Yii::error('出栈1');
             }
             else
             {
@@ -293,33 +253,11 @@ class SiteController extends Controller
     public function actionExport()
     {
         $logger = MMLogger::getLogger(__FUNCTION__);
-//        对当天数据进行统计
-        $categorys = Scount::find()->all();
-        if(empty($categorys))
-        {
-            $result['code'] = 201;
-            $logger->warn('     time:'.date('Y-m-d H:i:s').'    当前数据表中未存在数据');
-            HttpResponseUtil::setJsonResponse($result);
-            return;
-        }
-        //对用户的添加
-        $users = Scount::find()->groupBy(['ip'])->all();
-        foreach($users as $user)
-        {
-            //如果表中没有这个用户
-            if(Ipaddress::find()->where(['ipaddress'=>$user->ip])->one())
-            {
-                break;
-            }
-            $ip = new Ipaddress();
-            $ip->ipaddress = $user->ip;
-            $ip->save();
-
-        }
-
-        $content = Scount::find()->all();
+        //处理30天前的数据
+        $date = date('Y-m-d',time()-86400*30);
         $string = null;
-        foreach($content as $v)
+        $month_contents = Month::find()->where(['like','time',$date])->all();
+        foreach($month_contents as $v)
         {
             $string .= '(\''.$v->appkey.'\',';
             $string .= '\''.$v->page.'\',';
@@ -328,11 +266,10 @@ class SiteController extends Controller
             $string .= '\''.$v->time.'\',';
             $string .= '\''.$v->referrer.'\',';
             $string .= '\''.$v->message.'\',';
-            $string .= '\''.$v->hour.'\',';
             $string .= '\''.$v->visit.'\',';
             $string .= '\''.$v->created_at.'\'),';
         }
-        $tname = 'scount'.time();
+        $tname = $date.'_count_'.time();
         $ctable = 'CREATE TABLE `'.$tname.'` (
                   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
                   `appkey` char(9) NOT NULL,
@@ -342,23 +279,86 @@ class SiteController extends Controller
                   `time` char(20) NOT NULL,
                   `referrer` varchar(100) NOT NULL,
                   `message` varchar(100) NOT NULL,
-                  `hour` char(2) NOT NULL,
                   `visit` char(1) NOT NULL,
                   `created_at` datetime NOT NULL,
                   PRIMARY KEY (`id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `appkey`,`page`,`type`, `ip`,`time`,`referrer`,`message`,`hour`,`visit`,`created_at`) VALUES';
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;INSERT INTO `'.$tname.'` ( `appkey`,`page`,`type`, `ip`,`time`,`referrer`,`message`,`visit`,`created_at`) VALUES';
         $sql =  $ctable.trim($string,',');
         $sqlfile = fopen(Yii::$app->basePath."/web/sql/".$tname.'.sql', "w") or die("Unable to open file!");
         fwrite($sqlfile,$sql);
         fclose($sqlfile);
-        Scount::deleteAll();
+
+        $transaction = ActiveRecord::getDb()->beginTransaction();
+        try
+        {
+            //前30天的数据处理
+            $appkeys = Page::find()->all();
+            $types = Type::find()->all();
+            foreach($appkeys as $appkey)
+            {
+                foreach($types as $type)
+                {
+                    for($i = 0; $i < 24; $i++)
+                    {
+                        $sql =  Month::find()->where(['page' => $appkey['id'],'type'=> $type['type'],'HOUR(time)'=>$i])->andWhere(['like','time',$date]);
+                        //每天各个小时的访问量
+                        $pv =  $sql->count();
+                        $arrPv[] = array(
+                            'appkey' => $appkey['appkey'],
+                            'page' => $appkey['id'],
+                            'type' => $type['type'],
+                            'date' => date('Y-m-d H:m:i',strtotime($date) + 3600 * $i),
+                            'visit' => 0,
+                            'num' => $pv
+                        );
+                        //每天各个小时的独立访问量
+                        $ip =  $sql->andWhere(['visit'=>1])->count();
+                        $arrIp[] = array(
+                            'appkey' => $appkey['appkey'],
+                            'page' => $appkey['id'],
+                            'type' => $type['type'],
+                            'date' => date('Y-m-d H:m:i',strtotime($date) + 3600 * $i),
+                            'visit' => 1,
+                            'num' => $ip
+                        );
+                    }
+                }
+            }
+            Yii::$app->db->createCommand()->batchInsert(Count::tableName(),['appkey','page','type','time','visit','num'],$arrIp)->execute();
+            Yii::$app->db->createCommand()->batchInsert(Count::tableName(),['appkey','page','type','time','visit','num'],$arrPv)->execute();
+            Month::deleteAll(['like','time',$date]);
+
+            //第7天的数据到30天数据库中
+            $week_date = date('Y-m-d',time()-86400*7);
+            $week_contents = Week::find()->where(['like','time',$week_date])->select(['appkey','page','type','ip','time','referrer','message','visit','created_at'])->asArray()->all();
+            $db = Yii::$app->db->createCommand()->batchInsert(Month::tableName(),['appkey','page','type','ip','time','referrer','message','visit','created_at'],$week_contents)->execute();
+            Week::deleteAll(['like','time',$week_date]);
+
+            //今天数据到昨天数据中
+            $yesterday_date = date('Y-m-d',time()-86400);
+            Yesterday::deleteAll();
+            $yesterday_contents = Today::find()->where(['like','time',$yesterday_date])->select(['appkey','page','type','ip','time','referrer','message','visit','created_at'])->asArray()->all();
+            $db = Yii::$app->db->createCommand()->batchInsert(Yesterday::tableName(),['appkey','page','type','ip','time','referrer','message','visit','created_at'],$yesterday_contents)->execute();
+            Today::deleteAll(['like','time',$yesterday_date]);
+            var_dump($db);
+            $transaction->commit();
+        }
+        catch(\yii\base\Exception $e)
+        {
+            $transaction->rollBack();
+            $result['code'] = 201;
+            $logger->warn('数据库事务处理操作失败');
+            return;
+        }
+
         $result['code'] = 200;
         HttpResponseUtil::setJsonResponse($result);
     }
 
     public function actionTest()
     {
-        return $this->redirect(VpassUrl::getLoginUrl());
+        $s = Yii::$app->request->post('type');
+        echo $s;
     }
 
 

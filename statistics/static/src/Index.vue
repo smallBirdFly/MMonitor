@@ -149,7 +149,8 @@
 	var hour = {
 		startTime : moment().format('YYYY-MM-DD'),
 		endTime: moment().add(-1,'days').format('YYYY-MM-DD'),
-		type:'pv'
+		type:'pv',
+		csrf:$('._csrf').val()
 	};
 	//定义按照天比较的初始值
 	var day = {
