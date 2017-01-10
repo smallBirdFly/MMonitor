@@ -246,7 +246,7 @@ class ExceptionsController extends Controller
         $m = 60;
         $today = getdate(); //得到一个数组
         $totalSeconds = ($today['hours'])*$h + ($today['minutes'])*$m + ($today['seconds']); //得出当天的总秒数
-        $logger->error($day);
+        //$logger->error($day);
         //day = 0为今天，1为昨天，得到所请求的 当天开始时间
         if($day == 1)
         {

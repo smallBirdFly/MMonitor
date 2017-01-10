@@ -13,6 +13,7 @@
     import Visit from './visit.vue'
     import Exception from './exception.vue'
     import Exception_visit from './exception_visit'
+    import Custom from './custom'
     export default{
         data () {
             return {
@@ -31,7 +32,8 @@
             { path: '/preview', component: Index },
             {path: '/visit',component:Visit},
             {path: '/exception',component:Exception},
-            {path: '/exception_visit',component:Exception_visit}
+            {path: '/exception_visit',component:Exception_visit},
+            {path: '/custom',component:Custom}
         ]
     }
 </script>

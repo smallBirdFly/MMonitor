@@ -39,6 +39,7 @@
 				<a href="javascript:;" @click="yesterday" class="date">昨天</a>
 				<a href="javascript:;" @click="week" class="date">最近7天</a>
 				<a href="javascript:;" @click="month" class="date">最近30天</a>
+				<router-link to="/custom" class="date">自定义上报类型</router-link>
 			</div>
 		</div>
 		<div class="wrap clearfix">
