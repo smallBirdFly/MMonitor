@@ -26,7 +26,7 @@ class SiteController extends Controller
 {
     public $layout = 'blank';
 
-//    public $enableCsrfValidation = false;
+    public $enableCsrfValidation = false;
 
     public function behaviors()
     {
@@ -328,10 +328,10 @@ class SiteController extends Controller
             Yii::$app->db->createCommand()->batchInsert(Count::tableName(),['appkey','page','type','time','visit','num'],$arrPv)->execute();
             Month::deleteAll(['like','time',$date]);
 
-            //第7天的数据到30天数据库中
+            //第7天的数据删除
             $week_date = date('Y-m-d',time()-86400*7);
-            $week_contents = Week::find()->where(['like','time',$week_date])->select(['appkey','page','type','ip','time','referrer','message','visit','created_at'])->asArray()->all();
-            $db = Yii::$app->db->createCommand()->batchInsert(Month::tableName(),['appkey','page','type','ip','time','referrer','message','visit','created_at'],$week_contents)->execute();
+           /* $week_contents = Week::find()->where(['like','time',$week_date])->select(['appkey','page','type','ip','time','referrer','message','visit','created_at'])->asArray()->all();
+            $db = Yii::$app->db->createCommand()->batchInsert(Month::tableName(),['appkey','page','type','ip','time','referrer','message','visit','created_at'],$week_contents)->execute();*/
             Week::deleteAll(['like','time',$week_date]);
 
             //今天数据到昨天数据中
@@ -340,7 +340,6 @@ class SiteController extends Controller
             $yesterday_contents = Today::find()->where(['like','time',$yesterday_date])->select(['appkey','page','type','ip','time','referrer','message','visit','created_at'])->asArray()->all();
             $db = Yii::$app->db->createCommand()->batchInsert(Yesterday::tableName(),['appkey','page','type','ip','time','referrer','message','visit','created_at'],$yesterday_contents)->execute();
             Today::deleteAll(['like','time',$yesterday_date]);
-            var_dump($db);
             $transaction->commit();
         }
         catch(\yii\base\Exception $e)
